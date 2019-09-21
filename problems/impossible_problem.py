@@ -70,6 +70,39 @@ def tabulate_results(px,py):
 	return 1
 
 
+def find_sum_list(psums, pprods):
+	sum_list = []
+	sum_count = 0
+	for isum in psums:
+		prod_count = 0
+		print("Trying sum {}".format(isum))
+		sdict = psums[isum]
+		# for each sum with multiple possible x,y
+		if sdict['count'] > 1 :
+			posn = 0
+			# for each possible x in this sum
+			for ix in sdict['x']:
+				# get y
+				iy = sdict['y'][posn]
+				print("Trying x,y = {},{}".format(ix,iy))
+				# get prod
+				nprod = ix * iy
+				nprod_key = str(nprod)
+				# check if this prod has multiple possible x,y
+				if pprods[nprod_key]['count'] > 1 :
+					print("Prod {} has multiple possible x,y\n".format(nprod_key))
+					prod_count += 1
+					# print("Sum = {}; Prod = {}; Possible x,y = {},{}".format(isum, nprod, ix, iy))
+				posn += 1
+			if prod_count == posn:
+				sum_count += 1
+				sum_list.append(isum)
+				print("*** Possible sum = {} ***\n\n".format(isum))
+
+	print("\nNumber of possible sums = {}\nlist = {}".format(sum_count, sum_list))
+	return sum_list
+
+
 # y > x > 1
 # x + y <= 100
 count = 0
@@ -82,13 +115,19 @@ for x in range(2,50):
 
 # print("count = {}\nsums = \n{}\nprods = \n{}\n".format(count, json.dumps(sums,indent=4), json.dumps(prods,indent=4)))
 
+answer_list = find_sum_list(sums, prods)
+
 for item in sums:
-	if sums[item]['count'] > 1:
-		print("sum = {}; item = {}".format(item, json.dumps(sums[item],indent=4)))
-		# print("sum {} has {} x,y tuples".format(item, sums[item]['count']))
+	if sums[item]['count'] > 1 :
+		pass
+		# print("sum = {}\ncount = {}\nx = {}\ny = {}".format(item, sums[item]['count'],sums[item]['x'],sums[item]['y']))
+		# print("sum = {}; item = {}".format(item, json.dumps(sums[item],indent=4)))
+	# print("sum {} has {} x,y tuples".format(item, sums[item]['count']))
 print('\n')
 for item in prods:
 	if prods[item]['count'] > 1:
 		pass
-		print("prod = {}; item = {}".format(item, json.dumps(prods[item],indent=4)))
-		# print("prod {} has {} x,y tuples".format(item, prods[item]['count']))
+		# print("prod = {}\ncount = {}\nx = {}\ny = {}".format(item, prods[item]['count'],prods[item]['x'],prods[item]['y']))
+	# print("prod {} has {} x,y tuples".format(item, prods[item]['count']))
+
+print("\nPROGRAM ENDED.")
