@@ -119,23 +119,24 @@ def find_sum_list(p_sums:dict, p_prods:dict) -> list:
     return sum_list
 
 
-def get_pairs_dict(p_poss_pairs:list, p_sums:dict) -> dict:
+def get_prods_xy_dict(p_poss_sums:list, p_sums:dict) -> dict:
     """
-    from the possible sum list, find a prod that has a matching sum with only ONE possible x,y
-    :param p_poss_pairs: possible sums
+    from the possible sum list, find all the possible prods and record their count and x,y
+    -- the solution prod can be any of the possible prods with a unique x,y
+    :param p_poss_sums: possible sums
     :param p_sums: all sums
     """
-    print("\nget_pairs_dict()")
+    print("\nget_prods_xy_dict()")
     pair_list = {}
-    for isum in p_poss_pairs:
-        print("get_pairs_dict() Trying sum {}".format(isum))
+    for isum in p_poss_sums:
+        print("get_prods_xy_dict() Trying sum {}".format(isum))
         sdict = p_sums[isum]
         sposn = 0
         # for each possible x in this sum
         for sx in sdict['x']:
             # get y
             sy = sdict['y'][sposn]
-            # print("get_pairs_dict() Trying x,y = {},{}".format(sx, sy))
+            # print("get_prods_xy_dict() Trying x,y = {},{}".format(sx, sy))
             # get prod
             nprod = sx * sy
             nprod_key = str(nprod)
@@ -161,7 +162,9 @@ def get_pairs_dict(p_poss_pairs:list, p_sums:dict) -> dict:
 
 def get_answer_pair(p_poss_prods:dict) -> dict:
     """
-    from the possible prod list, find a sum with a unique prod
+    from the possible prod list (i.e. each prod that is unique):
+        find the sum and keep track of how many unique prods for each possible sum
+    -- there should only be ONE sum with only ONE unique prod and the x,y of that sum is the solution
     :param p_poss_prods: possible prods
     """
     print("\nget_answer_pair()")
@@ -245,9 +248,11 @@ def impossible_problem_main():
 
     asum_list = find_sum_list(sums, prods)
 
-    apair_list = get_pairs_dict(asum_list, sums)
-    # print_dict_lt(apair_list, 'prod', p_count=2)
+    apair_list = get_prods_xy_dict(asum_list, sums)
+    print("\nALL possible prods with a unique x,y:")
+    print_dict_lt(apair_list, 'prod', p_count=2)
     answer_list = get_answer_pair(apair_list)
+    print("\nALL possible sums with the (x,y)s giving a unique possible prod:")
     print_dict_gt(answer_list, 'sum')
 
     print("\nPROGRAM ENDED.")
