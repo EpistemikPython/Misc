@@ -121,7 +121,7 @@ def find_possible_sums(p_sums:dict, p_prods:dict) -> list:
 
 def find_possible_prods(p_poss_sums:list, p_sums:dict) -> dict:
     """
-    from the possible sum list, take all the x,y's and find all the possible prods
+    from the possible sum list, take all the (x,y)s and find all the possible prods
     -- the solution prod can be any of the possible prods from a unique x,y
     :param p_poss_sums: possible sums
     :param p_sums: all sums
@@ -163,7 +163,7 @@ def get_solution_xy(p_poss_prods:dict) -> dict:
     """
     from the possible prod list find each prod that comes from a single x,y
     then find the sum and keep track of how many unique prods for each possible sum
-    -> there should only be ONE sum with only ONE unique prod and the x,y of that sum is the solution
+    -> there should only be ONE sum with a single unique prod and the x,y of that sum is the solution
     :param p_poss_prods: possible prods
     """
     print("\nget_solution_xy()")
@@ -171,6 +171,7 @@ def get_solution_xy(p_poss_prods:dict) -> dict:
     for item in p_poss_prods:
         # print("get_solution_xy() Trying prod {}".format(item))
         pdict = p_poss_prods[item]
+        # only want the prods with a unique x,y
         if pdict['count'] == 1:
             px = pdict['x'][0]
             py = pdict['y'][0]
@@ -239,17 +240,18 @@ def impossible_problem_main():
 
     print("Number of possible x,y = {}".format(count))
     # print("count = {}\nsums = \n{}\nprods = \n{}\n".format(count, json.dumps(sums,indent=4), json.dumps(prods,indent=4)))
-    print("Number of sums from multiple x,y's = {}".format(num_count_items(sums, 1)))
+    print("Number of sums from multiple (x,y)s = {}".format(num_count_items(sums, 1)))
     # print_dict_gt(sums, 'sum')
-    print("Number of prods from multiple x,y's = {}".format(num_count_items(prods, 1)))
+    print("Number of prods from multiple (x,y)s = {}".format(num_count_items(prods, 1)))
     # print_dict_gt(prods, 'prod')
 
-    asum_list = find_possible_sums(sums, prods)
+    sum_list = find_possible_sums(sums, prods)
 
-    apair_list = find_possible_prods(asum_list, sums)
+    prod_list = find_possible_prods(sum_list, sums)
     print("\nPossible prods with a unique x,y:")
-    print_dict_lt(apair_list, 'prod', p_count=2)
-    answer_list = get_solution_xy(apair_list)
+    print_dict_lt(prod_list, 'prod', p_count=2)
+
+    answer_list = get_solution_xy(prod_list)
     print("\nPossible sums with the (x,y)s from the unique possible prods:")
     print_dict_gt(answer_list, 'sum')
 
