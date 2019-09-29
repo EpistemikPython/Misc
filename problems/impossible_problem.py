@@ -103,7 +103,8 @@ def find_possible_sums(p_sums:dict, p_prods:dict) -> list:
                 # check if this prod has multiple possible x,y
                 if p_prods[nprod_key]['count'] == 1:
                     possible = False
-                    print("ONLY ONE Prod of {},{}! Go to next sum!\n".format(ix,iy))
+                    print("ONLY ONE x,y ({},{}) for {}! Go to next sum!\n"
+                          .format(ix, iy, nprod_key))
                     break
                 # print("Prod {} has multiple possible x,y ...".format(nprod_key))
                 posn += 1
@@ -229,15 +230,19 @@ def impossible_problem_main():
     x + y <= 100
     """
     count = 0
+    max_sum = 1000
+    x1 = 2
+    x2 = max_sum // 2
     # x = 2..49
-    for x in range(2, 50):
+    for x in range(x1, x2):
         y1 = x + 1
-        y2 = 100 - x + 1
+        y2 = max_sum - x + 1
         # y = 3..98 to 50..51
         for y in range(y1, y2):
             tabulate_results(x, y)
             count += 1
 
+    print("Max sum = {}".format(max_sum))
     print("Number of possible x,y = {}".format(count))
     # print("count = {}\nsums = \n{}\nprods = \n{}\n".format(count, json.dumps(sums,indent=4), json.dumps(prods,indent=4)))
     print("Number of sums from multiple (x,y)s = {}".format(num_count_items(sums, 1)))
@@ -254,6 +259,8 @@ def impossible_problem_main():
     answer_list = get_solution_xy(prod_list)
     print("\nPossible sums with the (x,y)s from the unique possible prods:")
     print_dict_gt(answer_list, 'sum')
+    print("\nPossible solutions:")
+    print_dict_lt(answer_list, 'sum', p_count=2)
 
     print("\nPROGRAM ENDED.")
 
