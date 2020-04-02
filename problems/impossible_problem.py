@@ -1,16 +1,17 @@
-#  Copyright (c) 2019  Mark Sattolo   <epistemik@gmail.com>
+#  Copyright (c) 2020  Mark Sattolo   <epistemik@gmail.com>
 
 ###############################################################################################################################
 # coding=utf-8
 #
 # impossible_problem.py
 #
-#
 __author__ = 'Mark Sattolo'
 __author_email__ = 'epistemik@gmail.com'
 __python_version__ = 3.6
 __created__ = '2019-09-11'
 __updated__ = '2019-09-22'
+
+# import json
 
 """
 x and y are whole numbers each greater than 1, where y is greater than x, 
@@ -72,12 +73,14 @@ def tabulate_results(p_x:int, p_y:int):
         prods[prod_key]['y'] = []
     prods[prod_key]['y'].append(p_y)
 
-    # print("x = {}; y = {}; sum = {}; prod = {}".format(x,y,sum,prod))
+    # print(F"x = {p_x}; y = {p_y}; sum = {tr_sum}; prod = {tr_prod}")
 
 
 def find_possible_sums(p_sums:dict, p_prods:dict) -> list:
     """
-    find sums which have ALL their prods with multiple possible x,y
+    Sam: 'I don’t know x and y, and I know that you don’t know them either.'
+    thus: find sums that result from at least two different x,y
+          AND have ALL their prods from multiple possible x,y
     :param p_sums: all sums
     :param p_prods: all prods
     :return: list of possible sums
@@ -86,7 +89,7 @@ def find_possible_sums(p_sums:dict, p_prods:dict) -> list:
     sum_list = []
     sum_count = 0
     for isum in p_sums:
-        print("find_possible_sums() Trying sum {}".format(isum))
+        print(F"Try sum {isum}")
         possible = True
         sdict = p_sums[isum]
         # for each sum with multiple possible x,y
@@ -96,27 +99,26 @@ def find_possible_sums(p_sums:dict, p_prods:dict) -> list:
             for ix in sdict['x']:
                 # get y
                 iy = sdict['y'][posn]
-                # print("find_possible_sums() Trying x,y = {},{}".format(ix, iy))
+                # print(F"find_possible_sums() Trying x,y = {ix},{iy}")
                 # get prod
                 nprod = ix * iy
                 nprod_key = str(nprod)
                 # check if this prod has multiple possible x,y
                 if p_prods[nprod_key]['count'] == 1:
                     possible = False
-                    print("ONLY ONE x,y ({},{}) for {}! Go to next sum!\n"
-                          .format(ix, iy, nprod_key))
+                    print(F"ONLY ONE x,y=({ix},{iy}) for prod {nprod_key}! Go to next sum!\n")
                     break
-                # print("Prod {} has multiple possible x,y ...".format(nprod_key))
+                # print(F"Prod {nprod_key} has multiple possible x,y ...")
                 posn += 1
             if not possible: continue
         else:
-            print("Sum {} has ONLY ONE possible x,y! Go to next sum!\n".format(isum))
+            print(F"ONLY ONE possible x,y for sum {isum}! Go to next sum!\n")
             continue
         sum_count += 1
         sum_list.append(isum)
-        print("*** Possible sum = {} ***\n\n".format(isum))
+        print(F">> {isum} is a possible sum!\n\n")
 
-    print("\nNumber of possible sums = {}\nlist = {}".format(sum_count, sum_list))
+    print(F"\nNumber of possible sums = {sum_count}\nlist = {sum_list}")
     return sum_list
 
 
@@ -130,14 +132,14 @@ def find_possible_prods(p_poss_sums:list, p_sums:dict) -> dict:
     print("\nfind_possible_prods()")
     prod_list = {}
     for isum in p_poss_sums:
-        print("find_possible_prods() Trying sum {}".format(isum))
+        print(F"Try sum {isum}")
         sdict = p_sums[isum]
         sposn = 0
         # for each possible x in this sum
         for sx in sdict['x']:
             # get y
             sy = sdict['y'][sposn]
-            # print("find_possible_prods() Trying x,y = {},{}".format(sx, sy))
+            # print(F"find_possible_prods() Trying x,y = {sx},{sy}")
             # get prod
             nprod = sx * sy
             nprod_key = str(nprod)
@@ -208,8 +210,7 @@ def print_dict_gt(p_dict:dict, p_label:str, p_count:int=0):
     for item in p_dict:
         key = p_dict[item]
         if key['count'] > p_count:
-            print("\n{} = {}\ncount = {}\nx = {}\ny = {}"
-                  .format(p_label, item, key['count'], key['x'], key['y']))
+            print(F"\n{p_label} = {item}\ncount = {key['count']}\nx = {key['x']}\ny = {key['y']}")
     print('\n')
 
 
@@ -218,10 +219,9 @@ def print_dict_lt(p_dict:dict, p_label:str, p_count:int=10):
     for item in p_dict:
         key = p_dict[item]
         if key['count'] < p_count:
-            print("{} = {};\tcount = {};\tx = {};\ty = {}"
-                  .format(p_label, item, key['count'], key['x'], key['y']))
+            print(F"{p_label} = {item};\tcount = {key['count']};\tx = {key['x']};\ty = {key['y']}")
             count += 1
-    print("Have {} {} items with count < {}".format(count, p_label, p_count))
+    print(F"Have {count} {p_label} items with count < {p_count}")
 
 
 def impossible_problem_main():
@@ -230,7 +230,7 @@ def impossible_problem_main():
     x + y <= 100
     """
     count = 0
-    max_sum = 1000
+    max_sum = 100
     x1 = 2
     x2 = max_sum // 2
     # x = 2..49
@@ -242,18 +242,18 @@ def impossible_problem_main():
             tabulate_results(x, y)
             count += 1
 
-    print("Max sum = {}".format(max_sum))
-    print("Number of possible x,y = {}".format(count))
-    # print("count = {}\nsums = \n{}\nprods = \n{}\n".format(count, json.dumps(sums,indent=4), json.dumps(prods,indent=4)))
-    print("Number of sums from multiple (x,y)s = {}".format(num_count_items(sums, 1)))
+    print(F"Max sum = {max_sum}")
+    print(F"Number of possible x,y = {count}")
+    # print(F"sums = \n{json.dumps(sums,indent=4)}\nprods = \n{json.dumps(prods,indent=4)}\n")
+    print(F"Number of sums having multiple (x,y)s = {num_count_items(sums, 1)}")
     # print_dict_gt(sums, 'sum')
-    print("Number of prods from multiple (x,y)s = {}".format(num_count_items(prods, 1)))
+    print(F"Number of prods having multiple (x,y)s = {num_count_items(prods, 1)}")
     # print_dict_gt(prods, 'prod')
 
     sum_list = find_possible_sums(sums, prods)
 
     prod_list = find_possible_prods(sum_list, sums)
-    print("\nPossible prods with a unique x,y:")
+    print("\nPossible prods (have a unique x,y):")
     print_dict_lt(prod_list, 'prod', p_count=2)
 
     answer_list = get_solution_xy(prod_list)
@@ -267,3 +267,4 @@ def impossible_problem_main():
 
 if __name__ == '__main__':
     impossible_problem_main()
+    exit()
