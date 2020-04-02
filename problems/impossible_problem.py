@@ -9,9 +9,10 @@ __author__ = 'Mark Sattolo'
 __author_email__ = 'epistemik@gmail.com'
 __python_version__ = 3.6
 __created__ = '2019-09-11'
-__updated__ = '2019-09-22'
+__updated__ = '2020-04-02'
 
 # import json
+import operator
 
 """
 x and y are whole numbers each greater than 1, where y is greater than x, 
@@ -24,68 +25,69 @@ The following conversation takes place between them.
 Sam: 'I don’t know x and y, and I know that you don’t know them either.'
 Peter: 'I now know x and y.'
 Sam: 'I also now know x and y.'
+
 The question: What are x and y?
 """
 
-# dictionaries to store all the possible sums and prods and each possible x,y
-sums = {}
-prods = {}
+# dictionaries to store all the possible sums and products and each possible x,y
+possible_sums = {}
+possible_prods = {}
 
 
 def tabulate_results(p_x:int, p_y:int):
     """
-    for x and y:
+    for each x,y:
         calculate the sum then add this x,y to the list for that sum and keep a count of each x,y
-        calculate the prod then add this x,y to the list for that prod and keep a count of each x,y
+        calculate the product then add this x,y to the list for that product and keep a count of each x,y
     """
     # print("\ntabulate_results()")
     tr_sum = p_x + p_y
     sum_key = str(tr_sum)
     # keep the count
-    if sums.get(sum_key) is None:
-        sums[sum_key] = {}
-        sums[sum_key]['count'] = 1
+    if possible_sums.get(sum_key) is None:
+        possible_sums[sum_key] = {}
+        possible_sums[sum_key]['count'] = 1
     else:
-        sums[sum_key]['count'] += 1
+        possible_sums[sum_key]['count'] += 1
     # record x
-    if sums[sum_key].get('x') is None:
-        sums[sum_key]['x'] = []
-    sums[sum_key]['x'].append(p_x)
+    if possible_sums[sum_key].get('x') is None:
+        possible_sums[sum_key]['x'] = []
+    possible_sums[sum_key]['x'].append(p_x)
     # record y
-    if sums[sum_key].get('y') is None:
-        sums[sum_key]['y'] = []
-    sums[sum_key]['y'].append(p_y)
+    if possible_sums[sum_key].get('y') is None:
+        possible_sums[sum_key]['y'] = []
+    possible_sums[sum_key]['y'].append(p_y)
 
     tr_prod = p_x * p_y
     prod_key = str(tr_prod)
     # keep the count
-    if prods.get(prod_key) is None:
-        prods[prod_key] = {}
-        prods[prod_key]['count'] = 1
+    if possible_prods.get(prod_key) is None:
+        possible_prods[prod_key] = {}
+        possible_prods[prod_key]['count'] = 1
     else:
-        prods[prod_key]['count'] += 1
+        possible_prods[prod_key]['count'] += 1
     # record x
-    if prods[prod_key].get('x') is None:
-        prods[prod_key]['x'] = []
-    prods[prod_key]['x'].append(p_x)
+    if possible_prods[prod_key].get('x') is None:
+        possible_prods[prod_key]['x'] = []
+    possible_prods[prod_key]['x'].append(p_x)
     # record y
-    if prods[prod_key].get('y') is None:
-        prods[prod_key]['y'] = []
-    prods[prod_key]['y'].append(p_y)
+    if possible_prods[prod_key].get('y') is None:
+        possible_prods[prod_key]['y'] = []
+    possible_prods[prod_key]['y'].append(p_y)
 
     # print(F"x = {p_x}; y = {p_y}; sum = {tr_sum}; prod = {tr_prod}")
 
 
-def find_possible_sums(p_sums:dict, p_prods:dict) -> list:
+def find_candidate_sums(p_sums:dict, p_prods:dict) -> list:
     """
     Sam: 'I don’t know x and y, and I know that you don’t know them either.'
     thus: find sums that result from at least two different x,y
-          AND have ALL their prods from multiple possible x,y
+          AND have ALL their products from multiple possible x,y
     :param p_sums: all sums
-    :param p_prods: all prods
-    :return: list of possible sums
+    :param p_prods: all products
+    :return list of candidate sums
     """
-    print("\nfind_possible_sums()")
+    print("\nfind_candidate_sums()")
     sum_list = []
     sum_count = 0
     for isum in p_sums:
@@ -95,12 +97,12 @@ def find_possible_sums(p_sums:dict, p_prods:dict) -> list:
         # for each sum with multiple possible x,y
         if sdict['count'] > 1:
             posn = 0
-            # for each possible x in this sum
+            # for each x in this sum
             for ix in sdict['x']:
                 # get y
                 iy = sdict['y'][posn]
-                # print(F"find_possible_sums() Trying x,y = {ix},{iy}")
-                # get prod
+                # print(F"Trying x,y = {ix},{iy}")
+                # get product
                 nprod = ix * iy
                 nprod_key = str(nprod)
                 # check if this prod has multiple possible x,y
@@ -116,86 +118,91 @@ def find_possible_sums(p_sums:dict, p_prods:dict) -> list:
             continue
         sum_count += 1
         sum_list.append(isum)
-        print(F">> {isum} is a possible sum!\n\n")
+        print(F">> {isum} is a candidate sum!\n\n")
 
-    print(F"\nNumber of possible sums = {sum_count}\nlist = {sum_list}")
+    print(F"\nNumber of candidate sums = {sum_count}\nlist = {sum_list}")
     return sum_list
 
 
-def find_possible_prods(p_poss_sums:list, p_sums:dict) -> dict:
+def find_candidate_prods(p_cand_sums:list, p_poss_sums:dict) -> dict:
     """
-    from the possible sum list, take all the (x,y)s and find all the possible prods
-    -- the solution prod can be any of the possible prods from a unique x,y
+    Peter: 'I now know x and y.'
+    thus: find products that have only ONE of their possible (x,y)s giving a candidate sum
+          so: from the candidate sums, take all the (x,y)s and find all the products
+              >> candidate products will be those appearing in just ONE candidate sum
+    :param p_cand_sums: candidate sums
     :param p_poss_sums: possible sums
-    :param p_sums: all sums
+    :return dict of candidate products information
     """
-    print("\nfind_possible_prods()")
-    prod_list = {}
-    for isum in p_poss_sums:
+    print("\nfind_candidate_prods()")
+    cand_prods_dict = {}
+    for isum in p_cand_sums:
         print(F"Try sum {isum}")
-        sdict = p_sums[isum]
+        poss_sum = p_poss_sums[isum]
         sposn = 0
         # for each possible x in this sum
-        for sx in sdict['x']:
+        for sx in poss_sum['x']:
             # get y
-            sy = sdict['y'][sposn]
-            # print(F"find_possible_prods() Trying x,y = {sx},{sy}")
-            # get prod
+            sy = poss_sum['y'][sposn]
+            # print(F"Trying x,y = {sx},{sy}")
+            # get product
             nprod = sx * sy
             nprod_key = str(nprod)
             # keep the count
-            if prod_list.get(nprod_key) is None:
-                prod_list[nprod_key] = {}
-                prod_list[nprod_key]['count'] = 1
+            if cand_prods_dict.get(nprod_key) is None:
+                cand_prods_dict[nprod_key] = {}
+                cand_prods_dict[nprod_key]['count'] = 1
             else:
-                prod_list[nprod_key]['count'] += 1
+                cand_prods_dict[nprod_key]['count'] += 1
             # record x
-            if prod_list[nprod_key].get('x') is None:
-                prod_list[nprod_key]['x'] = []
-            prod_list[nprod_key]['x'].append(sx)
+            if cand_prods_dict[nprod_key].get('x') is None:
+                cand_prods_dict[nprod_key]['x'] = []
+            cand_prods_dict[nprod_key]['x'].append(sx)
             # record y
-            if prod_list[nprod_key].get('y') is None:
-                prod_list[nprod_key]['y'] = []
-            prod_list[nprod_key]['y'].append(sy)
+            if cand_prods_dict[nprod_key].get('y') is None:
+                cand_prods_dict[nprod_key]['y'] = []
+            cand_prods_dict[nprod_key]['y'].append(sy)
             sposn += 1
 
-    return prod_list
+    return cand_prods_dict
 
 
-def get_solution_xy(p_poss_prods:dict) -> dict:
+def get_solutions(p_cand_prods:dict) -> dict:
     """
-    from the possible prod list find each prod that comes from a single x,y
-    then find the sum and keep track of how many unique prods for each possible sum
-    -> there should only be ONE sum with a single unique prod and the x,y of that sum is the solution
-    :param p_poss_prods: possible prods
+    Sam: 'I also now know x and y.'
+    thus: from the candidate sums find those whose (x,y)s give just one candidate product
+          so: from the candidate products find all the sums and the (x,y)s they come from
+          >> there should only be ONE sum with a single candidate product
+             and the x,y of that sum/product is the solution
+    :param p_cand_prods: dict of candidate products information
     """
-    print("\nget_solution_xy()")
-    xy_list = {}
-    for item in p_poss_prods:
-        # print("get_solution_xy() Trying prod {}".format(item))
-        pdict = p_poss_prods[item]
-        # only want the prods with a unique x,y
+    print("\nget_solutions()")
+    xy_dict = {}
+    for item in p_cand_prods:
+        # print(F"Trying prod {item}")
+        pdict = p_cand_prods[item]
+        # only want the products with a unique x,y
         if pdict['count'] == 1:
             px = pdict['x'][0]
             py = pdict['y'][0]
             psum = px + py
             sum_key = str(psum)
             # keep the count
-            if xy_list.get(sum_key) is None:
-                xy_list[sum_key] = {}
-                xy_list[sum_key]['count'] = 1
+            if xy_dict.get(sum_key) is None:
+                xy_dict[sum_key] = {}
+                xy_dict[sum_key]['count'] = 1
             else:
-                xy_list[sum_key]['count'] += 1
+                xy_dict[sum_key]['count'] += 1
             # record x
-            if xy_list[sum_key].get('x') is None:
-                xy_list[sum_key]['x'] = []
-            xy_list[sum_key]['x'].append(px)
+            if xy_dict[sum_key].get('x') is None:
+                xy_dict[sum_key]['x'] = []
+            xy_dict[sum_key]['x'].append(px)
             # record y
-            if xy_list[sum_key].get('y') is None:
-                xy_list[sum_key]['y'] = []
-            xy_list[sum_key]['y'].append(py)
+            if xy_dict[sum_key].get('y') is None:
+                xy_dict[sum_key]['y'] = []
+            xy_dict[sum_key]['y'].append(py)
 
-    return xy_list
+    return xy_dict
 
 
 def num_count_items(p_dict:dict, p_count:int=0) -> int:
@@ -206,65 +213,56 @@ def num_count_items(p_dict:dict, p_count:int=0) -> int:
     return num
 
 
-def print_dict_gt(p_dict:dict, p_label:str, p_count:int=0):
-    for item in p_dict:
-        key = p_dict[item]
-        if key['count'] > p_count:
-            print(F"\n{p_label} = {item}\ncount = {key['count']}\nx = {key['x']}\ny = {key['y']}")
-    print('\n')
-
-
-def print_dict_lt(p_dict:dict, p_label:str, p_count:int=10):
+def print_dict(p_dict:dict, p_label:str, p_op:operator=operator.lt, p_count:int=2):
     count = 0
     for item in p_dict:
         key = p_dict[item]
-        if key['count'] < p_count:
+        if p_op(key['count'] , p_count):
             print(F"{p_label} = {item};\tcount = {key['count']};\tx = {key['x']};\ty = {key['y']}")
             count += 1
-    print(F"Have {count} {p_label} items with count < {p_count}")
+    print(F"Have {count} {p_label} items with count {'<' if p_op(0,1) else '>'} {p_count}")
 
 
-def impossible_problem_main():
+def impossible_problem_main(max_sum:int):
     """
     y > x > 1
-    x + y <= 100
+    x + y <= p_max_sum
     """
     count = 0
-    max_sum = 100
     x1 = 2
     x2 = max_sum // 2
-    # x = 2..49
+    # x = 2..49 for max_sum of 100
     for x in range(x1, x2):
         y1 = x + 1
         y2 = max_sum - x + 1
-        # y = 3..98 to 50..51
+        # y ranges = 3..98 to 50..51 for max_sum of 100
         for y in range(y1, y2):
             tabulate_results(x, y)
             count += 1
 
     print(F"Max sum = {max_sum}")
     print(F"Number of possible x,y = {count}")
-    # print(F"sums = \n{json.dumps(sums,indent=4)}\nprods = \n{json.dumps(prods,indent=4)}\n")
-    print(F"Number of sums having multiple (x,y)s = {num_count_items(sums, 1)}")
-    # print_dict_gt(sums, 'sum')
-    print(F"Number of prods having multiple (x,y)s = {num_count_items(prods, 1)}")
-    # print_dict_gt(prods, 'prod')
+    # print(F"sums = \n{json.dumps(possible_sums,indent=4)}\nproducts = \n{json.dumps(possible_prods,indent=4)}\n")
+    print(F"Number of sums having multiple (x,y)s = {num_count_items(possible_sums, 1)}")
+    # print_dict(possible_sums, 'sum', p_op=operator.gt, p_count=0)
+    print(F"Number of products having multiple (x,y)s = {num_count_items(possible_prods, 1)}")
+    # print_dict(possible_prods, 'prod', p_op=operator.gt, p_count=0)
 
-    sum_list = find_possible_sums(sums, prods)
+    candidate_sums = find_candidate_sums(possible_sums, possible_prods)
 
-    prod_list = find_possible_prods(sum_list, sums)
-    print("\nPossible prods (have a unique x,y):")
-    print_dict_lt(prod_list, 'prod', p_count=2)
+    candidate_prods = find_candidate_prods(candidate_sums, possible_sums)
+    print("\nCandidate products (only one x,y in the candidate sums):")
+    print_dict(candidate_prods, 'prod')
 
-    answer_list = get_solution_xy(prod_list)
-    print("\nPossible sums with the (x,y)s from the unique possible prods:")
-    print_dict_gt(answer_list, 'sum')
+    possible_solutions = get_solutions(candidate_prods)
+    print("\nCandidate sums (with the (x,y)s from the candidate products):")
+    print_dict(possible_solutions, 'sum', p_op=operator.gt, p_count=0)
     print("\nPossible solutions:")
-    print_dict_lt(answer_list, 'sum', p_count=2)
+    print_dict(possible_solutions, 'sum')
 
     print("\nPROGRAM ENDED.")
 
 
 if __name__ == '__main__':
-    impossible_problem_main()
+    impossible_problem_main(100)
     exit()
