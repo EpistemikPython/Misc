@@ -1,15 +1,15 @@
-#  Copyright (c) 2020  Mark Sattolo   <epistemik@gmail.com>
-
 ###############################################################################################################################
 # coding=utf-8
 #
 # impossible_problem.py
 #
+#  Copyright (c) 2020  Mark Sattolo  <epistemik@gmail.com>
+
 __author__ = 'Mark Sattolo'
 __author_email__ = 'epistemik@gmail.com'
 __python_version__ = 3.6
 __created__ = '2019-09-11'
-__updated__ = '2020-04-02'
+__updated__ = '2020-04-03'
 
 # import json
 import operator
@@ -29,9 +29,27 @@ Sam: 'I also now know x and y.'
 The question: What are x and y?
 """
 
-# dictionaries to store all the possible sums and products and each possible x,y
+# dictionaries to store all the possible sums and products, each with possible (x,y)s
 possible_sums = {}
 possible_prods = {}
+
+
+def num_count_items(p_dict:dict, p_count:int=0) -> int:
+    num = 0
+    for item in p_dict:
+        if p_dict[item]['count'] > p_count:
+            num += 1
+    return num
+
+
+def print_dict(p_dict:dict, p_label:str, p_op:operator=operator.lt, p_count:int=2):
+    count = 0
+    for item in p_dict:
+        key = p_dict[item]
+        if p_op(key['count'] , p_count):
+            print(F"{p_label} = {item};\tcount = {key['count']};\tx = {key['x']};\ty = {key['y']}")
+            count += 1
+    print(F"Have {count} {p_label} items with count {'<' if p_op(0,1) else '>'} {p_count}")
 
 
 def tabulate_results(p_x:int, p_y:int):
@@ -75,7 +93,7 @@ def tabulate_results(p_x:int, p_y:int):
         possible_prods[prod_key]['y'] = []
     possible_prods[prod_key]['y'].append(p_y)
 
-    # print(F"x = {p_x}; y = {p_y}; sum = {tr_sum}; prod = {tr_prod}")
+    # print(F"x = {p_x}; y = {p_y}; sum = {tr_sum}; product = {tr_prod}")
 
 
 def find_candidate_sums(p_sums:dict, p_prods:dict) -> list:
@@ -101,16 +119,16 @@ def find_candidate_sums(p_sums:dict, p_prods:dict) -> list:
             for ix in sdict['x']:
                 # get y
                 iy = sdict['y'][posn]
-                # print(F"Trying x,y = {ix},{iy}")
+                # print(F"trying x,y = {ix},{iy}")
                 # get product
                 nprod = ix * iy
                 nprod_key = str(nprod)
-                # check if this prod has multiple possible x,y
+                # check if this product has multiple possible x,y
                 if p_prods[nprod_key]['count'] == 1:
                     possible = False
-                    print(F"ONLY ONE x,y=({ix},{iy}) for prod {nprod_key}! Go to next sum!\n")
+                    print(F"ONLY ONE x,y=({ix},{iy}) for product {nprod_key}! Go to next sum!\n")
                     break
-                # print(F"Prod {nprod_key} has multiple possible x,y ...")
+                # print(F"Product {nprod_key} has multiple possible x,y ...")
                 posn += 1
             if not possible: continue
         else:
@@ -130,8 +148,8 @@ def find_candidate_prods(p_cand_sums:list, p_poss_sums:dict) -> dict:
     thus: find products that have only ONE of their possible (x,y)s giving a candidate sum
           so: from the candidate sums, take all the (x,y)s and find all the products
               >> candidate products will be those appearing in just ONE candidate sum
-    :param p_cand_sums: candidate sums
-    :param p_poss_sums: possible sums
+    :param p_cand_sums: list of candidate sums
+    :param p_poss_sums: dict with possible sums
     :return dict of candidate products information
     """
     print("\nfind_candidate_prods()")
@@ -144,7 +162,7 @@ def find_candidate_prods(p_cand_sums:list, p_poss_sums:dict) -> dict:
         for sx in poss_sum['x']:
             # get y
             sy = poss_sum['y'][sposn]
-            # print(F"Trying x,y = {sx},{sy}")
+            # print(F"trying x,y = {sx},{sy}")
             # get product
             nprod = sx * sy
             nprod_key = str(nprod)
@@ -175,11 +193,12 @@ def get_solutions(p_cand_prods:dict) -> dict:
           >> there should only be ONE sum with a single candidate product
              and the x,y of that sum/product is the solution
     :param p_cand_prods: dict of candidate products information
+    :return dict of possible solutions
     """
     print("\nget_solutions()")
     xy_dict = {}
     for item in p_cand_prods:
-        # print(F"Trying prod {item}")
+        # print(F"Try prod {item}")
         pdict = p_cand_prods[item]
         # only want the products with a unique x,y
         if pdict['count'] == 1:
@@ -205,28 +224,10 @@ def get_solutions(p_cand_prods:dict) -> dict:
     return xy_dict
 
 
-def num_count_items(p_dict:dict, p_count:int=0) -> int:
-    num = 0
-    for item in p_dict:
-        if p_dict[item]['count'] > p_count:
-            num += 1
-    return num
-
-
-def print_dict(p_dict:dict, p_label:str, p_op:operator=operator.lt, p_count:int=2):
-    count = 0
-    for item in p_dict:
-        key = p_dict[item]
-        if p_op(key['count'] , p_count):
-            print(F"{p_label} = {item};\tcount = {key['count']};\tx = {key['x']};\ty = {key['y']}")
-            count += 1
-    print(F"Have {count} {p_label} items with count {'<' if p_op(0,1) else '>'} {p_count}")
-
-
 def impossible_problem_main(max_sum:int):
     """
     y > x > 1
-    x + y <= p_max_sum
+    x + y <= max_sum
     """
     count = 0
     x1 = 2
