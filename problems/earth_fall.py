@@ -2,6 +2,7 @@
 # See:
 #     Matt Parker: How to mathematically calculate a fall through the Earth
 #     https://www.youtube.com/watch?v=s94Gojs3Ags
+#     code at: https://www.dropbox.com/s/vbwymdxjz47bsrs/Earth_fall.py?dl=0
 
 # Comment:
 # To better align the output, I would change the print line to:
