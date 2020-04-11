@@ -1,3 +1,11 @@
+###############################################################################################################################
+# coding=utf-8
+#
+# earth_fall.py
+#
+__python_version__ = '3.6+'
+__created__ = '2020-04-09'
+__updated__ = '2020-04-09'
 
 # See:
 #     Matt Parker: How to mathematically calculate a fall through the Earth
@@ -27,7 +35,7 @@ def fall(cap:float=1.0):
     m_earth = 5.972 * 10**24
     g = 6.674 * 10**-11
 
-    rho = m_earth/((4.0/3) * math.pi * r_earth**3)
+    rho = m_earth/( (4.0/3) * math.pi * r_earth**3 )
 
     inc = r_earth/4.0
 

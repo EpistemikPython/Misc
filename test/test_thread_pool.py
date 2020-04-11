@@ -7,7 +7,7 @@
 
 __author__         = 'Mark Sattolo'
 __author_email__   = 'epistemik@gmail.com'
-__python_version__ = 3.6
+__python_version__ = '3.6+'
 __created__ = '2020-04-09'
 __updated__ = '2020-04-09'
 
