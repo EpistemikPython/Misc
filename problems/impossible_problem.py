@@ -138,7 +138,6 @@ def find_candidate_sums(p_sums:dict, p_prods:dict) -> list:
         sum_list.append(isum)
         print(F">> {isum} is a candidate sum!\n\n")
 
-    print(F"\nNumber of candidate sums = {sum_count}\nlist = {sum_list}")
     return sum_list
 
 
@@ -229,6 +228,7 @@ def impossible_problem_main(max_sum:int):
     y > x > 1
     x + y <= max_sum
     """
+    print(F"Max sum = {max_sum}")
     count = 0
     x1 = 2
     x2 = max_sum // 2
@@ -241,7 +241,6 @@ def impossible_problem_main(max_sum:int):
             tabulate_results(x, y)
             count += 1
 
-    print(F"Max sum = {max_sum}")
     print(F"Number of possible x,y = {count}")
     # print(F"sums = \n{json.dumps(possible_sums,indent=4)}\nproducts = \n{json.dumps(possible_prods,indent=4)}\n")
     print(F"Number of sums having multiple (x,y)s = {num_count_items(possible_sums, 1)}")
@@ -250,6 +249,7 @@ def impossible_problem_main(max_sum:int):
     # print_dict(possible_prods, 'prod', p_op=operator.gt, p_count=0)
 
     candidate_sums = find_candidate_sums(possible_sums, possible_prods)
+    print(F"\nNumber of candidate sums = {len(candidate_sums)}\nlist = {candidate_sums}")
 
     candidate_prods = find_candidate_prods(candidate_sums, possible_sums)
     print("\nCandidate products (only one x,y in the candidate sums):")
