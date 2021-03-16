@@ -12,6 +12,7 @@
 **/bin/
 *.py[cdo]
 *.out
+*.log
 *.o
 *.so
 *.obj
