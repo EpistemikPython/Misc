@@ -3,16 +3,17 @@
 #
 # impossible_problem.py
 #
-#  Copyright (c) 2020  Mark Sattolo  <epistemik@gmail.com>
+#  Copyright (c) 2021  Mark Sattolo  <epistemik@gmail.com>
 
 __author__ = 'Mark Sattolo'
 __author_email__ = 'epistemik@gmail.com'
 __python_version__ = '3.6+'
 __created__ = '2019-09-11'
-__updated__ = '2020-04-03'
+__updated__ = '2021-03-22'
 
 # import json
 import operator
+import sys
 
 """
 x and y are whole numbers each greater than 1, where y is greater than x, 
@@ -119,7 +120,6 @@ def find_candidate_sums(p_sums:dict, p_prods:dict) -> list:
             for ix in sdict['x']:
                 # get y
                 iy = sdict['y'][posn]
-                # print(F"trying x,y = {ix},{iy}")
                 # get product
                 nprod = ix * iy
                 nprod_key = str(nprod)
@@ -128,7 +128,6 @@ def find_candidate_sums(p_sums:dict, p_prods:dict) -> list:
                     possible = False
                     print(F"ONLY ONE x,y=({ix},{iy}) for product {nprod_key}! Go to next sum!\n")
                     break
-                # print(F"Product {nprod_key} has multiple possible x,y ...")
                 posn += 1
             if not possible: continue
         else:
@@ -161,7 +160,6 @@ def find_candidate_prods(p_cand_sums:list, p_poss_sums:dict) -> dict:
         for sx in poss_sum['x']:
             # get y
             sy = poss_sum['y'][sposn]
-            # print(F"trying x,y = {sx},{sy}")
             # get product
             nprod = sx * sy
             nprod_key = str(nprod)
@@ -187,8 +185,7 @@ def find_candidate_prods(p_cand_sums:list, p_poss_sums:dict) -> dict:
 def get_solutions(p_cand_prods:dict) -> dict:
     """
     Sam: 'I also now know x and y.'
-    thus: from the candidate sums find those whose (x,y)s give just one candidate product
-          so: from the candidate products find all the sums and the (x,y)s they come from
+    thus: from the candidate products find all the sums and the (x,y)s they come from
           >> there should only be ONE sum with a single candidate product
              and the x,y of that sum/product is the solution
     :param p_cand_prods: dict of candidate products information
@@ -197,7 +194,6 @@ def get_solutions(p_cand_prods:dict) -> dict:
     print("\nget_solutions()")
     xy_dict = {}
     for item in p_cand_prods:
-        # print(F"Try prod {item}")
         pdict = p_cand_prods[item]
         # only want the products with a unique x,y
         if pdict['count'] == 1:
@@ -223,20 +219,20 @@ def get_solutions(p_cand_prods:dict) -> dict:
     return xy_dict
 
 
-def impossible_problem_main(max_sum:int):
+def main_solve_problem(p_max_sum:int):
     """
     y > x > 1
-    x + y <= max_sum
+    x + y <= maximum_sum
     """
-    print(F"Max sum = {max_sum}")
+    print(F"Max sum = {p_max_sum}")
     count = 0
     x1 = 2
-    x2 = max_sum // 2
-    # x = 2..49 for max_sum of 100
+    x2 = p_max_sum // 2
+    # x = 2..49 for max sum of 100
     for x in range(x1, x2):
         y1 = x + 1
-        y2 = max_sum - x + 1
-        # y ranges = 3..98 to 50..51 for max_sum of 100
+        y2 = p_max_sum - x + 1
+        # y ranges = 3..98 (for x=2) to 50..51 (for x=49) if max sum of 100
         for y in range(y1, y2):
             tabulate_results(x, y)
             count += 1
@@ -265,5 +261,8 @@ def impossible_problem_main(max_sum:int):
 
 
 if __name__ == '__main__':
-    impossible_problem_main(100)
+    max_sum = 100
+    if len(sys.argv) > 1 and sys.argv[1].isnumeric():
+        max_sum = sys.argv[1]
+    main_solve_problem(max_sum)
     exit()
