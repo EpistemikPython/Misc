@@ -3,13 +3,13 @@
 #
 # pi_gcd.py
 #
-#  Copyright (c) 2020  Mark Sattolo  <epistemik@gmail.com>
+#  Copyright (c) 2021  Mark Sattolo  <epistemik@gmail.com>
 
 __author__         = 'Mark Sattolo'
 __author_email__   = 'epistemik@gmail.com'
 __python_version__ = '3.6+'
 __created__ = '2020-04-10'
-__updated__ = '2020-04-11'
+__updated__ = '2021-03-21'
 
 # Inspiration:
 #     Matt Parker: Generating π from 1,000 random numbers
@@ -47,10 +47,10 @@ def pi_estimate(num_samples:int, num_range:int, num_runs:int=10):
         print(F"# of coprime pairs = {coprime} & estimate of pi = {est:>11.11f}")
 
     ave_est = average(estimates)
-    print(F"\t\t    pi = {math.pi:>11.11f}")
+    print(F"    actual value of pi = {math.pi:>11.11f}")
     print(F"average estimate of pi = {ave_est:>11.11f}")
 
 
 if __name__ == '__main__':
-    pi_estimate(1000000,1000000)
+    pi_estimate(1000000,1000000,20)
     exit()
