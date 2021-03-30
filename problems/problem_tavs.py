@@ -24,6 +24,8 @@
 # Sam says, “I know the numbers”.
 #
 # What are the numbers?
+import sys
+
 
 def run_rounds(pairs:list, num_rounds:int):
     # the rounds
@@ -73,8 +75,13 @@ def main_two_digits_problem(num_rounds:int):
     for i,r in enumerate(pairs):
         if p1.count(p1[i]) == 1:
             print(F"unique remaining product = {p1[i]}\nnumbers are {repr(pairs[i])}")
+            return
+    print("NO unique solution!")
 
 
 if __name__ == '__main__':
-    main_two_digits_problem(4)
+    num_rds = 4
+    if len(sys.argv) > 1 and sys.argv[1].isnumeric():
+        num_rds = sys.argv[1]
+    main_two_digits_problem(int(num_rds))
     exit()
