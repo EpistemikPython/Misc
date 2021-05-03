@@ -22,44 +22,46 @@ CLA =  8    # Clear (set to zero)  the Accumulator
 INC = 10    # Increment (add 1 to) the Accumulator
 ADD = 99    # Add to Accumulator
 SUB = 61    # Subtract from Accumulator
-JMP = 15    # Jump ("go to ")
+JMP = 15    # Jump ("go to")
 JZ  = 17    # Jump if the Zero status bit is True
 JN  = 19    # Jump if the Negative status bit is True
 DSP =  1    # Display (write on the screen)
 HLT = 64    # Halt
 
 
+COMMENT_MARKER = '/'
+
 class Byte:
     def __init__(self, val=0):
-        self.value = val
+        self.value:int = val
     # = -99..99
-    MIN_VALUE = -99
-    MAX_VALUE = 99
+    MIN_VALUE:int = -99
+    MAX_VALUE:int = 99
 
-    def set(self, val):
-        if self.MIN_VALUE <= val <= self.MAX_VALUE:
-            self.value = val
-        else:
-            print(F"ILLEGAL value '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
-
-    def get(self):
-        return self.value
-
-
-class Word:
-    def __init__(self, val=0):
-        self.value = val
-    # = 0000..9999
-    MIN_VALUE = 0
-    MAX_VALUE = 9999
-
-    def set(self, val):
+    def set(self, val:int):
         if self.MIN_VALUE <= val <= self.MAX_VALUE:
             self.value = val
         else:
             print(F"ILLEGAL parameter '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
 
-    def get(self):
+    def get(self) -> int:
+        return self.value
+
+
+class Word:
+    def __init__(self, val=0):
+        self.value:int = val
+    # = 0000..9999
+    MIN_VALUE:int = 0
+    MAX_VALUE:int = 9999
+
+    def set(self, val:int):
+        if self.MIN_VALUE <= val <= self.MAX_VALUE:
+            self.value = val
+        else:
+            print(F"ILLEGAL parameter '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
+
+    def get(self) -> int:
         return self.value
 
     def inc(self):
@@ -69,7 +71,7 @@ class Word:
             print(F"ILLEGAL Increment attempt! ALREADY at Max value = {self.MAX_VALUE}!")
 
 
-memory = [] # array[word] of byte
+memory = dict() # array[word] of byte
 
 # the following are the registers in the CPU
 pc  = Word()     # word   # program counter
@@ -82,7 +84,9 @@ h = False        # bit    # "Halt" status bit
 
 mar = Word()  # word   # Memory Address register
 mdr = Byte()  # byte   # Memory Data    register
-rw = False    # bit    # Read/Write bit.  Read = True ; Write = False
+READ = True
+WRITE = False
+rw = True    # bit    # Read/Write bit.  Read = True ; Write = False
 
 
 def load(filename):
@@ -95,10 +99,12 @@ def load(filename):
             codes = line.split()
             if len(codes) < 1:
                 continue
-            if codes[0].isalpha():
+            if codes[0].isalpha() or codes[0] == COMMENT_MARKER:
                 continue # skip over comment
             for item in codes:
                 memory[address.get()] = Byte( int(item) )
+                print(F"load item {item} at address {address.get()}")
+                address.inc()
     # while not EOF:
     #     if not eoln:
     #         read(first_character)
@@ -112,11 +118,20 @@ def load(filename):
     #     readln
 
 
+def check_memory():
+    for key in reversed( memory.keys() ):
+        print(F"m[{key}]={memory[key].get()} ", end = '|')
+    print("===")
+
+
 def access_memory():
-    if rw:
-        mdr.set( memory[mar.get()] ) # True = read = copy a value from memory into the CPU
-    else:
-        memory[mar.get()] = mdr.get() # False = write = copy a value into memory from the CPU
+    print("access memory")
+    if rw: # True = read = copy a value from memory into the CPU
+        mdr.set( (memory[mar.get()]).get() )
+        print(F"now mdr = {mdr.get()}")
+    else: # False = write = copy a value into memory from the CPU
+        memory[mar.get()] = Byte( mdr.get() )
+        print(F"now memory[{mar.get()}] = {(memory[mar.get()]).get()}")
 
 
 def run_sim():  # This implements the Fetch-Execute cycle
@@ -128,95 +143,118 @@ def run_sim():  # This implements the Fetch-Execute cycle
     global n
     # repeat
     while not h:
-        # FETCH OPCODE
+        print("FETCH OPCODE")
         mar.set( pc.get() )
         pc.inc()  # = pc + 1   # NOTE that pc is incremented immediately
-        rw  = True
+        rw = READ
         access_memory()
         opCode.set( mdr.get() )
 
+        opcode = opCode.get()
         # If the opcode is odd, it needs an operand.
-        if opCode.get() % 2 == 1:
-            # FETCH THE ADDRESS OF THE OPERAND
+        if opcode % 2 == 1:
+            print("FETCH THE ADDRESS OF THE OPERAND")
             mar.set( pc.get() )
             pc.inc() # = pc + 1   # NOTE that pc is incremented immediately
-            rw = True
+            rw = READ
             access_memory()
             opAddr.set( mdr.get() ) # this is just the HIGH byte of the opAddr
-            mar.set( pc.get )
+            mar.set( pc.get() )
             pc.inc() # = pc + 1   # NOTE that pc is incremented immediately
-            rw = True
+            rw = READ
             access_memory()    # this gets the LOW byte
-            opAddr.set( 100 * opAddr.get() + mdr.get() )  # put the two bytes together
-            # end
+            opAddr.set( (100 * opAddr.get()) + mdr.get() )  # put the two bytes together
+            print(F"Operand Address = {opAddr.get()}")
 
-    # EXECUTE THE OPERATION
-    #   case opCode of
-
-        if opCode == LDA:
-            mar.set( opAddr.get() )    # Get the Operand"s value from memory
-            rw = True
+        # EXECUTE THE OPERATION
+        if opcode == LDA: # Get the Operand"s value from memory
+            print("LDA")
+            mar.set( opAddr.get() )
+            rw = READ
             access_memory()
-            acc.set( mdr.get() )        # and store it in the Accumulator
+            acc.set( mdr.get() )  # and store it in the Accumulator
+            print(F"now Accumulator value = {acc.get()}")
 
-        elif opCode == STA:
-            mdr.set( acc.get() )         # Store the Accumulator
-            mar.set( opAddr.get() )   # into the Operand"s address
-            rw = False     # False means "write"
+        elif opcode == STA: # Store the Accumulator
+            print("STA")
+            mdr.set( acc.get() )
+            mar.set( opAddr.get() )   # into the Operand's address
+            rw = WRITE
             access_memory()
 
-        elif opCode == CLA:
-            acc.set( 0 )        # Clear = set the Accumulator to zero
-            z = True      # set the Status Bits appropriately
+        elif opcode == CLA: # Clear = set the Accumulator to zero
+            print("CLA")
+            acc.set( 0 )
+            print(F"now Accumulator value = {acc.get()}")
+            z = True       # set the Status Bits appropriately
             n = False
 
-        elif opCode == INC:
-            acc.set( (acc.get()+1) % 100 ) # Increment = add 1 to the Accumulator
+        elif opcode == INC: # Increment = add 1 to the Accumulator
+            print("INC")
+            acc.set( (acc.get()+1) % 100 )
+            print(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
-        elif opCode == ADD:
-            mar.set( opAddr.get() )    # Get the Operand"s value from memory
-            rw = True
+        elif opcode == ADD:
+            print("ADD")
+            mar.set( opAddr.get() )    # Get the Operand's value from memory
+            rw = READ
             access_memory()
             acc.set( (acc.get() + mdr.get()) % 100 ) # and add it to the Accumulator
+            print(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
-        elif opCode == SUB:
-            mar.set( opAddr.get() )    # Get the Operand"s value from memory
-            rw  = True
+        elif opcode == SUB:
+            print("SUB")
+            mar.set( opAddr.get() )    # Get the Operand's value from memory
+            rw  = READ
             access_memory()
             acc.set( (acc.get() - mdr.get()) % 100 ) # and subtract it from the Accumulator
+            print(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
-        elif opCode == JMP:
+        elif opcode == JMP:
+            print("JMP")
             pc.set( opAddr.get() )  # opAddr is the address of the next instruction to execute
 
-        elif opCode == JZ :
+        elif opcode == JZ :
+            print("JZ")
             if z :
                 pc.set( opAddr.get() ) # Jump if the Z status bit is True
 
-        elif opCode == JN :
+        elif opcode == JN :
+            print("JN")
             if n :
                 pc.set( opAddr.get() ) # Jump if the N status bit is True
 
-        elif opCode == HLT:
+        elif opcode == HLT:
+            print("HLT")
             h = True  # set the Halt status bit
 
-        elif opCode == DSP:
-            mar.set( opAddr.get() )   # Get the Operand"s value from memory
-            rw = True
+        elif opcode == DSP:
+            print("DSP")
+            mar.set( opAddr.get() )   # Get the Operand's value from memory
+            rw = READ
             access_memory()
             print(F"memory location {mar.get()} contains the value {mdr.get()}")
 
 
-def main_sim(args:list):
-    load(args[0])
-    run_sim()
+def main_sim(fn:str):
+    try:
+        load( fn )
+        run_sim()
+    except Exception as ex:
+        print("PROBLEM with program: " + repr(ex))
+        exit(222)
 
 
 if __name__ == "__main__":
-    main_sim(sys.argv[1:])
+    if len( sys.argv ) > 1:
+        main_sim( sys.argv[1] )
+    else:
+        print("MISSING file name!")
+    print("Program completed.")
     exit()
