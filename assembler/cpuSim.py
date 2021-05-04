@@ -10,14 +10,14 @@ __author_email__ = "epistemik@gmail.com"
 __created__ = "2021-05-02"
 __updated__ = "2021-05-03"
 
+# **  CSI 1101,  Winter, 1999  **
+# ** Assignment 8, Simulator program **
+
 import logging
 import sys
 import mhsLogging
 
-asm_logger = logging.getLogger( mhsLogging.get_base_filename(__file__))
-
-# **  CSI 1101,  Winter, 1999  **
-# ** Assignment 8, Simulator program **
+asm_logger = logging.getLogger( mhsLogging.get_base_filename(__file__) )
 
 # the following constants give symbolic names for the opcodes
 LDA = 91    # Load  Accumulator from memory
@@ -43,10 +43,12 @@ class Byte:
     MAX_VALUE:int = 99
 
     def set(self, val:int):
-        if self.MIN_VALUE <= val <= self.MAX_VALUE:
-            self.value = val
+        if val < self.MIN_VALUE:
+            self.value = ((val * -1) % 100) * -1
+        elif val >= self.MAX_VALUE:
+            self.value = val % 100
         else:
-            asm_logger.warning(F"ILLEGAL parameter '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
+            self.value = val
 
     def get(self) -> int:
         return self.value
@@ -75,6 +77,11 @@ class Word:
             asm_logger.warning(F"ILLEGAL Increment attempt! ALREADY at Max value = {self.MAX_VALUE}!")
 
 
+def show(msg:str, endl='\n'):
+    print(msg, end = endl)
+    asm_logger.info(msg)
+
+
 memory = dict() # array[word] of byte
 
 # the following are the registers in the CPU
@@ -90,7 +97,7 @@ mar = Word()  # word   # Memory Address register
 mdr = Byte()  # byte   # Memory Data    register
 READ = True
 WRITE = False
-rw = True    # bit    # Read/Write bit.  Read = True ; Write = False
+rw = True     # bit    # Read/Write bit.  Read = True ; Write = False
 
 
 def load(filename):
@@ -113,8 +120,8 @@ def load(filename):
 
 def check_memory():
     for key in reversed( memory.keys() ):
-        print(F"m[{key}]={memory[key].get()} ", end = '|')
-    print("===")
+        show(F"m[{key}]={memory[key].get()} ", '|')
+    show("===")
 
 
 def access_memory():
@@ -161,7 +168,7 @@ def run_sim():  # This implements the Fetch-Execute cycle
 
         # EXECUTE THE OPERATION
         if opcode == LDA: # Get the Operand"s value from memory
-            print("LDA")
+            show("LDA")
             mar.set( opAddr.get() )
             rw = READ
             access_memory()
@@ -169,70 +176,70 @@ def run_sim():  # This implements the Fetch-Execute cycle
             asm_logger.debug(F"now Accumulator value = {acc.get()}")
 
         elif opcode == STA: # Store the Accumulator
-            print("STA")
+            show("STA")
             mdr.set( acc.get() )
             mar.set( opAddr.get() )   # into the Operand's address
             rw = WRITE
             access_memory()
 
         elif opcode == CLA: # Clear = set the Accumulator to zero
-            print("CLA")
+            show("CLA")
             acc.set( 0 )
-            print(F"now Accumulator value = {acc.get()}")
+            asm_logger.debug(F"now Accumulator value = {acc.get()}")
             z = True       # set the Status Bits appropriately
             n = False
 
         elif opcode == INC: # Increment = add 1 to the Accumulator
-            print("INC")
-            acc.set( (acc.get()+1) % 100 )
+            show("INC")
+            acc.set( acc.get() + 1 )
             asm_logger.debug(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
         elif opcode == ADD:
-            print("ADD")
+            show("ADD")
             mar.set( opAddr.get() )    # Get the Operand's value from memory
             rw = READ
             access_memory()
-            acc.set( (acc.get() + mdr.get()) % 100 ) # and add it to the Accumulator
+            acc.set( acc.get() + mdr.get() ) # and add it to the Accumulator
             asm_logger.debug(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
         elif opcode == SUB:
-            print("SUB")
+            show("SUB")
             mar.set( opAddr.get() )    # Get the Operand's value from memory
             rw  = READ
             access_memory()
-            acc.set( (acc.get() - mdr.get()) % 100 ) # and subtract it from the Accumulator
+            acc.set( acc.get() - mdr.get() ) # and subtract it from the Accumulator
             asm_logger.debug(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
         elif opcode == JMP:
-            print("JMP")
+            show("JMP")
             pc.set( opAddr.get() )  # opAddr is the address of the next instruction to execute
 
         elif opcode == JZ :
-            print("JZ")
+            show("JZ")
             if z :
                 pc.set( opAddr.get() ) # Jump if the Z status bit is True
 
         elif opcode == JN :
-            print("JN")
+            show("JN")
             if n :
                 pc.set( opAddr.get() ) # Jump if the N status bit is True
 
         elif opcode == HLT:
-            print("HLT")
+            show("HLT")
             h = True  # set the Halt status bit
 
         elif opcode == DSP:
-            print("DSP")
+            show("DSP")
             mar.set( opAddr.get() )   # Get the Operand's value from memory
             rw = READ
             access_memory()
-            print(F"memory location {mar.get()} contains the value {mdr.get()}")
+            show(F"memory location {mar.get()} contains the value {mdr.get()}")
 
 
 def main_sim(fn:str):
@@ -241,13 +248,13 @@ def main_sim(fn:str):
         run_sim()
     except Exception as ex:
         asm_logger.error("PROBLEM with program: " + repr(ex))
-        exit(222)
+        exit(246)
 
 
 if __name__ == "__main__":
     if len( sys.argv ) > 1:
         main_sim( sys.argv[1] )
     else:
-        print("MISSING file name!")
-    print("Program completed.")
+        show("MISSING file name!")
+    show("Program completed.")
     exit()
