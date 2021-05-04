@@ -1,7 +1,7 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# py -- CPU simulator program ported from pas
+# cpuSim.py -- CPU simulator program ported from pascal
 #
 # Copyright (c) 2021 Mark Sattolo <epistemik@gmail.com>
 
@@ -10,7 +10,11 @@ __author_email__ = "epistemik@gmail.com"
 __created__ = "2021-05-02"
 __updated__ = "2021-05-03"
 
+import logging
 import sys
+import mhsLogging
+
+asm_logger = logging.getLogger( mhsLogging.get_base_filename(__file__))
 
 # **  CSI 1101,  Winter, 1999  **
 # ** Assignment 8, Simulator program **
@@ -29,7 +33,7 @@ DSP =  1    # Display (write on the screen)
 HLT = 64    # Halt
 
 
-COMMENT_MARKER = '/'
+COMMENT_MARKERS = ['/', '#']
 
 class Byte:
     def __init__(self, val=0):
@@ -42,7 +46,7 @@ class Byte:
         if self.MIN_VALUE <= val <= self.MAX_VALUE:
             self.value = val
         else:
-            print(F"ILLEGAL parameter '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
+            asm_logger.warning(F"ILLEGAL parameter '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
 
     def get(self) -> int:
         return self.value
@@ -59,7 +63,7 @@ class Word:
         if self.MIN_VALUE <= val <= self.MAX_VALUE:
             self.value = val
         else:
-            print(F"ILLEGAL parameter '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
+            asm_logger.warning(F"ILLEGAL parameter '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
 
     def get(self) -> int:
         return self.value
@@ -68,7 +72,7 @@ class Word:
         if self.value < self.MAX_VALUE:
             self.value = self.value + 1
         else:
-            print(F"ILLEGAL Increment attempt! ALREADY at Max value = {self.MAX_VALUE}!")
+            asm_logger.warning(F"ILLEGAL Increment attempt! ALREADY at Max value = {self.MAX_VALUE}!")
 
 
 memory = dict() # array[word] of byte
@@ -99,23 +103,12 @@ def load(filename):
             codes = line.split()
             if len(codes) < 1:
                 continue
-            if codes[0].isalpha() or codes[0] == COMMENT_MARKER:
+            if codes[0].isalpha() or codes[0] in COMMENT_MARKERS:
                 continue # skip over comment
             for item in codes:
                 memory[address.get()] = Byte( int(item) )
-                print(F"load item {item} at address {address.get()}")
+                asm_logger.info(F"load item {item} at address {address.get()}")
                 address.inc()
-    # while not EOF:
-    #     if not eoln:
-    #         read(first_character)
-    #         if first_character != ' ':   # non-blank indicates a comment
-    #             repeat                 # skip over comment
-    #                 read(ch)
-    #             until ch = first_character
-    #             while not eoln:
-    #                 read(memory[address])
-    #                 address = address + 1
-    #     readln
 
 
 def check_memory():
@@ -125,13 +118,13 @@ def check_memory():
 
 
 def access_memory():
-    print("access memory")
+    asm_logger.info(F"rw = {rw}")
     if rw: # True = read = copy a value from memory into the CPU
         mdr.set( (memory[mar.get()]).get() )
-        print(F"now mdr = {mdr.get()}")
+        asm_logger.debug(F"now mdr = {mdr.get()}")
     else: # False = write = copy a value into memory from the CPU
         memory[mar.get()] = Byte( mdr.get() )
-        print(F"now memory[{mar.get()}] = {(memory[mar.get()]).get()}")
+        asm_logger.debug(F"now memory[{mar.get()}] = {(memory[mar.get()]).get()}")
 
 
 def run_sim():  # This implements the Fetch-Execute cycle
@@ -143,7 +136,7 @@ def run_sim():  # This implements the Fetch-Execute cycle
     global n
     # repeat
     while not h:
-        print("FETCH OPCODE")
+        asm_logger.info("FETCH OPCODE")
         mar.set( pc.get() )
         pc.inc()  # = pc + 1   # NOTE that pc is incremented immediately
         rw = READ
@@ -153,7 +146,7 @@ def run_sim():  # This implements the Fetch-Execute cycle
         opcode = opCode.get()
         # If the opcode is odd, it needs an operand.
         if opcode % 2 == 1:
-            print("FETCH THE ADDRESS OF THE OPERAND")
+            asm_logger.info("FETCH THE ADDRESS OF THE OPERAND")
             mar.set( pc.get() )
             pc.inc() # = pc + 1   # NOTE that pc is incremented immediately
             rw = READ
@@ -164,7 +157,7 @@ def run_sim():  # This implements the Fetch-Execute cycle
             rw = READ
             access_memory()    # this gets the LOW byte
             opAddr.set( (100 * opAddr.get()) + mdr.get() )  # put the two bytes together
-            print(F"Operand Address = {opAddr.get()}")
+            asm_logger.info(F"Operand Address = {opAddr.get()}")
 
         # EXECUTE THE OPERATION
         if opcode == LDA: # Get the Operand"s value from memory
@@ -173,7 +166,7 @@ def run_sim():  # This implements the Fetch-Execute cycle
             rw = READ
             access_memory()
             acc.set( mdr.get() )  # and store it in the Accumulator
-            print(F"now Accumulator value = {acc.get()}")
+            asm_logger.debug(F"now Accumulator value = {acc.get()}")
 
         elif opcode == STA: # Store the Accumulator
             print("STA")
@@ -192,7 +185,7 @@ def run_sim():  # This implements the Fetch-Execute cycle
         elif opcode == INC: # Increment = add 1 to the Accumulator
             print("INC")
             acc.set( (acc.get()+1) % 100 )
-            print(F"now Accumulator value = {acc.get()}")
+            asm_logger.debug(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
@@ -202,7 +195,7 @@ def run_sim():  # This implements the Fetch-Execute cycle
             rw = READ
             access_memory()
             acc.set( (acc.get() + mdr.get()) % 100 ) # and add it to the Accumulator
-            print(F"now Accumulator value = {acc.get()}")
+            asm_logger.debug(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
@@ -212,7 +205,7 @@ def run_sim():  # This implements the Fetch-Execute cycle
             rw  = READ
             access_memory()
             acc.set( (acc.get() - mdr.get()) % 100 ) # and subtract it from the Accumulator
-            print(F"now Accumulator value = {acc.get()}")
+            asm_logger.debug(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
@@ -247,7 +240,7 @@ def main_sim(fn:str):
         load( fn )
         run_sim()
     except Exception as ex:
-        print("PROBLEM with program: " + repr(ex))
+        asm_logger.error("PROBLEM with program: " + repr(ex))
         exit(222)
 
 
