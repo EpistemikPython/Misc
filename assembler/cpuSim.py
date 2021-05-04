@@ -22,7 +22,7 @@ asm_logger = logging.getLogger( mhsLogging.get_base_filename(__file__) )
 # the following constants give symbolic names for the opcodes
 LDA = 91    # Load  Accumulator from memory
 STA = 39    # Store Accumulator into memory
-CLA =  8    # Clear (set to zero)  the Accumulator
+CLA =  8    # Clear (set to zero) the Accumulator
 INC = 10    # Increment (add 1 to) the Accumulator
 ADD = 99    # Add to Accumulator
 SUB = 61    # Subtract from Accumulator
@@ -36,9 +36,10 @@ HLT = 64    # Halt
 COMMENT_MARKERS = ['/', '#']
 
 class Byte:
+    """ -99..99 """
     def __init__(self, val=0):
         self.value:int = val
-    # = -99..99
+
     MIN_VALUE:int = -99
     MAX_VALUE:int = 99
 
@@ -55,9 +56,10 @@ class Byte:
 
 
 class Word:
+    """ 0000..9999 """
     def __init__(self, val=0):
         self.value:int = val
-    # = 0000..9999
+
     MIN_VALUE:int = 0
     MAX_VALUE:int = 9999
 
@@ -78,6 +80,7 @@ class Word:
 
 
 def show(msg:str, endl='\n'):
+    """ print and log """
     print(msg, end = endl)
     asm_logger.info(msg)
 
@@ -134,7 +137,8 @@ def access_memory():
         asm_logger.debug(F"now memory[{mar.get()}] = {(memory[mar.get()]).get()}")
 
 
-def run_sim():  # This implements the Fetch-Execute cycle
+def run_sim():
+    """ implements the Fetch-Execute cycle """
     pc.set(0)   # always start execution at location 0
     global rw
     global h
@@ -145,22 +149,22 @@ def run_sim():  # This implements the Fetch-Execute cycle
     while not h:
         asm_logger.info("FETCH OPCODE")
         mar.set( pc.get() )
-        pc.inc()  # = pc + 1   # NOTE that pc is incremented immediately
+        pc.inc()  # pc is incremented immediately
         rw = READ
         access_memory()
         opCode.set( mdr.get() )
 
         opcode = opCode.get()
-        # If the opcode is odd, it needs an operand.
+        # If the opcode is odd, it needs operands
         if opcode % 2 == 1:
             asm_logger.info("FETCH THE ADDRESS OF THE OPERAND")
             mar.set( pc.get() )
-            pc.inc() # = pc + 1   # NOTE that pc is incremented immediately
+            pc.inc() # pc is incremented immediately
             rw = READ
             access_memory()
             opAddr.set( mdr.get() ) # this is just the HIGH byte of the opAddr
             mar.set( pc.get() )
-            pc.inc() # = pc + 1   # NOTE that pc is incremented immediately
+            pc.inc() # pc is incremented immediately
             rw = READ
             access_memory()    # this gets the LOW byte
             opAddr.set( (100 * opAddr.get()) + mdr.get() )  # put the two bytes together
@@ -178,7 +182,7 @@ def run_sim():  # This implements the Fetch-Execute cycle
         elif opcode == STA: # Store the Accumulator
             show("STA")
             mdr.set( acc.get() )
-            mar.set( opAddr.get() )   # into the Operand's address
+            mar.set( opAddr.get() )  # into the Operand's address
             rw = WRITE
             access_memory()
 
@@ -198,7 +202,7 @@ def run_sim():  # This implements the Fetch-Execute cycle
 
         elif opcode == ADD:
             show("ADD")
-            mar.set( opAddr.get() )    # Get the Operand's value from memory
+            mar.set( opAddr.get() ) # Get the Operand's value from memory
             rw = READ
             access_memory()
             acc.set( acc.get() + mdr.get() ) # and add it to the Accumulator
@@ -208,7 +212,7 @@ def run_sim():  # This implements the Fetch-Execute cycle
 
         elif opcode == SUB:
             show("SUB")
-            mar.set( opAddr.get() )    # Get the Operand's value from memory
+            mar.set( opAddr.get() ) # Get the Operand's value from memory
             rw  = READ
             access_memory()
             acc.set( acc.get() - mdr.get() ) # and subtract it from the Accumulator
@@ -236,19 +240,20 @@ def run_sim():  # This implements the Fetch-Execute cycle
 
         elif opcode == DSP:
             show("DSP")
-            mar.set( opAddr.get() )   # Get the Operand's value from memory
+            mar.set( opAddr.get() ) # Get the Operand's value from memory
             rw = READ
             access_memory()
             show(F"memory location {mar.get()} contains the value {mdr.get()}")
 
 
 def main_sim(fn:str):
+    show("Program started: " + mhsLogging.run_ts)
     try:
         load( fn )
         run_sim()
     except Exception as ex:
         asm_logger.error("PROBLEM with program: " + repr(ex))
-        exit(246)
+        exit(256)
 
 
 if __name__ == "__main__":
