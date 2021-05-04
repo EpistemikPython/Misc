@@ -34,12 +34,14 @@ machineLang = list()
 # followed by the integer opcode corresponding to the mnemonic.
 def create_opcode_table():
     """load the mnemonic:opCode entries from file"""
+    show("BEGIN")
     with open(OPCODE_FILE) as fp:
         for line in fp:
             codes = line.split()
-            if len(codes) is not 2:
+            if len(codes) != 2:
                 continue
             if codes[0].isalpha() and codes[1].isdecimal():
+                show(F"mnemonic = {codes[0]} and opcode = {codes[1]}")
                 opCodeTable[codes[0]] = codes[1]
 
 
@@ -85,8 +87,11 @@ def create_opcode_table():
 
 def run_sim(infile:str):
     create_opcode_table()
+    for key in opCodeTable.keys():
+        print(F"{key}:{opCodeTable[key]}")
 
-    lines = 0
+    lines = 1
+    address = 0
 
     # FIRST PASS: convert mnemonics, build symbol table
     # - need to process differently three types of input line:
@@ -96,17 +101,49 @@ def run_sim(infile:str):
 
     with open(infile) as fp:
         for line in fp:
+            show(F"line #{lines} = {line}")
+            mach_line = ""
             codes = line.split()
             line_len = len(codes)
-            if line_len == 3:
-                continue
-            if line_len == 2:
-                continue
-            if line_len == 1:
-                continue
-            if codes[0].isalpha() and codes[1].isdecimal():
-                opCodeTable[codes[0]] = codes[1]
-            lines += 1
+            if 1 <= line_len <= 3:
+                # LABEL X Y
+                if line_len == 3:
+                    symbolTable[codes[0]] = address
+                    # LABEL BYTE VALUE
+                    if codes[1] == "BYTE":
+                        mach_line = codes[2]
+                        address += 1
+                    else:
+                        # LABEL MNEMONIC OPERAND
+                        mach_line = F"{opCodeTable[codes[1]]} {codes[2]}"
+                        address += 3
+                elif line_len == 2:
+                    # BYTE VALUE
+                    if codes[1] == "BYTE":
+                        mach_line = codes[1]
+                        address += 1
+                    # MNEMONIC OPERAND
+                    elif codes[0] in opCodeTable.keys():
+                        mach_line = F"{opCodeTable[codes[0]]} {codes[1]}"
+                        address += 3
+                    # LABEL MNEMONIC
+                    else:
+                        symbolTable[codes[0]] = address
+                        mach_line = opCodeTable[codes[1]]
+                        address += 1
+                # MNEMONIC
+                elif line_len == 1:
+                    mach_line = opCodeTable[codes[0]]
+                    address += 1
+                lines += 1
+                machineLang.append(mach_line)
+
+    show("\nSymbol Table:")
+    for key in symbolTable.keys():
+        show(F"{key}:{symbolTable[key]}")
+    show("\nMachine Language File:")
+    for entry in machineLang:
+        show(F"{entry}")
 
     # SECOND PASS:
     # look up symbolic operands in the Symbol Table
@@ -115,18 +152,18 @@ def run_sim(infile:str):
     # and write out the machine language program line by line.	*
 
 
-def main_cpu_sim(fn:str):
+def main_asm_sim(fn:str):
     show("Program started: " + mhsLogging.run_ts)
     try:
         run_sim(fn)
     except Exception as ex:
         asmsim_lgr.error("PROBLEM with program: " + repr(ex))
-        exit(256)
+        exit(149)
 
 
 if __name__ == "__main__":
     if len( sys.argv ) > 1:
-        main_cpu_sim(sys.argv[1])
+        main_asm_sim(sys.argv[1])
     else:
         show("MISSING file name!")
     show("Program completed.")
