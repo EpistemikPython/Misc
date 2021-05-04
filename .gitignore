@@ -4,6 +4,7 @@
 /py3bindings
 **/in/Monarch
 **/out/
+**/code/
 **/logs/
 **/venv/
 **/Downloads
