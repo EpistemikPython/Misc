@@ -19,7 +19,7 @@ FXN_TIME_STR:str  = "%H:%M:%S:%f"
 CELL_TIME_STR:str = "%H:%M:%S"
 CELL_DATE_STR:str = "%Y-%m-%d"
 FILE_DATE_STR:str = "D%Y-%m-%d"
-FILE_TIME_STR:str = "T%Hh%M"
+FILE_TIME_STR:str = "T%H-%M-%S"
 FILE_DATETIME_FORMAT = FILE_DATE_STR + FILE_TIME_STR
 RUN_DATETIME_FORMAT  = CELL_DATE_STR + '_' + FXN_TIME_STR
 
@@ -30,7 +30,7 @@ file_ts:str = now_dt.strftime(FILE_DATETIME_FORMAT)
 # print(F"{__file__}: file_ts = {file_ts}")
 
 SIMPLE_FORMAT:str  = "%(levelname)-8s - %(filename)s[%(lineno)s]: %(message)s"
-COMPLEX_FORMAT:str = "%(levelname)-8s | %(filename)s:%(funcName)-16s[l.%(lineno)s]  %(message)s"
+COMPLEX_FORMAT:str = "%(levelname)-8s | %(filename)s:%(funcName)-16s l.%(lineno)-5s > %(message)s"
 
 FILE_LEVEL    = logging.DEBUG
 CONSOLE_LEVEL = logging.WARNING
@@ -40,7 +40,7 @@ logging.basicConfig( level = FILE_LEVEL,
                      format = COMPLEX_FORMAT,
                      datefmt = RUN_DATETIME_FORMAT,
                      filename = F"logs/asm_{file_ts}.log",
-                     filemode = 'w')
+                     filemode = 'w' )
 
 # define a Handler which writes messages to sys.stderr
 console = logging.StreamHandler()
