@@ -1,4 +1,4 @@
-/file: a8asm2.dat/
+/ file: a8asm2.dat /
 //
 /This file contains a program that computes the quotient/
 /and remainder of X divided by Y, using the algorithm described in/

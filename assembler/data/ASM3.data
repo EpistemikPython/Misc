@@ -1,6 +1,6 @@
-/Mystery Program -- what does it do ?/
+/ Mystery Program -- what does it do ? /
 //
-/variable X = memory location 23/
+/ variable X = memory location 23 /
 //
 [1]   DSP  [1]
       BYTE 91

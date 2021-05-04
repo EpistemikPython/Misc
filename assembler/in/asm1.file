@@ -2,6 +2,9 @@
 / Mark Sattolo,  student# 428500 /
 / Machine language file written by assembler a8 /
 / Produced from ASM file 'asm1.dat' /
+# output: 1) 25 div 7
+#         2) 25 mod 7
+
   08
   39  0 44
   91  0 42
