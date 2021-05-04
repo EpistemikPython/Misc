@@ -2,22 +2,22 @@
 # coding=utf-8
 #
 # cpuSim.py -- CPU simulator program ported from pascal
+#              - originally for CSI 1101,  Winter, 1999; Assignment 8
 #
 # Copyright (c) 2021 Mark Sattolo <epistemik@gmail.com>
 
 __author__       = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __created__ = "2021-05-02"
-__updated__ = "2021-05-03"
+__updated__ = "2021-05-04"
 
-# **  CSI 1101,  Winter, 1999  **
-# ** Assignment 8, Simulator program **
-
-import logging
 import sys
 import mhsLogging
 
-asm_logger = logging.getLogger( mhsLogging.get_base_filename(__file__) )
+log_control = mhsLogging.MhsLogger(mhsLogging.get_base_filename(__file__))
+cpusim_lgr = log_control.get_logger()
+show = log_control.show
+cpusim_lgr.warning("START LOGGING")
 
 # the following constants give symbolic names for the opcodes
 LDA = 91    # Load  Accumulator from memory
@@ -67,7 +67,7 @@ class Word:
         if self.MIN_VALUE <= val <= self.MAX_VALUE:
             self.value = val
         else:
-            asm_logger.warning(F"ILLEGAL parameter '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
+            cpusim_lgr.warning(F"ILLEGAL parameter '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
 
     def get(self) -> int:
         return self.value
@@ -76,13 +76,7 @@ class Word:
         if self.value < self.MAX_VALUE:
             self.value = self.value + 1
         else:
-            asm_logger.warning(F"ILLEGAL Increment attempt! ALREADY at Max value = {self.MAX_VALUE}!")
-
-
-def show(msg:str, endl='\n'):
-    """ print and log """
-    print(msg, end = endl)
-    asm_logger.info(msg)
+            cpusim_lgr.warning(F"ILLEGAL Increment attempt! ALREADY at Max value = {self.MAX_VALUE}!")
 
 
 memory = dict() # array[word] of byte
@@ -117,7 +111,7 @@ def load(filename):
                 continue # skip over comment
             for item in codes:
                 memory[address.get()] = Byte( int(item) )
-                asm_logger.info(F"load item {item} at address {address.get()}")
+                cpusim_lgr.info(F"load item {item} at address {address.get()}")
                 address.inc()
 
 
@@ -128,13 +122,13 @@ def check_memory():
 
 
 def access_memory():
-    asm_logger.info(F"rw = {rw}")
+    cpusim_lgr.info(F"rw = {rw}")
     if rw: # True = read = copy a value from memory into the CPU
         mdr.set( (memory[mar.get()]).get() )
-        asm_logger.debug(F"now mdr = {mdr.get()}")
+        cpusim_lgr.debug(F"now mdr = {mdr.get()}")
     else: # False = write = copy a value into memory from the CPU
         memory[mar.get()] = Byte( mdr.get() )
-        asm_logger.debug(F"now memory[{mar.get()}] = {(memory[mar.get()]).get()}")
+        cpusim_lgr.debug(F"now memory[{mar.get()}] = {(memory[mar.get()]).get()}")
 
 
 def run_sim():
@@ -147,7 +141,7 @@ def run_sim():
     global n
     # repeat
     while not h:
-        asm_logger.info("FETCH OPCODE")
+        cpusim_lgr.info("FETCH OPCODE")
         mar.set( pc.get() )
         pc.inc()  # pc is incremented immediately
         rw = READ
@@ -157,7 +151,7 @@ def run_sim():
         opcode = opCode.get()
         # If the opcode is odd, it needs operands
         if opcode % 2 == 1:
-            asm_logger.info("FETCH THE ADDRESS OF THE OPERAND")
+            cpusim_lgr.info("FETCH THE ADDRESS OF THE OPERAND")
             mar.set( pc.get() )
             pc.inc() # pc is incremented immediately
             rw = READ
@@ -168,7 +162,7 @@ def run_sim():
             rw = READ
             access_memory()    # this gets the LOW byte
             opAddr.set( (100 * opAddr.get()) + mdr.get() )  # put the two bytes together
-            asm_logger.info(F"Operand Address = {opAddr.get()}")
+            cpusim_lgr.info(F"Operand Address = {opAddr.get()}")
 
         # EXECUTE THE OPERATION
         if opcode == LDA: # Get the Operand"s value from memory
@@ -177,7 +171,7 @@ def run_sim():
             rw = READ
             access_memory()
             acc.set( mdr.get() )  # and store it in the Accumulator
-            asm_logger.debug(F"now Accumulator value = {acc.get()}")
+            cpusim_lgr.debug(F"now Accumulator value = {acc.get()}")
 
         elif opcode == STA: # Store the Accumulator
             show("STA")
@@ -189,14 +183,14 @@ def run_sim():
         elif opcode == CLA: # Clear = set the Accumulator to zero
             show("CLA")
             acc.set( 0 )
-            asm_logger.debug(F"now Accumulator value = {acc.get()}")
+            cpusim_lgr.debug(F"now Accumulator value = {acc.get()}")
             z = True       # set the Status Bits appropriately
             n = False
 
         elif opcode == INC: # Increment = add 1 to the Accumulator
             show("INC")
             acc.set( acc.get() + 1 )
-            asm_logger.debug(F"now Accumulator value = {acc.get()}")
+            cpusim_lgr.debug(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
@@ -206,7 +200,7 @@ def run_sim():
             rw = READ
             access_memory()
             acc.set( acc.get() + mdr.get() ) # and add it to the Accumulator
-            asm_logger.debug(F"now Accumulator value = {acc.get()}")
+            cpusim_lgr.debug(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
@@ -216,7 +210,7 @@ def run_sim():
             rw  = READ
             access_memory()
             acc.set( acc.get() - mdr.get() ) # and subtract it from the Accumulator
-            asm_logger.debug(F"now Accumulator value = {acc.get()}")
+            cpusim_lgr.debug(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
@@ -246,19 +240,19 @@ def run_sim():
             show(F"memory location {mar.get()} contains the value {mdr.get()}")
 
 
-def main_sim(fn:str):
+def main_cpu_sim(fn:str):
     show("Program started: " + mhsLogging.run_ts)
     try:
         load( fn )
         run_sim()
     except Exception as ex:
-        asm_logger.error("PROBLEM with program: " + repr(ex))
+        cpusim_lgr.error("PROBLEM with program: " + repr(ex))
         exit(256)
 
 
 if __name__ == "__main__":
     if len( sys.argv ) > 1:
-        main_sim( sys.argv[1] )
+        main_cpu_sim(sys.argv[1])
     else:
         show("MISSING file name!")
     show("Program completed.")

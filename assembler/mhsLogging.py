@@ -14,7 +14,6 @@ import logging
 import os.path as osp
 from datetime import datetime as dt
 
-JSON = "json"
 FXN_TIME_STR:str  = "%H:%M:%S:%f"
 CELL_TIME_STR:str = "%H:%M:%S"
 CELL_DATE_STR:str = "%Y-%m-%d"
@@ -25,35 +24,47 @@ RUN_DATETIME_FORMAT  = CELL_DATE_STR + '_' + FXN_TIME_STR
 
 now_dt:dt  = dt.now()
 run_ts:str = now_dt.strftime(RUN_DATETIME_FORMAT)
-# print(F"{__file__}: run_ts = {run_ts}")
 file_ts:str = now_dt.strftime(FILE_DATETIME_FORMAT)
-# print(F"{__file__}: file_ts = {file_ts}")
 
 SIMPLE_FORMAT:str  = "%(levelname)-8s - %(filename)s[%(lineno)s]: %(message)s"
-COMPLEX_FORMAT:str = "%(levelname)-8s | %(filename)s:%(funcName)-16s l.%(lineno)-5s > %(message)s"
+COMPLEX_FORMAT:str = "%(levelname)-8s | %(filename)-16s : %(funcName)-16s l.%(lineno)-5s > %(message)s"
 
 FILE_LEVEL    = logging.DEBUG
 CONSOLE_LEVEL = logging.WARNING
 
-# set up logging to file
-logging.basicConfig( level = FILE_LEVEL,
-                     format = COMPLEX_FORMAT,
-                     datefmt = RUN_DATETIME_FORMAT,
-                     filename = F"logs/asm_{file_ts}.log",
-                     filemode = 'w' )
 
-# define a Handler which writes messages to sys.stderr
-console = logging.StreamHandler()
-console.setLevel(CONSOLE_LEVEL)
+class MhsLogger:
+    def __init__(self, name:str):
+        # set up logging to file
+        logging.basicConfig( level = FILE_LEVEL,
+                             format = COMPLEX_FORMAT,
+                             datefmt = RUN_DATETIME_FORMAT,
+                             filename = F"logs/{name}_{file_ts}.log",
+                             filemode = 'w' )
 
-# set a format which is simpler for console use
-formatter = logging.Formatter(SIMPLE_FORMAT)
+        # define a Handler which writes messages to sys.stderr
+        console = logging.StreamHandler()
+        console.setLevel(CONSOLE_LEVEL)
 
-# tell the handler to use this format
-console.setFormatter(formatter)
+        # set a format which is simpler for console use
+        formatter = logging.Formatter(SIMPLE_FORMAT)
 
-# add the handler to the root logger
-logging.getLogger('').addHandler(console)
+        # tell the handler to use this format
+        console.setFormatter(formatter)
+
+        # add the handler to the root logger
+        logging.getLogger('').addHandler(console)
+
+        self.mhs_logger = logging.getLogger("mhs")
+
+    def get_logger(self):
+        return self.mhs_logger
+
+    def show(self, msg:str, endl='\n'):
+        """ print and log """
+        print(msg, end = endl)
+        if self.mhs_logger:
+            self.mhs_logger.info(msg)
 
 
 def get_base_filename(p_name:str, file_div:str=osp.sep, sfx_div:str=osp.extsep) -> str:
