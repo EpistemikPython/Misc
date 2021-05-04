@@ -200,11 +200,11 @@ var
   # If there is a blank (' ') in column 1, "labl" is set to the empty string
   # otherwise "labl" is set to contain the sequence of non-blank characters
   # starting in column 1 up to (but not including) the first blank.
-  # "mnemonic" is set to be the first sequence of non-blank characters ning
+  # "mnemonic" is set to be the first sequence of non-blank characters beginning
   # after the first blank on the line.
-  # "operand" is set to be the first sequence of non-blank characters ning
-  # after the first blank after the  of "mnemonic".  If there is no non-blank
-  # character after the  of "mnemonic", "operand" is set to the empty string ('').
+  # "operand" is set to be the first sequence of non-blank characters beginning
+  # after the first blank after the end of "mnemonic".  If there is no non-blank
+  # character after the end of "mnemonic", "operand" is set to the empty string ('').
 # NOTE: "label" is a keyword in Pascal, so it cannot be used as a variable name.
 
 def read_asm_line(var F: markfile var labl, mnemonic, operand: str):
@@ -388,7 +388,7 @@ def main():
           writeln('Do you wish to process another file [ y or n ] ?')
           readln(continue)
           if ( continue in ['n', 'N'] ) then
-             writeln('PROGRAM ED - have a nice day!')
+             writeln('PROGRAM ENDED - have a nice day!')
           else
               writeln('========================================')
     until
