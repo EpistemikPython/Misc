@@ -165,31 +165,32 @@ def run_sim(infile:str):
     # is not a symbol, it is an integer that is to be directly used)
     # and write out the machine language program line by line.	*
 
-    for line in machineLang:
-        words = line.split()
-        for word in words:
-            dbg(F"check word = {word}")
-            # find the labels in the symbol table
-            if word in symbolTable.keys():
-                indx = machineLang.index(line)
-                token = symbolTable[word]
-                addr = str(token // 100) + " " + str(token % 100)
-                # replace the label with the address
-                newline = line.replace(word, addr)
-                machineLang.remove(line)
-                machineLang.insert(indx, newline)
-
-    dbg("Machine Language File:")
-    for entry in machineLang:
-        dbg(F"{entry}")
-
     base_infile = mhsLogging.get_base_filename(infile)
     outfile_name = "code/" + base_infile + "_" + mhsLogging.file_ts + ".code"
     show(F"outfile name = {outfile_name}")
     with open(outfile_name, 'w') as writer:
         writer.write(F"{COMMENT_MARKERS[1]} {base_filename}: run on {run_time} from file {infile}\n")
         for line in machineLang:
-            writer.write(" " + line + '\n')
+            newline = ""
+            words = line.split()
+            for word in words:
+                dbg(F"check word = {word}")
+                # find the labels in the symbol table
+                if word in symbolTable.keys():
+                    indx = machineLang.index(line)
+                    token = symbolTable[word]
+                    addr = str(token // 100) + " " + str(token % 100)
+                    # replace the label with the address
+                    newline = line.replace(word, addr)
+                    machineLang.remove(line)
+                    machineLang.insert(indx, newline)
+                    writer.write(" " + newline + '\n')
+            if not newline:
+                writer.write(" " + line + '\n')
+
+    dbg("Machine Language File:")
+    for entry in machineLang:
+        dbg(F"{entry}")
 
 
 def main_asm_sim(fn:str):
