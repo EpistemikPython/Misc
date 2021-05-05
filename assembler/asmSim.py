@@ -151,6 +151,29 @@ def run_sim(infile:str):
     # is not a symbol, it is an integer that is to be directly used)
     # and write out the machine language program line by line.	*
 
+    for line in machineLang:
+        words = line.split()
+        for word in words:
+            show(F"check word = {word}")
+            if word in symbolTable.keys():
+                indx = machineLang.index(line)
+                token = symbolTable[word]
+                addr = str(token // 100) + " " + str(token % 100)
+                newline = line.replace(word, addr)
+                machineLang.remove(line)
+                machineLang.insert(indx, newline)
+
+    show("\nMachine Language File:")
+    for entry in machineLang:
+        show(F"{entry}")
+
+    base_infile = mhsLogging.get_base_filename(infile)
+    outfile_name = "code/" + base_infile + "_" + mhsLogging.file_ts + ".out"
+    show(F"outfile name = {outfile_name}")
+    with open(outfile_name, 'w') as writer:
+        for line in machineLang:
+            writer.write(" " + line + '\n')
+
 
 def main_asm_sim(fn:str):
     show("Program started: " + mhsLogging.run_ts)
@@ -158,7 +181,7 @@ def main_asm_sim(fn:str):
         run_sim(fn)
     except Exception as ex:
         asmsim_lgr.error("PROBLEM with program: " + repr(ex))
-        exit(149)
+        exit(173)
 
 
 if __name__ == "__main__":
