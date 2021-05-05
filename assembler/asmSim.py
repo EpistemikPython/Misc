@@ -35,7 +35,6 @@ opCodeTable = dict()
 symbolTable = dict()
 machineLang = list()
 
-
 # create_opcode_table - reads "opcode_table" from the file whose DOS/Windows name
 # is 'opcodes.dat'.  Each line of opcodes.dat contains:  a mnemonic (string of maxIDsize
 # or fewer non-blank characters) starting in column 1, followed by one or more blanks,
@@ -191,7 +190,6 @@ def run_sim(infile:str):
     dbg("Machine Language File:")
     for entry in machineLang:
         dbg(F"{entry}")
-
 
 def main_asm_sim(fn:str):
     show(F"Program started: {run_time}")

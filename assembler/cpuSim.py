@@ -22,7 +22,7 @@ show = log_control.show
 lgr.warning("START LOGGING")
 
 # the following constants give symbolic names for the opcodes
-LDA = 91    # Load  Accumulator from memory
+LDA = 91    # Load Accumulator from memory
 STA = 39    # Store Accumulator into memory
 CLA =  8    # Clear (set to zero) the Accumulator
 INC = 10    # Increment (add 1 to) the Accumulator
@@ -33,7 +33,6 @@ JZ  = 17    # Jump if the Zero status bit is True
 JN  = 19    # Jump if the Negative status bit is True
 DSP =  1    # Display (write on the screen)
 HLT = 64    # Halt
-
 
 COMMENT_MARKERS = ['/', '#']
 
@@ -56,7 +55,6 @@ class Byte:
 
     def get(self) -> int:
         return self.value
-
 
 class Word:
     """ 0000..9999 """
@@ -99,7 +97,6 @@ READ = True
 WRITE = False
 rw = True     # bit    # Read/Write bit.  Read = True ; Write = False
 
-
 def load(filename):
     """Load a machine language program into memory"""
     show(F"load({filename})")
@@ -120,12 +117,10 @@ def load(filename):
                 info(F"load item {item} at address {address.get()}")
                 address.inc()
 
-
 def check_memory():
     for key in reversed( memory.keys() ):
         dbg(F"m[{key}]={memory[key].get()} ", '|')
     dbg("===")
-
 
 def access_memory():
     info(F"rw = {rw}")
@@ -135,7 +130,6 @@ def access_memory():
     else: # False = write = copy a value into memory from the CPU
         memory[mar.get()] = Byte( mdr.get() )
         dbg(F"now memory[{mar.get()}] = {(memory[mar.get()]).get()}")
-
 
 def run_sim():
     """ implements the Fetch-Execute cycle """
@@ -245,7 +239,6 @@ def run_sim():
             rw = READ
             access_memory()
             show(F"memory location {mar.get()} contains the value {mdr.get()}")
-
 
 def main_cpu_sim(filename:str):
     show(F"Program started: {mhsLogging.run_ts}")
