@@ -27,7 +27,7 @@ run_ts:str = now_dt.strftime(RUN_DATETIME_FORMAT)
 file_ts:str = now_dt.strftime(FILE_DATETIME_FORMAT)
 
 SIMPLE_FORMAT:str  = "%(levelname)-8s - %(filename)s[%(lineno)s]: %(message)s"
-COMPLEX_FORMAT:str = "%(levelname)-8s | %(filename)-16s : %(funcName)-16s l.%(lineno)-5s > %(message)s"
+COMPLEX_FORMAT:str = "%(levelname)-8s | %(filename)-16s : %(funcName)-24s l.%(lineno)-4s > %(message)s"
 
 FILE_LEVEL    = logging.DEBUG
 CONSOLE_LEVEL = logging.WARNING
@@ -65,6 +65,10 @@ class MhsLogger:
         print(msg, end = endl)
         if self.mhs_logger:
             self.mhs_logger.log(level, msg)
+
+    def debug(self, msg:str):
+        if self.mhs_logger:
+            self.mhs_logger.debug(msg)
 
 
 def get_base_filename(p_name:str, file_div:str=osp.sep, sfx_div:str=osp.extsep) -> str:
