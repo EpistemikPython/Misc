@@ -15,9 +15,10 @@ import sys
 import mhsLogging
 
 log_control = mhsLogging.MhsLogger(mhsLogging.get_base_filename(__file__))
-asmsim_lgr = log_control.get_logger()
-show = log_control.show
-asmsim_lgr.warning("START LOGGING")
+lgr = log_control.get_logger()
+show = lgr.info
+dbg  = lgr.debug
+lgr.warning("START LOGGING")
 
 MAX_ID_SIZE = 4   	  # maximum length of identifiers (labels, etc.)
 MAX_STATEMENTS = 400  # maximum number of statements in the assembly language program, not counting comments and empty lines
@@ -41,8 +42,11 @@ def create_opcode_table():
             if len(codes) != 2:
                 continue
             if codes[0].isalpha() and codes[1].isdecimal():
-                show(F"mnemonic = {codes[0]} and opcode = {codes[1]}")
+                dbg(F"mnemonic = {codes[0]} and opcode = {codes[1]}")
                 opCodeTable[codes[0]] = codes[1]
+
+    for key in opCodeTable.keys():
+        dbg(F"{key}:{opCodeTable[key]}")
 
 
 # read_asm_line - reads the next line of input (keyboard), and extracts from
@@ -86,9 +90,7 @@ def create_opcode_table():
 
 
 def run_sim(infile:str):
-    create_opcode_table()
-    for key in opCodeTable.keys():
-        print(F"{key}:{opCodeTable[key]}")
+    show("BEGIN")
 
     lines = 1
     address = 0
@@ -101,7 +103,7 @@ def run_sim(infile:str):
 
     with open(infile) as fp:
         for line in fp:
-            show(F"line #{lines} = {line}")
+            dbg(F"line #{lines} = {line}")
             mach_line = ""
             codes = line.split()
             line_len = len(codes)
@@ -138,12 +140,12 @@ def run_sim(infile:str):
                 lines += 1
                 machineLang.append(mach_line)
 
-    show("\nSymbol Table:")
+    dbg("Symbol Table:")
     for key in symbolTable.keys():
-        show(F"{key}:{symbolTable[key]}")
-    show("\nMachine Language File:")
+        dbg(F"{key}:{symbolTable[key]}")
+    dbg("Machine Language File:")
     for entry in machineLang:
-        show(F"{entry}")
+        dbg(F"{entry}")
 
     # SECOND PASS:
     # look up symbolic operands in the Symbol Table
@@ -154,7 +156,7 @@ def run_sim(infile:str):
     for line in machineLang:
         words = line.split()
         for word in words:
-            show(F"check word = {word}")
+            dbg(F"check word = {word}")
             if word in symbolTable.keys():
                 indx = machineLang.index(line)
                 token = symbolTable[word]
@@ -163,9 +165,9 @@ def run_sim(infile:str):
                 machineLang.remove(line)
                 machineLang.insert(indx, newline)
 
-    show("\nMachine Language File:")
+    dbg("Machine Language File:")
     for entry in machineLang:
-        show(F"{entry}")
+        dbg(F"{entry}")
 
     base_infile = mhsLogging.get_base_filename(infile)
     outfile_name = "code/" + base_infile + "_" + mhsLogging.file_ts + ".out"
@@ -178,10 +180,11 @@ def run_sim(infile:str):
 def main_asm_sim(fn:str):
     show("Program started: " + mhsLogging.run_ts)
     try:
-        run_sim(fn)
+        create_opcode_table()
+        run_sim( fn )
     except Exception as ex:
-        asmsim_lgr.error("PROBLEM with program: " + repr(ex))
-        exit(173)
+        lgr.error("PROBLEM with program: " + repr(ex))
+        exit(185)
 
 
 if __name__ == "__main__":
