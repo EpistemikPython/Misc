@@ -60,11 +60,11 @@ class MhsLogger:
     def get_logger(self):
         return self.mhs_logger
 
-    def show(self, msg:str, endl='\n'):
+    def show(self, msg:str, level=logging.INFO, endl='\n'):
         """ print and log """
         print(msg, end = endl)
         if self.mhs_logger:
-            self.mhs_logger.info(msg)
+            self.mhs_logger.log(level, msg)
 
 
 def get_base_filename(p_name:str, file_div:str=osp.sep, sfx_div:str=osp.extsep) -> str:
