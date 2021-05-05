@@ -2,22 +2,24 @@
 # coding=utf-8
 #
 # cpuSim.py -- CPU simulator program ported from pascal
-#              - originally for CSI 1101,  Winter, 1999; Assignment 8
+#              - originally for CSI 1101,  Winter 1999; Assignment 8
 #
 # Copyright (c) 2021 Mark Sattolo <epistemik@gmail.com>
 
 __author__       = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __created__ = "2021-05-02"
-__updated__ = "2021-05-04"
+__updated__ = "2021-05-05"
 
 import sys
 import mhsLogging
 
 log_control = mhsLogging.MhsLogger(mhsLogging.get_base_filename(__file__))
-cpusim_lgr = log_control.get_logger()
+lgr = log_control.get_logger()
+info = lgr.info
+dbg  = lgr.debug
 show = log_control.show
-cpusim_lgr.warning("START LOGGING")
+lgr.warning("START LOGGING")
 
 # the following constants give symbolic names for the opcodes
 LDA = 91    # Load  Accumulator from memory
@@ -67,7 +69,7 @@ class Word:
         if self.MIN_VALUE <= val <= self.MAX_VALUE:
             self.value = val
         else:
-            cpusim_lgr.warning(F"ILLEGAL parameter '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
+            lgr.warning(F"ILLEGAL parameter '{val}' NOT between {self.MIN_VALUE} and {self.MAX_VALUE}!")
 
     def get(self) -> int:
         return self.value
@@ -76,7 +78,7 @@ class Word:
         if self.value < self.MAX_VALUE:
             self.value = self.value + 1
         else:
-            cpusim_lgr.warning(F"ILLEGAL Increment attempt! ALREADY at Max value = {self.MAX_VALUE}!")
+            lgr.warning(F"ILLEGAL Increment attempt! ALREADY at Max value = {self.MAX_VALUE}!")
 
 
 memory = dict() # array[word] of byte
@@ -99,6 +101,7 @@ rw = True     # bit    # Read/Write bit.  Read = True ; Write = False
 
 def load(filename):
     """Load a machine language program into memory"""
+    show(F"load({filename})")
     address = Word()
     with open(filename) as fp:
         ct = 0
@@ -111,28 +114,29 @@ def load(filename):
                 continue # skip over comment
             for item in codes:
                 memory[address.get()] = Byte( int(item) )
-                cpusim_lgr.info(F"load item {item} at address {address.get()}")
+                info(F"load item {item} at address {address.get()}")
                 address.inc()
 
 
 def check_memory():
     for key in reversed( memory.keys() ):
-        show(F"m[{key}]={memory[key].get()} ", '|')
-    show("===")
+        dbg(F"m[{key}]={memory[key].get()} ", '|')
+    dbg("===")
 
 
 def access_memory():
-    cpusim_lgr.info(F"rw = {rw}")
+    info(F"rw = {rw}")
     if rw: # True = read = copy a value from memory into the CPU
         mdr.set( (memory[mar.get()]).get() )
-        cpusim_lgr.debug(F"now mdr = {mdr.get()}")
+        dbg(F"now mdr = {mdr.get()}")
     else: # False = write = copy a value into memory from the CPU
         memory[mar.get()] = Byte( mdr.get() )
-        cpusim_lgr.debug(F"now memory[{mar.get()}] = {(memory[mar.get()]).get()}")
+        dbg(F"now memory[{mar.get()}] = {(memory[mar.get()]).get()}")
 
 
 def run_sim():
     """ implements the Fetch-Execute cycle """
+    show("run_sim()")
     pc.set(0)   # always start execution at location 0
     global rw
     global h
@@ -141,7 +145,7 @@ def run_sim():
     global n
     # repeat
     while not h:
-        cpusim_lgr.info("FETCH OPCODE")
+        dbg("FETCH OPCODE")
         mar.set( pc.get() )
         pc.inc()  # pc is incremented immediately
         rw = READ
@@ -151,7 +155,7 @@ def run_sim():
         opcode = opCode.get()
         # If the opcode is odd, it needs operands
         if opcode % 2 == 1:
-            cpusim_lgr.info("FETCH THE ADDRESS OF THE OPERAND")
+            dbg("FETCH THE ADDRESS OF THE OPERAND")
             mar.set( pc.get() )
             pc.inc() # pc is incremented immediately
             rw = READ
@@ -162,7 +166,7 @@ def run_sim():
             rw = READ
             access_memory()    # this gets the LOW byte
             opAddr.set( (100 * opAddr.get()) + mdr.get() )  # put the two bytes together
-            cpusim_lgr.info(F"Operand Address = {opAddr.get()}")
+            info(F"Operand Address = {opAddr.get()}")
 
         # EXECUTE THE OPERATION
         if opcode == LDA: # Get the Operand"s value from memory
@@ -171,7 +175,7 @@ def run_sim():
             rw = READ
             access_memory()
             acc.set( mdr.get() )  # and store it in the Accumulator
-            cpusim_lgr.debug(F"now Accumulator value = {acc.get()}")
+            dbg(F"now Accumulator value = {acc.get()}")
 
         elif opcode == STA: # Store the Accumulator
             show("STA")
@@ -183,14 +187,14 @@ def run_sim():
         elif opcode == CLA: # Clear = set the Accumulator to zero
             show("CLA")
             acc.set( 0 )
-            cpusim_lgr.debug(F"now Accumulator value = {acc.get()}")
+            dbg(F"now Accumulator value = {acc.get()}")
             z = True       # set the Status Bits appropriately
             n = False
 
         elif opcode == INC: # Increment = add 1 to the Accumulator
             show("INC")
             acc.set( acc.get() + 1 )
-            cpusim_lgr.debug(F"now Accumulator value = {acc.get()}")
+            dbg(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
@@ -200,7 +204,7 @@ def run_sim():
             rw = READ
             access_memory()
             acc.set( acc.get() + mdr.get() ) # and add it to the Accumulator
-            cpusim_lgr.debug(F"now Accumulator value = {acc.get()}")
+            dbg(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
@@ -210,7 +214,7 @@ def run_sim():
             rw  = READ
             access_memory()
             acc.set( acc.get() - mdr.get() ) # and subtract it from the Accumulator
-            cpusim_lgr.debug(F"now Accumulator value = {acc.get()}")
+            dbg(F"now Accumulator value = {acc.get()}")
             z = (acc.get() == 0)   # set the Status Bits appropriately
             n = (acc.get() < 0)
 
@@ -233,7 +237,7 @@ def run_sim():
             h = True  # set the Halt status bit
 
         elif opcode == DSP:
-            show("DSP")
+            info("DSP")
             mar.set( opAddr.get() ) # Get the Operand's value from memory
             rw = READ
             access_memory()
@@ -241,19 +245,19 @@ def run_sim():
 
 
 def main_cpu_sim(fn:str):
-    show("Program started: " + mhsLogging.run_ts)
+    show(F"Program started: {mhsLogging.run_ts}")
     try:
         load( fn )
         run_sim()
     except Exception as ex:
-        cpusim_lgr.error("PROBLEM with program: " + repr(ex))
-        exit(256)
+        lgr.error(F"PROBLEM with program: {repr(ex)}")
+        exit(254)
 
 
 if __name__ == "__main__":
     if len( sys.argv ) > 1:
         main_cpu_sim(sys.argv[1])
     else:
-        show("MISSING file name!")
+        lgr.warning("MISSING file name!")
     show("Program completed.")
     exit()
