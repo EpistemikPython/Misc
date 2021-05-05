@@ -1,8 +1,8 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# cpuSim.py -- CPU simulator program ported from pascal
-#              - originally for CSI 1101,  Winter 1999; Assignment 8
+# cpuSim.py -- CPU simulator program ported from Pascal source code
+#              - originally for CSI 1101,  Winter 1999, Assignment 8
 #
 # Copyright (c) 2021 Mark Sattolo <epistemik@gmail.com>
 
@@ -47,6 +47,7 @@ class Byte:
 
     def set(self, val:int):
         if val < self.MIN_VALUE:
+            # get the expected value from mod of negative number
             self.value = ((val * -1) % 100) * -1
         elif val >= self.MAX_VALUE:
             self.value = val % 100
@@ -87,7 +88,7 @@ memory = dict() # array[word] of byte
 pc  = Word()     # word   # program counter
 acc = Byte()     # byte   # accumulator
 opCode = Byte()  # byte   # the opcode of the current instruction
-opAddr = Word()  # word   # the ADDRESS of the operand of the current instruction
+opAddr = Word()  # word   # the memory address of the operand of the current instruction
 z = False        # bit    # "Zero" status bit
 n = False        # bit    # "Negative" status bit
 h = False        # bit    # "Halt" status bit
@@ -108,10 +109,12 @@ def load(filename):
         for line in fp:
             ct += 1
             codes = line.split()
+            # skip blank line
             if len(codes) < 1:
                 continue
+            # skip over comment
             if codes[0].isalpha() or codes[0] in COMMENT_MARKERS:
-                continue # skip over comment
+                continue
             for item in codes:
                 memory[address.get()] = Byte( int(item) )
                 info(F"load item {item} at address {address.get()}")
@@ -164,8 +167,8 @@ def run_sim():
             mar.set( pc.get() )
             pc.inc() # pc is incremented immediately
             rw = READ
-            access_memory()    # this gets the LOW byte
-            opAddr.set( (100 * opAddr.get()) + mdr.get() )  # put the two bytes together
+            access_memory() # this gets the LOW byte
+            opAddr.set( (100 * opAddr.get()) + mdr.get() ) # put the two bytes together
             info(F"Operand Address = {opAddr.get()}")
 
         # EXECUTE THE OPERATION
@@ -174,13 +177,13 @@ def run_sim():
             mar.set( opAddr.get() )
             rw = READ
             access_memory()
-            acc.set( mdr.get() )  # and store it in the Accumulator
+            acc.set( mdr.get() ) # and store it in the Accumulator
             dbg(F"now Accumulator value = {acc.get()}")
 
         elif opcode == STA: # Store the Accumulator
             show("STA")
             mdr.set( acc.get() )
-            mar.set( opAddr.get() )  # into the Operand's address
+            mar.set( opAddr.get() ) # into the Operand's address
             rw = WRITE
             access_memory()
 
@@ -188,15 +191,15 @@ def run_sim():
             show("CLA")
             acc.set( 0 )
             dbg(F"now Accumulator value = {acc.get()}")
-            z = True       # set the Status Bits appropriately
+            z = True  # set the Status Bits appropriately
             n = False
 
         elif opcode == INC: # Increment = add 1 to the Accumulator
             show("INC")
             acc.set( acc.get() + 1 )
             dbg(F"now Accumulator value = {acc.get()}")
-            z = (acc.get() == 0)   # set the Status Bits appropriately
-            n = (acc.get() < 0)
+            z = ( acc.get() == 0 ) # set the Status Bits appropriately
+            n = ( acc.get() < 0 )
 
         elif opcode == ADD:
             show("ADD")
@@ -205,8 +208,8 @@ def run_sim():
             access_memory()
             acc.set( acc.get() + mdr.get() ) # and add it to the Accumulator
             dbg(F"now Accumulator value = {acc.get()}")
-            z = (acc.get() == 0)   # set the Status Bits appropriately
-            n = (acc.get() < 0)
+            z = ( acc.get() == 0 ) # set the Status Bits appropriately
+            n = ( acc.get() < 0 )
 
         elif opcode == SUB:
             show("SUB")
@@ -215,21 +218,21 @@ def run_sim():
             access_memory()
             acc.set( acc.get() - mdr.get() ) # and subtract it from the Accumulator
             dbg(F"now Accumulator value = {acc.get()}")
-            z = (acc.get() == 0)   # set the Status Bits appropriately
-            n = (acc.get() < 0)
+            z = ( acc.get() == 0 ) # set the Status Bits appropriately
+            n = ( acc.get() < 0 )
 
         elif opcode == JMP:
             show("JMP")
-            pc.set( opAddr.get() )  # opAddr is the address of the next instruction to execute
+            pc.set( opAddr.get() ) # opAddr is the address of the next instruction to execute
 
-        elif opcode == JZ :
+        elif opcode == JZ:
             show("JZ")
-            if z :
+            if z:
                 pc.set( opAddr.get() ) # Jump if the Z status bit is True
 
-        elif opcode == JN :
+        elif opcode == JN:
             show("JN")
-            if n :
+            if n:
                 pc.set( opAddr.get() ) # Jump if the N status bit is True
 
         elif opcode == HLT:
@@ -244,14 +247,14 @@ def run_sim():
             show(F"memory location {mar.get()} contains the value {mdr.get()}")
 
 
-def main_cpu_sim(fn:str):
+def main_cpu_sim(filename:str):
     show(F"Program started: {mhsLogging.run_ts}")
     try:
-        load( fn )
+        load( filename )
         run_sim()
     except Exception as ex:
         lgr.error(F"PROBLEM with program: {repr(ex)}")
-        exit(254)
+        exit(257)
 
 
 if __name__ == "__main__":

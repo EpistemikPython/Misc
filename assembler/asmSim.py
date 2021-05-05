@@ -1,8 +1,8 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# assembler.py -- Assembler simulator program ported from ASMproj.pas
-#                 - originally for CSI 1101-X,  Winter 1999; Assignment 8
+# asmSim.py -- Assembler simulator program ported from ASMproj.pas
+#              - originally for CSI 1101-X,  Winter 1999, Assignment 8
 #
 # Copyright (c) 2021 Mark Sattolo <epistemik@gmail.com>
 
@@ -104,7 +104,7 @@ def run_sim(infile:str):
     # - need to process differently three types of input line:
     # (1) empty lines and comments
     # (2) lines whose mnemonic is 'BYTE'
-    # (3) lines whose mnemonic is in the opcode table. *
+    # (3) lines whose mnemonic is in the opcode table.
 
     with open(infile) as fp:
         for line in fp:
@@ -163,7 +163,7 @@ def run_sim(infile:str):
     # look up symbolic operands in the Symbol Table
     # (unless the mnemonic is 'BYTE' - the operand for 'BYTE'
     # is not a symbol, it is an integer that is to be directly used)
-    # and write out the machine language program line by line.	*
+    # and write out the machine language program line by line.
 
     base_infile = mhsLogging.get_base_filename(infile)
     outfile_name = "code/" + base_infile + "_" + mhsLogging.file_ts + ".code"
@@ -200,7 +200,7 @@ def main_asm_sim(fn:str):
         run_sim( fn )
     except Exception as ex:
         lgr.error(F"PROBLEM with program: {repr(ex)}")
-        exit(202)
+        exit(203)
 
 
 if __name__ == "__main__":
