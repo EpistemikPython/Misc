@@ -1,105 +1,95 @@
-#   Mark Sattolo (epistemik@gmail.com)
-# -----------------------------------------------
-# $File: #depot/Eclipse/Java/workspace/Turing/src/mhs/turing/Turing3_2.java $
-# $Revision: #3 $
-# $Change: 180 $
-# $DateTime: 2012/05/19 06:12:55 $
-# -----------------------------------------------
+##############################################################################################################################
+# coding=utf-8
 #
-#  mhs.turing.Turing3_2.java
-#  Created May 11, 2012
-#  git version created Mar 3, 2014
-#  independent git repository created Apr 6, 2015
+# Turing3p2.py -- Turing machine simulator program ported from Turing3_2.java
+#
+#   Python implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II,<br>
+#   which generates a sequence of 0's each followed by an increasing number of 1's, from 0 to infinity,<br>
+#   i.e. 001011011101111011111...<br>
+#   See also <i>The Annotated Turing</i> by <b>Charles Petzold</b> Chapter 5, pp.85-94.
+#
+# Copyright (c) 2021 Mark Sattolo <epistemik@gmail.com>
 
-# import joptsimple.OptionParser
-# import joptsimple.OptionSet
+__author__ = "Mark Sattolo"
+__author_email__ = "epistemik@gmail.com"
+__created__ = "2021-05-05"
+__updated__ = "2021-05-06"
+
+import sys
+import time
+from argparse import ArgumentParser
+import mhsLogging
+
+base_filename = mhsLogging.get_base_filename(__file__)
+log_control = mhsLogging.MhsLogger(base_filename)
+lgr = log_control.get_logger()
+info = lgr.info
+dbg = lgr.debug
+show = log_control.show
+lgr.warning("START LOGGING")
+
+run_time = mhsLogging.run_ts
 
 # number of 'squares' available on the 'tape'
-# static int
 DEFAULT_TAPE_SIZE = 256
 # MAXIMUM number of 'squares' available on the 'tape'
-# static int
 MAX_TAPE_SIZE = 1024 * 16
 # MINIMUM number of 'squares' available on the 'tape'
-# static int
 MIN_TAPE_SIZE = 16
 
 # if displaying each step of the algorithm, DEFAULT delay (in msec) between each step
-# static int
-DEFAULT_DELAY_MS = 2000
+DEFAULT_DELAY_MSEC = 2000.0
 # if displaying each step of the algorithm, MINIMUM delay (in msec) between each step
-# static int
-MIN_DELAY_MS = 5
+MIN_DELAY_MSEC = 5.0
 # if displaying each step of the algorithm, MAXIMUM delay (in msec) between each step
-# static int
-MAX_DELAY_MS = 1000 * 60
+MAX_DELAY_MSEC = 60.0 * 1000.0
 
-# tape symbol
-# static int
+# tape symbols
 nBLANK = 0  # nBLANK = 0 so tape array is initialized by default to all blanks
-nZERO = 1
-nONE = 2
-nX = 3
+nZERO  = 1
+nONE   = 2
+nX     = 3
 nSCHWA = 4
 
 # symbols to display -- order MUST MATCH the values for the tape symbol ints
-# static String[]
-STR_SYMBOLS = ["",   # nBLANK
+STR_SYMBOLS = ["",  # nBLANK
                "0",  # nZERO
                "1",  # nONE
                "x",  # nX
-               "@"   # nSCHWA
+               "@"  # nSCHWA
                ]
 
 # machine state
-# static int
-STATE_BEGIN = 0
+STATE_BEGIN   = 0
 STATE_PRINT_X = 1
 STATE_ERASE_X = 2
 STATE_PRINT_0 = 3
 STATE_PRINT_1 = 4
 
 # state names for display -- order MUST MATCH the values for the machine state ints
-# static String[]
 STR_STATES = ["STATE_BEGIN", "STATE_PRINT_X", "STATE_ERASE_X", "STATE_PRINT_0", "STATE_PRINT_1"]
 
-# Java implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II,<br>
-# which generates a sequence of 0's followed by an increasing number of 1's, from 0 to infinity,<br>
-# i.e. 001011011101111011111...<br>
-# See also <i>The Annotated Turing</i> by <b>Charles Petzold</b> Chapter 5, pp.85-94.
-#
-# @author mhsatto
-# @version 1.5.1
-# @date 2019-02-23
+
 class Turing3p2:
-    def __init__(self):
+    """ Python implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II """
+    def __init__(self, p_size=DEFAULT_TAPE_SIZE, p_pause=DEFAULT_DELAY_MSEC, p_newline=True, p_show=False):
         # current state of the machine
-        # int
-        self.state = 0
+        self.state = STATE_BEGIN
         # current position on the 'tape'
-        # int
         self.position = 0
 
         # use an array as a substitute for the <em>infinite</em> tape
-        # int[]
-        self.ar_tape = []
+        self.ar_tape = list()
+        # size of the 'tape' array
+        self.tape_size = p_size
 
         # determine whether each step is displayed
-        # boolean
-        self.show_steps = False
-        # delay, in milliseconds, between each step display
-        # int
-        self.step_delay = DEFAULT_DELAY_MS
-        # default tape array size
-        # boolean
-        self.tape_default = True
-        # size of the 'tape' array
-        # int
-        self.tape_size = DEFAULT_TAPE_SIZE
+        self.show_steps = p_show
+        # delay, in seconds, between each step display
+        self.step_delay = p_pause / 1000.0
 
         # determine whether print 'new-line' starting at each zero
-        # boolean
-        self.show_newline = True
+        self.show_newline = p_newline
 
     # run the algorithm:<br>
     # - check the current state<br>
@@ -109,23 +99,18 @@ class Turing3p2:
     # - set the next state<br>
     def generate(self):
         step = 0
-
-        print(("\nUsing DEFAULT s" if self.tape_default else "\nS") + "ize of tape array = " + str(len(self.ar_tape)))
-        print(".\nStep pause is " + str(self.step_delay) + ".\n" if self.show_steps else ".")
+        show( F"Size of tape array = {str(len(self.ar_tape))}" )
+        show( F"Step pause = {str(self.step_delay)} sec" )
 
         # initial state
         self.begin()
-
         # we don't have an infinite tape -- continue until we move past the end of the array
         while self.position < self.tape_size:
-
             step += 1
             location = self.ar_tape[self.position]
 
             if self.show_steps:
                 self.show_step(step)
-
-            # switch(state) {
 
             if self.state == STATE_PRINT_X:
                 if location == nONE:
@@ -165,11 +150,10 @@ class Turing3p2:
                 else:
                     # location == nZERO || location == nONE
                     self.move_right(2)
+
             else:
                 # throw new IllegalStateException("\n\t>> Current state is '" + state + "'?!")
                 print("\n\t>> Current state is '" + str(self.state) + "'?!")
-            # switch
-        # do
 
         self.end()
 
@@ -193,37 +177,24 @@ class Turing3p2:
         self.state = STATE_PRINT_X
 
     # SET the specified symbol on the tape at the current position
-    # @param i - symbol to set
-    def set(self, i:int):
-        self.ar_tape[self.position] = i
+    def set(self, sym:int):
+        self.ar_tape[self.position] = sym
 
     # ERASE the symbol at the current position
     def erase(self):
         self.ar_tape[self.position] = nBLANK
 
-    # MOVE RIGHT on the tape by one square
-    # def move_right(self):
-    #     self.move_right(1)
-
     # MOVE RIGHT by the specified number of squares - not in Turing's description but more convenient
-    # @param count - number of squares to move to the right
-    def move_right(self, count:int=1):
+    def move_right(self, count:int = 1):
         self.position += count
-
         # end program when position moves beyond the end of the array
         if self.position >= self.tape_size:
             print("Reached position # " + str(self.position) + " >> ENDING PROGRAM.\n")
             self.end()
 
-    # MOVE LEFT on the tape by one square
-    # def move_left(self):
-    #     self.move_left(1)
-
     # MOVE LEFT by the specified number of squares - not in Turing's description but more convenient
-    # @param count - number of squares to move to the left
-    def move_left(self, count:int=1):
+    def move_left(self, count:int = 1):
         self.position -= count
-
         # return to 0 if move before the start of the array -- SHOULD NEVER HAPPEN
         if self.position < 0:
             print("WARNING: Position: [" + str(self.position) + "] is less than 0 !")
@@ -233,7 +204,6 @@ class Turing3p2:
     def end(self):
         if not self.show_steps:
             self.printTape()
-
         print("\n == DONE ==")
         exit(0)
 
@@ -247,22 +217,25 @@ class Turing3p2:
     # @param step - current count in the series of instructions
     def show_step(self, step:int):
         print("Step #" + str(step) + " - State = " + STR_STATES[self.state] + " - Position is " + str(self.position) + "[")
-        printSymbol(self.ar_tape[self.position], False)
+        printSymbol(self.ar_tape[self.position], self.show_newline)
         print("]")
 
         self.printTape()
 
         # pause to allow easier inspection of each step
         try:
-             Thread.sleep(step_delay) # milliseconds
-         catch( InterruptedException ie ):
-            ie.printStackTrace()
+            time.sleep(self.step_delay) # seconds
+        except Exception as ex:
+            print(repr(ex))
+
+
+# END class Turing3p2
 
 
 # DISPLAY the symbol used for different types of <code>position</code> on the tape to stdout
 # @param posn - position on the tape to display
 # @param newline - new line starting at each 'zero'
-def printSymbol(posn:int, newline:bool):
+def printSymbol(posn: int, newline: bool):
     if posn == nBLANK:
         print(STR_SYMBOLS[nBLANK])
 
@@ -285,96 +258,62 @@ def printSymbol(posn:int, newline:bool):
         print("\n\t>> Current symbol is '" + str(posn) + "'?!")
 
 
-# process the command line arguments and initialize the program
-#  <code>OptionParser</code> options: -h for help, -s [arg] for steps, -t <arg> for tape size,
-#  -n for newline, -x for nice example run
-#  @param args - from command line
-# def setup(String[] args):
-def setup(args:list):
-    # Short options can accept single arguments. The argument can be made required or optional.
-    # When you construct an OptionParser with a string of short option characters,
-    # append a single colon (:) to an option character to configure that option to require an argument.
-    # Append two colons (::) to an option character to configure that option to accept an optional argument.
-    # Append an asterisk (*) to an option character, but before any "argument" indicators, to configure that option as a "help" option.
+def process_args():
+    arg_help = "Java implementation of the Turing machine described in 'On Computable Numbers' (1936), section 3.II,\n " \
+               "which generates a sequence of 0's followed by an increasing number of 1's, from 0 to infinity,\n " \
+               "i.e. 001011011101111011111... \n"
 
-    OptionParser parser = new OptionParser("h*s::t:nx")
-    OptionSet options = parser.parse(args)
+    arg_parser = ArgumentParser(description = arg_help, prog = "Turing3p2.py")
+    # optional arguments
+    arg_parser.add_argument('-d', "--describe", action = "store_true", help = "describe EACH algorithm step")
+    arg_parser.add_argument('-s', "--size", type = int, default = DEFAULT_TAPE_SIZE,
+                            help = "amount of output (number of digits)")
+    arg_parser.add_argument('-p', "--pause", type = int, default = 2, help = "pause between each step, in seconds")
+    arg_parser.add_argument('-n', "--newline", action = "store_true", help = "each zero in the output starts on a new line")
+    arg_parser.add_argument('-x', "--example", action = "store_true", help = "run a nice example [-n -s602]")
 
-    # show help
-    if options.has("h"):
-        System.out.println(
-            "\n Java implementation of the Turing machine described in 'On Computable Numbers' (1936), section 3.II,"
-            + "\n which generates a sequence of 0's followed by an increasing number of 1's, from 0 to infinity,"
-            + "\n i.e. 001011011101111011111... \n"
-            + "\n Usage: java <class-file> [-h] [-s [arg]] [-t <arg>] "
-            + "\n -h to print this message."
-            + "\n -t <int> to specify the size of the tape array (within reason)."
-            + "\n -s [int] to have each step of the algorithm displayed with a 2-second pause between steps,"
-            + "\n    > use the optional argument to set the pause between each step, in milliseconds."
-            + "\n -n to start a new line with each zero."
-            + "\n -x to run a nice example = [-n -t 602]\n")
+    return arg_parser
 
-        # try:
-        #     parser.printHelpOn( System.out )
-        #
-        # catch( IOException ioe ):
-        #     ioe.printStackTrace()
-        #
 
-        System.exit(0)
+def process_input_parameters(argx: list):
+    args = process_args().parse_args(argx)
+    dbg(F"\n\targs = {args}")
 
-    # use -s [pause] to show each step and optionally specify a pause interval by entering an integer argument
-    if options.has("s"):
-        show_steps = True
+    if args.example:
+        newline = True
+        size = 602
+        pause = DEFAULT_DELAY_MSEC
+        desc_steps = False
+    else:
+        size = args.size
+        if MIN_TAPE_SIZE > size > MAX_TAPE_SIZE:
+            size = DEFAULT_TAPE_SIZE
+            show(F"size = {size}")
+        pause = args.pause
+        if MIN_DELAY_MSEC > pause > MAX_DELAY_MSEC:
+            pause = DEFAULT_DELAY_MSEC
+            show(F"pause = {pause}")
+        newline = args.newline
+        desc_steps = args.describe
 
-        # use "-" for blank squares to see each step more clearly
-        STR_SYMBOLS[nBLANK] = "-"
+    return size, pause, newline, desc_steps
 
-        # check for optional argument
-        if options.hasArgument("s"):
-            step_delay = Integer.valueOf((String)options.valueOf("s"))
-            if (step_delay < MIN_DELAY_MS):
-                System.out.println("\n\t>>> MINIMUM value for the step pause is " + MIN_DELAY_MS + ". <<<")
-                step_delay = MIN_DELAY_MS
-            elif ( step_delay > MAX_DELAY_MS ):
-                System.out.println("\n\t>>> MAXIMUM value for the step pause is " + MAX_DELAY_MS + ". <<<")
-                step_delay = MAX_DELAY_MS
 
-    # -s
+def main_turing(args: list):
+    show(F"Program started: {run_time}")
+    size, pause, newline, desc = process_input_parameters(args)
+    try:
+        turing = Turing3p2(size, pause, newline, desc)
+        turing.generate()
+    except Exception as ex:
+        lgr.error(F"PROBLEM with program: {repr(ex)}")
+        exit(349)
 
-    # use -t <tape_size> to request a particular array (tape) size
-    if options.has("t"):
-        tape_size = Integer.valueOf((String)options.valueOf("t"))
-        if tape_size < MIN_TAPE_SIZE:
-            tape_size = MIN_TAPE_SIZE
-            System.out.println("\n\t>>> MINIMUM value for the tape size is " + MIN_TAPE_SIZE + ". <<<")
-        elif tape_size > MAX_TAPE_SIZE:
-            tape_size = MAX_TAPE_SIZE
-            System.out.println("\n\t>>> MAXIMUM value for the tape size is " + MAX_TAPE_SIZE + ". <<<")
 
-        tape_default = False
-    # -t
-
-    # use -n to print a 'new-line' starting with each zero
-    if options.has("n"):
-        show_newline = True
-    # -n
-
-    # use -x to run a nice example
-    if options.has("x"):
-        tape_size = 602
-        tape_default = False
-        show_newline = True
-    # -x
-
-    ar_tape = new int[tape_size]
-
-    state = STATE_BEGIN
-    position = 0
-
-# create the machine, process the command line, then start the algorithm
-# @param args - from command line
-main(String[] args):
-    Turing3_2 turing = new Turing3_2()
-    turing.setup(args)
-    turing.generate()
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        main_turing(sys.argv[1:])
+    else:
+        lgr.warning("MISSING file name!")
+    show("Program completed.")
+    exit()
