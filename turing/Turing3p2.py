@@ -3,10 +3,10 @@
 #
 # Turing3p2.py -- Turing machine simulator program ported from Turing3_2.java
 #
-#   Python implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II,<br>
-#   which generates a sequence of 0's each followed by an increasing number of 1's, from 0 to infinity,<br>
-#   i.e. 001011011101111011111...<br>
-#   See also <i>The Annotated Turing</i> by <b>Charles Petzold</b> Chapter 5, pp.85-94.
+#   Python implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II,
+#   which generates a sequence of 0's each followed by an increasing number of 1's, from 0 to infinity,
+#   i.e. 001011011101111011111...
+#   Also see <i>The Annotated Turing</i> by <b>Charles Petzold</b> Chapter 5, pp.85-94.
 #
 # Copyright (c) 2021 Mark Sattolo <epistemik@gmail.com>
 
@@ -51,9 +51,6 @@ nONE   = '1'
 nX     = 'x'
 nSCHWA = '@'
 
-# symbols to display -- order MUST MATCH the values for the tape symbol ints
-# STR_SYMBOLS = ["-", "0", "1", "x", "@"]
-
 # machine state
 STATE_BEGIN   = 0
 STATE_PRINT_X = 1
@@ -68,58 +65,55 @@ STR_STATES = ["STATE_BEGIN", "STATE_PRINT_X", "STATE_ERASE_X", "STATE_PRINT_0", 
 class Turing3p2:
     """ Python implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II """
     def __init__(self, p_size=DEFAULT_TAPE_SIZE, p_pause=DEFAULT_DELAY_MSEC, p_newline=True, p_show=False):
+        # use an array as a substitute for the <em>infinite</em> tape
+        self.tape = dict()
+        # size of the 'tape'
+        self.tape_size = p_size
+
+        global nBLANK
+        # determine whether each step is displayed
+        self.show_steps = p_show
+        if p_show:
+            nBLANK = '-' # for easier visualization
+        # prepare the empty tape
+        for r in range(self.tape_size):
+            self.tape[str(r)] = nBLANK
+
+        # delay, in seconds, between each step display
+        self.step_delay = p_pause / 1000.0
+
+        # start each zero on a new line
+        self.show_newline = p_newline
+
         # current state of the machine
         self.state = STATE_BEGIN
         # current position on the 'tape'
         self.position = 0
 
-        # use an array as a substitute for the <em>infinite</em> tape
-        self.tape = dict()
-        # size of the 'tape'
-        if p_size < MIN_TAPE_SIZE:
-            self.tape_size = MIN_TAPE_SIZE
-            info(F"MINIMUM tape size = {MIN_TAPE_SIZE}")
-        if p_size > MAX_TAPE_SIZE:
-            self.tape_size = MAX_TAPE_SIZE
-            info(F"MAXIMUM tape size = {MAX_TAPE_SIZE}")
-        else:
-            self.tape_size = p_size
-        for r in range(self.tape_size):
-            self.tape[str(r)] = nBLANK
-
-        # determine whether each step is displayed
-        self.show_steps = p_show
-        # delay, in seconds, between each step display
-        self.step_delay = p_pause / 1000.0
-
-        # determine whether print 'new-line' starting at each zero
-        self.show_newline = p_newline
-
-    # run the algorithm:<br>
-    # - check the current state<br>
-    # - check the current position on the "tape"<br>
-    # - create or erase a symbol if necessary<br>
-    # - move to a different position on the "tape" if necessary<br>
-    # - set the next state<br>
+    # run the algorithm:
+    # - check the current state
+    # - check the current position on the 'tape'
+    # - create or erase a symbol if necessary
+    # - move to a different position on the 'tape' if necessary
+    # - set the next state
     def generate(self):
         step = 0
-        show( F"Size of tape array = {str(len(self.tape.keys()))}")
-        show( F"Step pause = {str(self.step_delay)} sec" )
+        dbg( F"Size of tape array = {str(len(self.tape.keys()))}")
+        dbg( F"Step pause = {str(self.step_delay)} sec" )
 
         # initial state
         self.begin()
         # we don't have an infinite tape -- continue until we move past the end of the array
         while self.position < self.tape_size:
-            show(F"current position = {self.position}")
             step += 1
             current_symbol = self.tape[str(self.position)]
-            show(F"current symbol = {current_symbol}")
+            show(F"current position = {self.position}; current symbol = {current_symbol}")
 
             if self.show_steps:
                 self.show_step(step)
 
             if self.state == STATE_PRINT_X:
-                show(F"STATE_PRINT_X")
+                show("STATE_PRINT_X")
                 if current_symbol == nONE:
                     self.move_right()
                     self.set(nX)
@@ -129,7 +123,7 @@ class Turing3p2:
                     self.state = STATE_PRINT_1
 
             elif self.state == STATE_ERASE_X:
-                show(F"STATE_ERASE_X")
+                show("STATE_ERASE_X")
                 if current_symbol == nX:
                     self.erase()
                     self.move_right()
@@ -143,7 +137,7 @@ class Turing3p2:
                     self.move_left(2)
 
             elif self.state == STATE_PRINT_0:
-                show(F"STATE_PRINT_0")
+                show("STATE_PRINT_0")
                 if current_symbol == nBLANK:
                     self.set(nZERO)
                     self.move_left(2)
@@ -152,27 +146,26 @@ class Turing3p2:
                     self.move_right(2)
 
             elif self.state == STATE_PRINT_1:
-                show(F"STATE_PRINT_1")
+                show("STATE_PRINT_1")
                 if current_symbol == nBLANK:
                     self.set(nONE)
                     self.move_left()
                     self.state = STATE_ERASE_X
                 else:
-                    # location == nZERO || location == nONE
+                    # current symbol == nZERO or nONE
                     self.move_right(2)
 
             else:
-                # throw new IllegalStateException("\n\t>> Current state is '" + state + "'?!")
-                print("\n\t>> UNKNOWN Current state is '" + str(self.state) + "'?!")
+                raise Exception(F">>> UNKNOWN current state = {str(self.state)}?!")
 
         self.end()
 
     # the actions at the INITIAL STATE of the algorithm -- NEVER return to this state again
     def begin(self):
-        show("begin()")
         if self.state != STATE_BEGIN:
             return
 
+        show("STATE_BEGIN")
         if self.show_steps:
             self.show_step(0)
 
@@ -187,8 +180,6 @@ class Turing3p2:
         self.move_left(2)
         self.state = STATE_PRINT_X
 
-        # self.printTape()
-
     # SET the specified symbol on the tape at the current position
     def set(self, sym:str):
         self.tape[str(self.position)] = sym
@@ -200,79 +191,44 @@ class Turing3p2:
     # MOVE RIGHT by the specified number of squares - not in Turing's description but more convenient
     def move_right(self, count:int = 1):
         self.position += count
-        # end program when position moves beyond the end of the array
+        # END PROGRAM when position moves beyond the end of the tape
         if self.position >= self.tape_size:
-            print("Reached position # " + str(self.position) + " >> ENDING PROGRAM.\n")
-            self.end()
+            info("\nReached position # " + str(self.position) + " >> ENDING PROGRAM.")
 
     # MOVE LEFT by the specified number of squares - not in Turing's description but more convenient
     def move_left(self, count:int = 1):
         self.position -= count
-        # return to 0 if move before the start of the array -- SHOULD NEVER HAPPEN
+        # return to 0 if move before the beginning of the tape -- SHOULD NEVER HAPPEN
         if self.position < 0:
-            print("WARNING: Position: [" + str(self.position) + "] is less than 0 !")
+            lgr.warning("Position: [" + str(self.position) + "] is less than 0 !")
             self.position = 0
 
-    # DISPLAY the sequence of symbols on the tape, then exit.
+    # DISPLAY the entire sequence of symbols on the tape, then exit
     def end(self):
         if not self.show_steps:
             self.printTape()
-        print("\n == DONE ==")
-        exit(0)
+        show("\n == DONE ==")
 
-    # DISPLAY the sequence of symbols on the tape
+    # DISPLAY the current sequence of symbols on the tape
     def printTape(self):
         for posn in self.tape.keys():
-            # printSymbol(self.tape[posn], self.show_newline)
             if self.tape[posn] == nZERO and self.show_newline:
                 show("")
             show(self.tape[posn], endl = '')
         show("E")
 
-    # DISPLAY the step sequence and machine state at a particular point in the program
-    # @param step - current count in the series of instructions
+    # DISPLAY the position and machine state at a particular point in the program
     def show_step(self, step:int):
         show("Step #" + str(step) + " - State = " + STR_STATES[self.state] +
              " - Position is " + str(self.position) + "[" + self.tape[str(self.position)] + "]" , endl = '')
-        # printSymbol(self.tape[str(self.position)], False)
-        # show("]")
-
         self.printTape()
-
         # pause to allow easier inspection of each step
         try:
             time.sleep(self.step_delay) # seconds
         except Exception as ex:
-            print(repr(ex))
+            raise Exception( repr(ex) )
 
 # END class Turing3p2
-
-
-# DISPLAY the symbol used for different types of <code>position</code> on the tape to stdout
-# @param posn - position on the tape to display
-# @param newline - new line starting at each 'zero'
-def printSymbol(posn:str, newline:bool):
-
-    if posn == nBLANK:
-        show(nBLANK, endl = '')
-
-    elif posn == nSCHWA:
-        show(nSCHWA, endl = '')
-
-    elif posn == nX:
-        show(nX, endl = '')
-
-    elif posn == nZERO:
-        if newline:
-            show("")
-        show(nZERO, endl = '')
-
-    elif posn == nONE:
-        show(nONE, endl = '')
-
-    else:
-        # throw new IllegalStateException("\n\t>> Current symbol is '" + posn + "'?!")
-        lgr.warning("\n\t>> Current symbol is '" + str(posn) + "'?!")
 
 
 def process_args():
@@ -284,9 +240,9 @@ def process_args():
     # optional arguments
     arg_parser.add_argument('-d', "--describe", action = "store_true", help = "describe EACH algorithm step")
     arg_parser.add_argument('-s', "--size", type = int, default = DEFAULT_TAPE_SIZE,
-                            help = "amount of output (number of digits)")
+                            help = F"number of tape 'slots' ({MIN_TAPE_SIZE}..{MAX_TAPE_SIZE})")
     arg_parser.add_argument('-p', "--pause", type = float, default = DEFAULT_DELAY_MSEC,
-                            help = "interval between each step, in milliseconds")
+                            help = F"time to pause between each algorithm step, in msec ({MIN_DELAY_MSEC}..{MAX_DELAY_MSEC})")
     arg_parser.add_argument('-n', "--newline", action = "store_true", help = "each zero in the output starts on a new line")
     arg_parser.add_argument('-x', "--example", action = "store_true", help = "run a nice example [-n -s602]")
 
@@ -304,13 +260,18 @@ def process_input_parameters(argx: list):
         desc_steps = False
     else:
         size = args.size
-        if MIN_TAPE_SIZE > size > MAX_TAPE_SIZE:
-            size = DEFAULT_TAPE_SIZE
-            show(F"size = {size}")
+        if size < MIN_TAPE_SIZE:
+            size = MIN_TAPE_SIZE
+            lgr.warning(F"MINIMUM tape size = {MIN_TAPE_SIZE}")
+        if size > MAX_TAPE_SIZE:
+            size = MAX_TAPE_SIZE
+            lgr.warning(F"MAXIMUM tape size = {MAX_TAPE_SIZE}")
+
         pause = args.pause
         if MIN_DELAY_MSEC > pause > MAX_DELAY_MSEC:
             pause = DEFAULT_DELAY_MSEC
-            show(F"pause = {pause}")
+            lgr.warning(F"step delay MUST be between {MIN_DELAY_MSEC} and {MAX_DELAY_MSEC}!")
+
         newline = args.newline
         desc_steps = args.describe
 
@@ -318,7 +279,6 @@ def process_input_parameters(argx: list):
 
 
 def main_turing(args:list):
-    show(F"Program started: {run_time}")
     size, pause, newline, desc = process_input_parameters(args)
     show(F"size = {size}; pause = {pause}; newline = {newline}; desc = {desc}")
     try:
@@ -326,10 +286,11 @@ def main_turing(args:list):
         turing.generate()
     except Exception as ex:
         lgr.error(F"PROBLEM with program: {repr(ex)}")
-        exit(313)
+        exit(298)
 
 
 if __name__ == "__main__":
+    show(F"Program started: {run_time}")
     main_turing(sys.argv[1:])
     show("Program completed.")
     exit()
