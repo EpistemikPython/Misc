@@ -45,19 +45,14 @@ MIN_DELAY_MSEC = 5.0
 MAX_DELAY_MSEC = 60.0 * 1000.0
 
 # tape symbols
-nBLANK = 0
-nZERO  = 1
-nONE   = 2
-nX     = 3
-nSCHWA = 4
+nBLANK = ''
+nZERO  = '0'
+nONE   = '1'
+nX     = 'x'
+nSCHWA = '@'
 
 # symbols to display -- order MUST MATCH the values for the tape symbol ints
-STR_SYMBOLS = ["-",  # nBLANK
-               "0",  # nZERO
-               "1",  # nONE
-               "x",  # nX
-               "@"  # nSCHWA
-               ]
+# STR_SYMBOLS = ["-", "0", "1", "x", "@"]
 
 # machine state
 STATE_BEGIN   = 0
@@ -118,7 +113,7 @@ class Turing3p2:
             show(F"current position = {self.position}")
             step += 1
             current_symbol = self.tape[str(self.position)]
-            show(F"current symbol = {STR_SYMBOLS[current_symbol]}")
+            show(F"current symbol = {current_symbol}")
 
             if self.show_steps:
                 self.show_step(step)
@@ -178,8 +173,8 @@ class Turing3p2:
         if self.state != STATE_BEGIN:
             return
 
-        # if self.show_steps:
-        #     self.show_step(0)
+        if self.show_steps:
+            self.show_step(0)
 
         self.set(nSCHWA)
         self.move_right()
@@ -192,10 +187,10 @@ class Turing3p2:
         self.move_left(2)
         self.state = STATE_PRINT_X
 
-        self.printTape()
+        # self.printTape()
 
     # SET the specified symbol on the tape at the current position
-    def set(self, sym:int):
+    def set(self, sym:str):
         self.tape[str(self.position)] = sym
 
     # ERASE the symbol at the current position
@@ -228,16 +223,19 @@ class Turing3p2:
     # DISPLAY the sequence of symbols on the tape
     def printTape(self):
         for posn in self.tape.keys():
-            printSymbol(self.tape[posn], self.show_newline)
-        print("E")
+            # printSymbol(self.tape[posn], self.show_newline)
+            if self.tape[posn] == nZERO and self.show_newline:
+                show("")
+            show(self.tape[posn], endl = '')
+        show("E")
 
     # DISPLAY the step sequence and machine state at a particular point in the program
     # @param step - current count in the series of instructions
     def show_step(self, step:int):
         show("Step #" + str(step) + " - State = " + STR_STATES[self.state] +
-             " - Position is " + str(self.position) + "[", endl = '')
-        printSymbol(self.tape[str(self.position)], False)
-        show("]")
+             " - Position is " + str(self.position) + "[" + self.tape[str(self.position)] + "]" , endl = '')
+        # printSymbol(self.tape[str(self.position)], False)
+        # show("]")
 
         self.printTape()
 
@@ -253,24 +251,24 @@ class Turing3p2:
 # DISPLAY the symbol used for different types of <code>position</code> on the tape to stdout
 # @param posn - position on the tape to display
 # @param newline - new line starting at each 'zero'
-def printSymbol(posn:int, newline:bool):
+def printSymbol(posn:str, newline:bool):
 
     if posn == nBLANK:
-        show(STR_SYMBOLS[nBLANK], endl = '')
+        show(nBLANK, endl = '')
 
     elif posn == nSCHWA:
-        show(STR_SYMBOLS[nSCHWA], endl = '')
+        show(nSCHWA, endl = '')
 
     elif posn == nX:
-        show(STR_SYMBOLS[nX], endl = '')
+        show(nX, endl = '')
 
     elif posn == nZERO:
         if newline:
             show("")
-        show(STR_SYMBOLS[nZERO], endl = '')
+        show(nZERO, endl = '')
 
     elif posn == nONE:
-        show(STR_SYMBOLS[nONE], endl = '')
+        show(nONE, endl = '')
 
     else:
         # throw new IllegalStateException("\n\t>> Current symbol is '" + posn + "'?!")
