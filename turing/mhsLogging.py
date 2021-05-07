@@ -26,7 +26,7 @@ now_dt:dt  = dt.now()
 run_ts:str = now_dt.strftime(RUN_DATETIME_FORMAT)
 file_ts:str = now_dt.strftime(FILE_DATETIME_FORMAT)
 
-SIMPLE_FORMAT:str  = "%(levelname)-8s - %(filename)s[%(lineno)s]: %(message)s"
+SIMPLE_FORMAT:str  = "%(levelname)s - %(filename)s[%(lineno)s]: %(message)s"
 COMPLEX_FORMAT:str = "%(levelname)-8s | %(filename)-16s : %(funcName)-24s l.%(lineno)-4s > %(message)s"
 
 FILE_LEVEL    = logging.DEBUG
