@@ -38,11 +38,11 @@ MAX_TAPE_SIZE = 1024 * 16
 MIN_TAPE_SIZE = 16
 
 # if displaying each step of the algorithm, DEFAULT delay (in msec) between each step
-DEFAULT_DELAY_MSEC = 2000.0
+DEFAULT_DELAY_MSEC = 2000
 # if displaying each step of the algorithm, MINIMUM delay (in msec) between each step
-MIN_DELAY_MSEC = 5.0
+MIN_DELAY_MSEC = 50
 # if displaying each step of the algorithm, MAXIMUM delay (in msec) between each step
-MAX_DELAY_MSEC = 60.0 * 1000.0
+MAX_DELAY_MSEC = 60 * 1000
 
 # tape symbols
 symBLANK  = ''
@@ -231,21 +231,21 @@ class Turing3p2:
 
 # END class Turing3p2
 
-def turing_sleep(msec:float):
+def turing_sleep(msec:int):
     """ convert msec to sec and sleep """
-    time.sleep(msec / 1000.0)
+    time.sleep( float(msec) / 1000.0 )
 
 def process_args():
-    arg_desc = "Implementation of the state machine described in 'On Computable Numbers' (1936), section 3.II, " \
-               "which generates a sequence of 0's followed by an increasing number of 1's, from 0 to infinity, " \
-               "i.e. 001011011101111011111..."
+    arg_desc = "Implementation of the state machine described in 'On Computable Numbers' (1936) by Alan Turing, " \
+               "section 3.II, which generates a sequence of 0's followed by an increasing number of 1's, " \
+               "from zero to infinity, i.e. 001011011101111011111..."
 
     arg_parser = ArgumentParser(description = arg_desc, prog = "Turing3p2.py")
     # optional arguments
     arg_parser.add_argument('-d', "--describe", action = "store_true", help = "describe EACH algorithm step")
     arg_parser.add_argument('-s', "--size", type = int, default = DEFAULT_TAPE_SIZE,
-                            help = F"number of tape 'slots' ({MIN_TAPE_SIZE} <= SIZE <= {MAX_TAPE_SIZE})")
-    arg_parser.add_argument('-p', "--pause", type = float, default = DEFAULT_DELAY_MSEC,
+                            help = F"number of tape 'squares' ({MIN_TAPE_SIZE} <= SIZE <= {MAX_TAPE_SIZE})")
+    arg_parser.add_argument('-p', "--pause", type = int, default = DEFAULT_DELAY_MSEC,
         help = F"time to pause between each algorithm step, in msec ({MIN_DELAY_MSEC} <= PAUSE <= {MAX_DELAY_MSEC})")
     arg_parser.add_argument('-n', "--newline", action = "store_true", help = "each zero in the output starts on a new line")
     arg_parser.add_argument('-x', "--example", action = "store_true", help = "run a nice example [-n -s602]")
