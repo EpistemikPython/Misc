@@ -31,7 +31,7 @@ lgr.warning("START LOGGING")
 run_time = mhsLogging.run_ts
 
 # number of 'squares' available on the 'tape'
-DEFAULT_TAPE_SIZE = 512
+DEFAULT_TAPE_SIZE = 256
 # MAXIMUM number of 'squares' available on the 'tape'
 MAX_TAPE_SIZE = 1024 * 16
 # MINIMUM number of 'squares' available on the 'tape'
@@ -93,7 +93,7 @@ class Turing3p2:
     def begin(self):
         """set the INITIAL STATE of the machine -- should NEVER return to this state"""
         if self.state != STATE_BEGIN:
-            lgr.warning(F"UNEXPECTED RETURN TO {STR_STATES[STATE_BEGIN]}?!")
+            lgr.warning(F"UNEXPECTED return to {STR_STATES[STATE_BEGIN]}?!")
             return
 
         show(STR_STATES[STATE_BEGIN])
@@ -290,7 +290,7 @@ def main_turing(args:list):
         turing.generate()
     except Exception as ex:
         lgr.error(F"PROBLEM with program: {repr(ex)}!")
-        exit(283)
+        exit(293)
 
 
 if __name__ == "__main__":
