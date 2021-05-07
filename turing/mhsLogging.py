@@ -8,7 +8,7 @@
 __author__       = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __created__ = "2021-05-03"
-__updated__ = "2021-05-03"
+__updated__ = "2021-05-07"
 
 import logging
 import os.path as osp
@@ -32,8 +32,8 @@ COMPLEX_FORMAT:str = "%(levelname)-8s | %(filename)-16s : %(funcName)-24s l.%(li
 FILE_LEVEL    = logging.DEBUG
 CONSOLE_LEVEL = logging.WARNING
 
-
 class MhsLogger:
+    """ convenient setup of separate file and console logging """
     def __init__(self, name:str):
         # set up logging to file
         logging.basicConfig( level = FILE_LEVEL,
@@ -72,6 +72,7 @@ class MhsLogger:
 
 
 def get_base_filename(p_name:str, file_div:str=osp.sep, sfx_div:str=osp.extsep) -> str:
+    """ get the base filename from a string possibly containing path and file extension """
     spl1 = p_name.split(file_div)
     if spl1 and isinstance(spl1, list):
         spl2 = spl1[-1].split(sfx_div)
