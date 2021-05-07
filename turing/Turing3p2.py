@@ -1,7 +1,7 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# Turing3p2.py -- Turing machine simulator program ported from Turing3_2.java
+# Turing3p2.py -- Turing machine simulator ported from Turing3_2.java
 #
 #   Python implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II,
 #   which generates a sequence of 0's each followed by an increasing number of 1's, from zero to infinity,
@@ -79,7 +79,7 @@ class Turing3p2:
         for r in range(self.tape_size):
             self.tape[str(r)] = symBLANK
 
-        # delay, in seconds, between each step display
+        # delay, in milliseconds, between each step display
         self.step_delay = p_pause
 
         # start each zero on a new line
@@ -193,7 +193,7 @@ class Turing3p2:
         # END PROGRAM when position moves beyond the end of the tape
         if self.position >= self.tape_size:
             lgr.warning("Reached position # " + str(self.position) + " >> ENDING PROGRAM.")
-            turing_sleep(DEFAULT_DELAY_MSEC) # need to ensure the printouts are NOT interleaved
+            turing_sleep(DEFAULT_DELAY_MSEC) # to ensure the printouts are NOT interleaved
             if not self.show_steps:
                 self.print_tape()
             show(" === DONE === ")
@@ -201,9 +201,9 @@ class Turing3p2:
     def move_left(self, count:int=1):
         """MOVE LEFT by the specified number of squares - not in Turing's description but more convenient"""
         self.position -= count
-        # return to 0 if move before the beginning of the tape -- SHOULD NEVER HAPPEN
+        # return to position 0 if move BEFORE the beginning of the tape -- SHOULD NEVER HAPPEN
         if self.position < 0:
-            lgr.warning("Position: [" + str(self.position) + "] is less than 0 !")
+            lgr.warning("Position is less than 0 !!")
             self.position = 0
 
     def print_tape(self):
@@ -237,7 +237,7 @@ def turing_sleep(msec:int):
 
 def process_args():
     arg_desc = "Implementation of the state machine described in 'On Computable Numbers' (1936) by Alan Turing, " \
-               "section 3.II, which generates a sequence of 0's followed by an increasing number of 1's, " \
+               "section 3.II, which generates a sequence of 0's each followed by an increasing number of 1's, " \
                "from zero to infinity, i.e. 001011011101111011111..."
 
     arg_parser = ArgumentParser(description = arg_desc, prog = "Turing3p2.py")
