@@ -4,7 +4,7 @@
 # Turing3p2.py -- Turing machine simulator program ported from Turing3_2.java
 #
 #   Python implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II,
-#   which generates a sequence of 0's each followed by an increasing number of 1's, from 0 to infinity,
+#   which generates a sequence of 0's each followed by an increasing number of 1's, from zero to infinity,
 #   i.e. 001011011101111011111...
 #   Also see <i>The Annotated Turing</i> by <b>Charles Petzold</b> Chapter 5, pp.85-94.
 #
@@ -63,7 +63,7 @@ STR_STATES = ["STATE_BEGIN", "STATE_PRINT_X", "STATE_ERASE_X", "STATE_PRINT_0", 
 
 
 class Turing3p2:
-    """ Python implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II """
+    """Python implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II"""
     def __init__(self, p_size=DEFAULT_TAPE_SIZE, p_pause=DEFAULT_DELAY_MSEC, p_newline=True, p_show=False):
         # use as a substitute for the 'infinite' tape
         self.tape = dict()
@@ -90,8 +90,8 @@ class Turing3p2:
         # current position on the tape
         self.position = 0
 
-    # the actions to set the INITIAL STATE of the machine -- NEVER return to this state
     def begin(self):
+        """set the INITIAL STATE of the machine -- should NEVER return to this state"""
         if self.state != STATE_BEGIN:
             lgr.warning(F"UNEXPECTED RETURN TO {STR_STATES[STATE_BEGIN]}?!")
             return
@@ -111,13 +111,15 @@ class Turing3p2:
         self.move_left(2)
         self.state = STATE_PRINT_X
 
-    # run the algorithm:
-    # - check the current state
-    # - check the current position on the 'tape'
-    # - create or erase a symbol if necessary
-    # - move to a different position on the 'tape' if necessary
-    # - set the next state
     def generate(self):
+        """run the algorithm
+
+        - check the current state
+        - check the current position on the 'tape'
+        - create or erase a symbol if necessary
+        - move to a different position on the 'tape' if necessary
+        - set the next state
+        """
         step = 0
         dbg( F"Size of tape array = {str(len(self.tape.keys()))}")
         dbg( F"Step pause = {str(self.step_delay)} msec" )
@@ -177,16 +179,16 @@ class Turing3p2:
             else:
                 raise Exception(F">>> UNKNOWN current state = {str(self.state)}?!")
 
-    # SET the specified symbol on the tape at the current position
     def set(self, symbol:str):
+        """SET the specified symbol on the tape at the current position"""
         self.tape[str(self.position)] = symbol
 
-    # ERASE the symbol at the current position
     def erase(self):
+        """ERASE the symbol at the current position"""
         self.tape[str(self.position)] = symBLANK
 
-    # MOVE RIGHT by the specified number of squares - not in Turing's description but more convenient
     def move_right(self, count:int=1):
+        """MOVE RIGHT by the specified number of squares - not in Turing's description but more convenient"""
         self.position += count
         # END PROGRAM when position moves beyond the end of the tape
         if self.position >= self.tape_size:
@@ -196,16 +198,16 @@ class Turing3p2:
                 self.print_tape()
             show(" === DONE === ")
 
-    # MOVE LEFT by the specified number of squares - not in Turing's description but more convenient
     def move_left(self, count:int=1):
+        """MOVE LEFT by the specified number of squares - not in Turing's description but more convenient"""
         self.position -= count
         # return to 0 if move before the beginning of the tape -- SHOULD NEVER HAPPEN
         if self.position < 0:
             lgr.warning("Position: [" + str(self.position) + "] is less than 0 !")
             self.position = 0
 
-    # DISPLAY the current sequence of symbols on the tape
     def print_tape(self):
+        """DISPLAY the current sequence of symbols on the tape"""
         current_tape = ""
         for posn in self.tape.keys():
             if self.tape[posn] == SYM_ZERO and self.show_newline:
@@ -216,8 +218,8 @@ class Turing3p2:
         current_tape += 'E'
         dbg(current_tape)
 
-    # DISPLAY the position and machine state at a particular point in the program
     def show_step(self, step:int):
+        """DISPLAY the position and machine state at a particular point in the program"""
         show("Step #" + str(step) + " - State = " + STR_STATES[self.state] +
              " - Position is " + str(self.position) + "[" + self.tape[str(self.position)] + "]")
         self.print_tape()
