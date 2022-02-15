@@ -1,1 +1,2 @@
-# Testing of Python
+# miscellaneous code and tests of Python
+
