@@ -1,7 +1,7 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# scrabble_words.py -- manipulate a scrabble words dict
+# scrabble_words.py -- process a scrabble words dict to record the score of each word
 #
 # Copyright (c) 2022 Mark Sattolo <epistemik@gmail.com>
 
@@ -19,10 +19,13 @@ from scrabble_words_2019 import points, scrabble
 newdict = {}
 ie = 0
 for item in scrabble:
-    newdict[item] = len(item)
+    score = 0
+    for i in item:
+        score += points[i]
+    newdict[item] = score
     ie += 1
 
-print(f"eng_words count = {ie}\n")
+print(f"scrabble count = {ie}\n")
 
 ni = 0
 for item in newdict:
@@ -31,4 +34,4 @@ for item in newdict:
     if ni > 30:
         break
 
-save_to_json("len_words", newdict)
+save_to_json("scrabble_words", newdict)
