@@ -4,28 +4,33 @@
 # problem_tavs.py
 #
 #  original code Copyright (c) 2021  Thomas Sattolo  <tsattolo@gmail.com>
-#  modifications Copyright (c) 2021  Mark Sattolo  <epistemik@gmail.com>
+#  modifications Copyright (c) 2023  Mark Sattolo  <epistemik@gmail.com>
 
-# In 1969, Hans Freudenthal posed a puzzle that Martin Gardner would later call “The Impossible Problem”.
-# Below is a 2000 version due to Erich Friedman.
-#
-# I have secretly chosen two nonzero digits and have separately told their sum to Sam and their product to Pam,
-# both of whom are honest and logical.
-#
-# Pam says, “I don’t know the numbers”.
-# Sam says, “I don’t know the numbers”.
-# Pam says, “I don’t know the numbers”.
-# Sam says, “I don’t know the numbers”.
-# Pam says, “I don’t know the numbers”.
-# Sam says, “I don’t know the numbers”.
-# Pam says, “I don’t know the numbers”.
-# Sam says, “I don’t know the numbers”.
-# Pam says, “I know the numbers”.
-# Sam says, “I know the numbers”.
-#
-# What are the numbers?
+__created__ = '2021-07-19'
+__updated__ = '2023-01-12'
+
 import sys
 
+"""
+In 1969, Hans Freudenthal posed a puzzle that Martin Gardner would later call “The Impossible Problem”.
+Below is a 2000 version due to Erich Friedman.
+
+I have secretly chosen two non-zero digits and separately told their sum to Sam and their product to Pam,
+both of whom are honest and logical.
+
+Pam says, “I don’t know the numbers”.
+Sam says, “I don’t know the numbers”.
+Pam says, “I don’t know the numbers”.
+Sam says, “I don’t know the numbers”.
+Pam says, “I don’t know the numbers”.
+Sam says, “I don’t know the numbers”.
+Pam says, “I don’t know the numbers”.
+Sam says, “I don’t know the numbers”.
+Pam says, “I know the numbers”.
+Sam says, “I know the numbers”.
+
+What are the numbers?
+"""
 
 def run_rounds(pairs:list, num_rounds:int):
     # the rounds
