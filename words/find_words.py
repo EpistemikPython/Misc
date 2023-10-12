@@ -21,16 +21,19 @@ from scrabble_words_2019 import scrabble
 from mhsUtils import save_to_json
 
 anagrams = False
-firstletter = [ {} for f in range(26) ]
+ordered_letters = 'aesiorunltycdhmpgkbwfvzjxq'
+# ordered_letters = 'aesiorunltycdhmpgkbwfv'
+default_range = len(ordered_letters)
+firstletter = [ {} for f in range(default_range) ]
 wordnames = {}
 output = {}
 count = 0
 default_wordsize = 5
-default_numwords = 5
 five_words_initializer = (0, 0, 0, 0, 0)
+default_numwords = len(five_words_initializer)
 four_words_initializer = (0, 0, 0, 0)
 three_words_initializer = (0, 0, 0)
-ordered_letters = 'aesiorunltycdhmpgkbwfvzjxq'
+two_words_initializer = (0, 0)
 
 # TODO: find the proper balance between these two implementations
 #
@@ -44,14 +47,14 @@ ordered_letters = 'aesiorunltycdhmpgkbwfvzjxq'
 #  return (bits * 2 + 1) << shift
 
 def compress(cword):
-    return ( cword^(cword - 1) ).bit_length() - 1
+    return (cword^(cword - 1)).bit_length() - 1
 
 def decompress(dpack):
     return 1<<dpack
 
-def letter_to_bit(clb):
-    return ordered_letters.find(clb)
-    # return ord(c) - ord('a')
+def letter_to_bit(ch):
+    return ordered_letters.find(ch)
+    # return ord(ch) - ord('a')
 
 def store(progress):
     global count
@@ -61,12 +64,11 @@ def store(progress):
             count += 1
     else:
         group = sorted( next( iter(wordnames[word]) ) for word in progress )
-        # print(group)
         output[count] = group
         count += 1
 
-def solve(alphabet, num_wds, grace, progress, depth=0):
-    depth_limit = num_wds - 1
+def solve(alphabet, num_wrds, grace, progress, depth=0):
+    depth_limit = num_wrds - 1
     for drop in range(grace + 1):
         first = alphabet.bit_length() - 1
         for pack in firstletter[first]:
@@ -78,12 +80,13 @@ def solve(alphabet, num_wds, grace, progress, depth=0):
                         if depth >= depth_limit:
                             store(progress)
                         else:
-                            solve( alphabet & ~mask, num_wds, grace - drop, progress, depth + 1 )
+                            solve(alphabet & ~mask, num_wrds, grace - drop, progress, depth + 1)
         alphabet ^= 1<<first
 
 #TODO: Add an 'exclude' parameter to exclude certain letters from consideration
 def main_find(save_option, word_sz, num_wds):
     print(f"find {num_wds} unique words each with {word_sz} letters.")
+    print(f"letters to use are: '{ordered_letters}'")
     print(f"save option = '{save_option}'\n")
     start = time.perf_counter()
 
@@ -93,7 +96,7 @@ def main_find(save_option, word_sz, num_wds):
             word = word.lower()
             for lett in word:
                 i = letter_to_bit(lett)
-                if not( 0 <= i < 26 ):
+                if not( 0 <= i < default_range ):
                     break
                 b = 1<<i
                 if mask & b:
@@ -105,20 +108,25 @@ def main_find(save_option, word_sz, num_wds):
                 wordnames.setdefault( mask, set() ).add(word)
                 firstletter[first].setdefault( pack, set() ).add(mask)
 
-    alphabet = (1<<26) - 1
+    alphabet = (1<<default_range) - 1
     initializer = five_words_initializer
     if num_wds == 4:
         initializer = four_words_initializer
     elif num_wds == 3:
         initializer = three_words_initializer
-    starter = array.array('L', initializer)
-    solve(alphabet, num_wds, 1, starter)
-    # print(output)
+    elif num_wds == 2:
+        initializer = two_words_initializer
+    grace = default_range + 1 - (word_sz*num_wds)
+    if grace < 0:
+        print(f"BAD grace = {grace}!")
+        exit(grace)
+    solve(alphabet, num_wds, grace, array.array('L', initializer))
+
     nx = 0
     for index in output.keys():
         print(output[index])
         nx += 1
-        if nx > 25:
+        if nx > 30:
             break
     print(f"total groups = {count}")
     print(f"\nelapsed time = {time.perf_counter() - start}")
@@ -126,7 +134,7 @@ def main_find(save_option, word_sz, num_wds):
     save_option = save_option.upper()
     if save_option == 'Y' or save_option == 'YES':
         save_to_json(f"{word_sz}x{num_wds}_words", output)
-    print(f"\nelapsed time = {time.perf_counter() - start}")
+        print(f"\nelapsed time = {time.perf_counter() - start}")
 
 
 if __name__ == '__main__':
@@ -140,5 +148,10 @@ if __name__ == '__main__':
         word_size = int(argv[2])
     if len(argv) > 3:
         num_words = int(argv[3])
+    # to exclude some letters
+    print(ordered_letters.strip('jkqxz'))
+    nok = ordered_letters.partition('k')
+    print(nok[0] + nok[2])
+
     main_find(save_opt, word_size, num_words)
     exit()
