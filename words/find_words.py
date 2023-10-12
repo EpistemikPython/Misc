@@ -2,105 +2,124 @@
 # coding=utf-8
 #
 # find_words.py -- process a scrabble words dict to record the score of each word
-# adapted from: https://github.com/agunning/fiveletterclique.git
+# adapted from: https://github.com/sh1boot/fivewords.git
 #
 # Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
 
-__author__         = "Mark Sattolo"
-__author_email__   = "epistemik@gmail.com"
+__author__ = "Mark Sattolo"
+__author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
 __updated__ = "2023-10-11"
 
 from sys import argv
-import numpy as np
 import time
+import itertools
+import array
 from scrabble_words_2019 import scrabble
+from mhsUtils import save_to_json
 
-def lnot(a,b):
-    return np.logical_not( b&a.reshape((-1,1)) )
-    
-def add_taboo(words, dexp):
-    words = words[ (2**26 * words[:,1] + words[:,0]).argsort() ]
-    index = words[:,1].sum()
-    n_words = np.concatenate([words[-index:],words])
-    n_words[:index,1] = 0
-    qs = np.searchsorted(n_words[:index,0],dexp)
-    for i in range(25,-1,-1):
-        n_words[qs[i+1]:qs[i],0] += 2**i
-        if qs[i] == index:
-            break
-    return n_words
+anagrams = False
+firstletter = [ {} for f in range(26) ]
+wordnames = {}
+output = {}
+count = 0
 
-def add_word(words, dexp, balist2, rs):
-    words = words[words[:,0].argsort()]
-    qs = np.searchsorted(words[:,0],dexp)
-    l = words.shape[0]
-    words_list = []
-    for i in range(25,-1,-1):
-        uniq, index, counts = np.unique( words[qs[i+1]:qs[i],0], return_index=True, return_counts=True )
-        nz = np.nonzero( lnot(uniq, balist2[rs[i]:rs[i+1]]) )
-        if len(nz[0]) == 0:
-            continue
-        repeats = counts[nz[0]]
-        balistinds = rs[i]+np.repeat(nz[1],repeats)
-        currinds = qs[i+1]+np.repeat(index[nz[0]]+np.cumsum(repeats),repeats)-np.arange(1,sum(repeats)+1)
-        newarr = np.hstack((words[currinds],balist2[balistinds].reshape((-1,1))))
-        newarr[:,0] += newarr[:,-1]
-        words_list.append(newarr.copy())
-        if qs[i] == l:
-            break
-    n_words = np.concatenate(words_list)
-    return n_words
+# TODO: find the proper balance between these two implementations
+#
+# def compress(word):
+#  shift = (word ^ (word - 1)).bit_length()
+#  return ((shift - 1) << 8) | ((word >> shift) & 255)
+#
+# def decompress(pack):
+#  shift = pack >> 8
+#  bits = pack & 255
+#  return (bits * 2 + 1) << shift
 
-def main_find(output_path = 'output.txt'):
+def compress(cword):
+    return ( cword^(cword - 1) ).bit_length() - 1
+
+def decompress(dpack):
+    return 1<<dpack
+
+def letter_to_bit(clb):
+    return 'aesiorunltycdhmpgkbwfvzjxq'.find(clb)
+    # return ord(c) - ord('a')
+
+def store(progress):
+    global count
+    if anagrams:
+        for s in itertools.product( *(wordnames[word] for word in progress) ):
+            print( *sorted(s) )
+            count += 1
+    else:
+        group = sorted( next( iter(wordnames[word]) ) for word in progress )
+        # print(group)
+        output[count] = group
+        count += 1
+
+def solve(alphabet, num_wds, grace = 1, progress = array.array('L', (0, 0, 0, 0, 0)), depth=0):
+    depth_limit = num_wds - 1
+    for drop in range(grace + 1):
+        first = alphabet.bit_length() - 1
+        for pack in firstletter[first]:
+            required = decompress(pack)
+            if( alphabet & required ) == required:
+                for mask in firstletter[first][pack]:
+                    if( mask & alphabet ) == mask:
+                        progress[depth] = mask
+                        if depth >= depth_limit:
+                            store(progress)
+                        else:
+                            solve( alphabet & ~mask, num_wds, grace - drop, progress, depth + 1 )
+        alphabet ^= 1<<first
+
+def main_find(save_option, word_sz=5, num_wds=5):
+    print(f"find {num_wds} unique words each with {word_sz} letters.")
+    print(f"save option = '{save_option}'\n")
     start = time.perf_counter()
 
-    words = np.array( [item[:-1] for item in scrabble.keys() if len(item) == 6] )
-    # with open(dict_path) as f:
-    #     words = np.array( [X[:-1] for X in f if len(X) == 6] )
+    for word in scrabble.keys():
+        if len(word) == word_sz:
+            mask = 0
+            word = word.lower()
+            for lett in word:
+                i = letter_to_bit(lett)
+                if not( 0 <= i < 26 ):
+                    break
+                b = 1<<i
+                if mask & b:
+                    break
+                mask |= b
+            else:
+                first = mask.bit_length() - 1
+                pack = compress(mask)
+                wordnames.setdefault( mask, set() ).add(word)
+                firstletter[first].setdefault( pack, set() ).add(mask)
 
-    pi = np.array([ 0, 18, 11, 12, 1, 20, 16, 13, 3, 23, 17, 8, 14, 7, 4, 15, 25, 5, 2, 9, 6, 21, 19, 24, 10, 22])
+    alphabet = (1<<26) - 1
+    solve(alphabet, num_wds)
+    # print(output)
+    for index in output.keys():
+        print(output[index])
+    print(f"total groups = {count}")
+    print(f"\nelapsed time = {time.perf_counter() - start}")
 
-    raw = pi[ words.view('int32').reshape((-1,5)) - 97 ]
-    dup  = ((raw.reshape((-1,1,5))==raw.reshape((-1,5,1))).sum(axis=(1,2))<6)
-    # dup = ( ( raw.reshape((-1,1,5)) == raw.reshape((-1,5,1)) ).sum(axis = (1,2)) < 6 )
-    rmduplicates = raw[dup,:]
-
-    balist = (2**rmduplicates).sum(axis=1)
-    balist2, counts = np.unique(balist, return_counts=True)
-    words2 = words[dup][np.argsort(balist)]
-    anagramsl = np.concatenate( [[0], np.cumsum(counts)] )
-
-    exp = 2**np.array( range(0,27) )
-    dexp = 2**26 - exp
-    rs = np.searchsorted(balist2, exp)
-    ga = np.array( [[0,1]] )
-    for i in range(5):
-        ga = add_word( add_taboo(ga, dexp), dexp, balist2, rs )
-
-    outputs = ga[:,2:]
-    outputs2 = np.searchsorted(balist2,outputs)
-    va = anagramsl[1:] - anagramsl[:-1]
-    wordsquarelist = np.zeros( (va[outputs2].prod(axis=1).sum(),5), dtype = '<U5' )
-
-    t = 0
-    for i in range( len(outputs) ):
-        xa = np.array( list( np.ndindex( va[outputs2[i]]) ) )
-        index = anagramsl[outputs2[i]] + xa
-        wordsquarelist[t:t+xa.shape[0]] = words2[index]
-        t += xa.shape[0]
-
-    lines = [' '.join(X) for X in wordsquarelist]
-    with open(output_path, 'w') as f:
-        f.write( '\n'.join(lines) )
-
-    print( time.perf_counter() - start )
+    save_option = save_option.upper()
+    if save_option == 'Y' or save_option == 'YES':
+        save_to_json(f"{word_sz}x{num_wds}_words", output)
 
 
 if __name__ == '__main__':
     save_opt = 'No'
+    word_size = 5
+    num_words = 5
+    print(f"argv = {argv}")
     if len(argv) > 1 and argv[1].isalpha():
         save_opt = argv[1]
-    main_find(save_opt)
+    if len(argv) > 2 and argv[2].isalpha():
+        word_size = int(argv[2])
+    if len(argv) > 3 and argv[3].isalpha():
+        num_words = int(argv[3])
+    main_find(save_opt, word_size, num_words)
     exit()
