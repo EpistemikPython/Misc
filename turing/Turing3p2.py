@@ -13,7 +13,7 @@
 __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __created__ = "2021-05-05"
-__updated__ = "2021-05-07"
+__updated__ = "2023-10-19"
 
 import sys
 import time
@@ -26,9 +26,8 @@ lgr = log_control.get_logger()
 info = lgr.info
 dbg = lgr.debug
 show = log_control.show
-lgr.warning("START LOGGING")
-
 run_time = mhsLogging.run_ts
+lgr.warning("START LOGGING")
 
 # number of 'squares' available on the 'tape'
 DEFAULT_TAPE_SIZE = 256
@@ -51,16 +50,15 @@ SYM_ONE   = '1'
 SYM_X     = 'x'
 SYM_SCHWA = '@'
 
-# machine state
-STATE_BEGIN   = 0
-STATE_PRINT_X = 1
-STATE_ERASE_X = 2
-STATE_PRINT_0 = 3
-STATE_PRINT_1 = 4
+# state names for display
+STATE_LABELS = ["STATE_BEGIN", "STATE_PRINT_X", "STATE_ERASE_X", "STATE_PRINT_0", "STATE_PRINT_1"]
 
-# state names for display -- order MUST MATCH the values for the machine state ints
-STR_STATES = ["STATE_BEGIN", "STATE_PRINT_X", "STATE_ERASE_X", "STATE_PRINT_0", "STATE_PRINT_1"]
-
+# machine states
+STATE_BEGIN   = STATE_LABELS.index("STATE_BEGIN")
+STATE_PRINT_X = STATE_LABELS.index("STATE_PRINT_X")
+STATE_ERASE_X = STATE_LABELS.index("STATE_ERASE_X")
+STATE_PRINT_0 = STATE_LABELS.index("STATE_PRINT_0")
+STATE_PRINT_1 = STATE_LABELS.index("STATE_PRINT_1")
 
 class Turing3p2:
     """Python implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II"""
@@ -93,10 +91,10 @@ class Turing3p2:
     def begin(self):
         """set the INITIAL STATE of the machine -- should NEVER return to this state"""
         if self.state != STATE_BEGIN:
-            lgr.warning(F"UNEXPECTED return to {STR_STATES[STATE_BEGIN]}?!")
+            lgr.warning(F"UNEXPECTED return to {STATE_LABELS[STATE_BEGIN]}?!")
             return
 
-        show(STR_STATES[STATE_BEGIN])
+        show(STATE_LABELS[STATE_BEGIN])
         if self.show_steps:
             self.show_step(0)
 
@@ -104,7 +102,6 @@ class Turing3p2:
         self.move_right()
         self.set(SYM_SCHWA)
         self.move_right()
-
         self.set(SYM_ZERO)
         self.move_right(2)
         self.set(SYM_ZERO)
@@ -112,8 +109,7 @@ class Turing3p2:
         self.state = STATE_PRINT_X
 
     def generate(self):
-        """run the algorithm
-
+        """run the algorithm:
         - check the current state
         - check the current position on the 'tape'
         - create or erase a symbol if necessary
@@ -123,26 +119,24 @@ class Turing3p2:
         step = 0
         dbg( F"Size of tape array = {str(len(self.tape.keys()))}")
         dbg( F"Step pause = {str(self.step_delay)} msec" )
-
         # set the initial state
         self.begin()
+
         # we don't have an infinite tape --
         # >> CONTINUE UNTIL PAST THE END OF THE TAPE
         while self.position < self.tape_size:
             step += 1
             current_symbol = self.tape[str(self.position)]
-            dbg(F"current position = {self.position}; current symbol = {current_symbol}")
-
             if self.show_steps:
+                dbg(F"current position = {self.position}; current symbol = {current_symbol}")
                 self.show_step(step)
+                dbg(STATE_LABELS[self.state])
 
-            dbg(STR_STATES[self.state])
             if self.state == STATE_PRINT_X:
                 if current_symbol == SYM_ONE:
                     self.move_right()
                     self.set(SYM_X)
                     self.move_left(3)
-
                 elif current_symbol == SYM_ZERO:
                     self.state = STATE_PRINT_1
 
@@ -151,11 +145,9 @@ class Turing3p2:
                     self.erase()
                     self.move_right()
                     self.state = STATE_PRINT_1
-
                 elif current_symbol == SYM_SCHWA:
                     self.move_right()
                     self.state = STATE_PRINT_0
-
                 elif current_symbol == symBLANK:
                     self.move_left(2)
 
@@ -220,7 +212,7 @@ class Turing3p2:
 
     def show_step(self, step:int):
         """DISPLAY the position and machine state at a particular point in the program"""
-        show("Step #" + str(step) + " - State = " + STR_STATES[self.state] +
+        show("Step #" + str(step) + " - State = " + STATE_LABELS[self.state] +
              " - Position is " + str(self.position) + "[" + self.tape[str(self.position)] + "]")
         self.print_tape()
         # pause to allow easier inspection of each step
@@ -239,7 +231,6 @@ def process_args():
     arg_desc = "Implementation of the state machine described in 'On Computable Numbers' (1936) by Alan Turing, " \
                "section 3.II, which generates a sequence of 0's each followed by an increasing number of 1's, " \
                "from zero to infinity, i.e. 001011011101111011111..."
-
     arg_parser = ArgumentParser(description = arg_desc, prog = "Turing3p2.py")
     # optional arguments
     arg_parser.add_argument('-d', "--describe", action = "store_true", help = "describe EACH algorithm step")
@@ -270,12 +261,10 @@ def process_input_parameters(argx: list):
         if size > MAX_TAPE_SIZE:
             size = MAX_TAPE_SIZE
             lgr.warning(F"MAXIMUM tape size = {MAX_TAPE_SIZE}")
-
         pause = args.pause
         if MIN_DELAY_MSEC > pause > MAX_DELAY_MSEC:
             pause = DEFAULT_DELAY_MSEC
             lgr.warning(F"step delay MUST be between {MIN_DELAY_MSEC} and {MAX_DELAY_MSEC}!")
-
         newline = args.newline
         desc_steps = args.describe
 
@@ -290,11 +279,12 @@ def main_turing(args:list):
         turing.generate()
     except Exception as ex:
         lgr.error(F"PROBLEM with program: {repr(ex)}!")
-        exit(293)
+        exit(66)
 
 
 if __name__ == "__main__":
-    show(F"\nProgram started: {run_time}")
+    start = time.perf_counter()
+    show(F"Program started: {run_time}")
     main_turing(sys.argv[1:])
-    show("\nProgram completed.\n")
-    exit()
+    show(F"\nProgram completed.\nelapsed time = {time.perf_counter() - start}")
+    exit(0)
