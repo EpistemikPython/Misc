@@ -2,6 +2,8 @@
 !.gitignore
 /gnucash
 /py3bindings
+**/results/
+**/output/
 **/in/Monarch
 **/out/
 **/code/
@@ -20,5 +22,6 @@
 *.bin
 *.exe
 *.x
+*.term
 # find <dir/>* -type l >> .gitignore
 
