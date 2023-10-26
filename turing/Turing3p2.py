@@ -8,22 +8,21 @@
 #   i.e. 001011011101111011111...
 #   Also see <i>The Annotated Turing</i> by <b>Charles Petzold</b> Chapter 5, pp.85-94.
 #
-# Copyright (c) 2021 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
 
 __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
+__python_version__ = "3.6+"
 __created__ = "2021-05-05"
-__updated__ = "2023-10-19"
+__updated__ = "2023-10-26"
 
 import sys
 import time
 from argparse import ArgumentParser
 import mhsLogging
 
-base_filename = mhsLogging.get_base_filename(__file__)
-log_control = mhsLogging.MhsLogger(base_filename)
+log_control = mhsLogging.MhsLogger(mhsLogging.get_base_filename(__file__))
 lgr = log_control.get_logger()
-info = lgr.info
 dbg = lgr.debug
 show = log_control.show
 run_time = mhsLogging.run_ts
@@ -63,7 +62,7 @@ STATE_PRINT_1 = STATE_LABELS.index("STATE_PRINT_1")
 class Turing3p2:
     """Python implementation of the Turing machine described in "On Computable Numbers (1936)", section 3.II"""
     def __init__(self, p_size=DEFAULT_TAPE_SIZE, p_pause=DEFAULT_DELAY_MSEC, p_newline=True, p_show=False):
-        # use as a substitute for the 'infinite' tape
+        # substitute for the 'infinite' tape
         self.tape = dict()
         # size of the tape
         self.tape_size = p_size
@@ -79,7 +78,6 @@ class Turing3p2:
 
         # delay, in milliseconds, between each step display
         self.step_delay = p_pause
-
         # start each zero on a new line
         self.show_newline = p_newline
 
@@ -89,7 +87,7 @@ class Turing3p2:
         self.position = 0
 
     def begin(self):
-        """set the INITIAL STATE of the machine -- should NEVER return to this state"""
+        """set the INITIAL STATE of the machine >> should NEVER return to this state"""
         if self.state != STATE_BEGIN:
             lgr.warning(F"UNEXPECTED return to {STATE_LABELS[STATE_BEGIN]}?!")
             return
@@ -118,12 +116,13 @@ class Turing3p2:
         """
         step = 0
         dbg( F"Size of tape array = {str(len(self.tape.keys()))}")
-        dbg( F"Step pause = {str(self.step_delay)} msec" )
+        if self.show_steps:
+            dbg( F"Step pause = {str(self.step_delay)} msec" )
         # set the initial state
         self.begin()
 
-        # we don't have an infinite tape --
-        # >> CONTINUE UNTIL PAST THE END OF THE TAPE
+        # we don't have an infinite tape
+        # >> CONTINUE UNTIL REACH THE END OF THE TAPE
         while self.position < self.tape_size:
             step += 1
             current_symbol = self.tape[str(self.position)]
@@ -139,6 +138,8 @@ class Turing3p2:
                     self.move_left(3)
                 elif current_symbol == SYM_ZERO:
                     self.state = STATE_PRINT_1
+                else:
+                    raise Exception(F"Problem with state {STATE_LABELS[self.state]} @ step #{step}!")
 
             elif self.state == STATE_ERASE_X:
                 if current_symbol == SYM_X:
@@ -150,6 +151,8 @@ class Turing3p2:
                     self.state = STATE_PRINT_0
                 elif current_symbol == symBLANK:
                     self.move_left(2)
+                else:
+                    raise Exception(F"Problem with state {STATE_LABELS[self.state]} @ step #{step}!")
 
             elif self.state == STATE_PRINT_0:
                 if current_symbol == symBLANK:
@@ -165,7 +168,7 @@ class Turing3p2:
                     self.move_left()
                     self.state = STATE_ERASE_X
                 else:
-                    # current symbol == nZERO or nONE
+                    # current symbol == ZERO or ONE
                     self.move_right(2)
 
             else:
@@ -184,7 +187,7 @@ class Turing3p2:
         self.position += count
         # END PROGRAM when position moves beyond the end of the tape
         if self.position >= self.tape_size:
-            lgr.warning("Reached position # " + str(self.position) + " >> ENDING PROGRAM.")
+            lgr.warning("Reached tape position # " + str(self.position) + " >> ENDING PROGRAM.")
             turing_sleep(DEFAULT_DELAY_MSEC) # to ensure the printouts are NOT interleaved
             if not self.show_steps:
                 self.print_tape()
@@ -193,7 +196,7 @@ class Turing3p2:
     def move_left(self, count:int=1):
         """MOVE LEFT by the specified number of squares - not in Turing's description but more convenient"""
         self.position -= count
-        # return to position 0 if move BEFORE the beginning of the tape -- SHOULD NEVER HAPPEN
+        # return to position 0 if move BEFORE the beginning of the tape >> SHOULD NEVER HAPPEN
         if self.position < 0:
             lgr.warning("Position is less than 0 !!")
             self.position = 0
@@ -201,14 +204,17 @@ class Turing3p2:
     def print_tape(self):
         """DISPLAY the current sequence of symbols on the tape"""
         current_tape = ""
+        # display tape to the console
         for posn in self.tape.keys():
             if self.tape[posn] == SYM_ZERO and self.show_newline:
                 print("")
+                current_tape += '\n'
             print(self.tape[posn], end='')
             current_tape += self.tape[posn]
         print('E')
         current_tape += 'E'
-        dbg(current_tape)
+        # record tape for the log
+        lgr.info(current_tape)
 
     def show_step(self, step:int):
         """DISPLAY the position and machine state at a particular point in the program"""
@@ -224,7 +230,7 @@ class Turing3p2:
 # END class Turing3p2
 
 def turing_sleep(msec:int):
-    """ convert msec to sec and sleep """
+    """convert msec to sec and sleep"""
     time.sleep( float(msec) / 1000.0 )
 
 def process_args():
@@ -243,15 +249,14 @@ def process_args():
 
     return arg_parser
 
-
 def process_input_parameters(argx: list):
     args = process_args().parse_args(argx)
-    dbg(F"\n\targs = {args}")
+    dbg(F"args = {args}")
 
+    pause = 0
     if args.example:
         newline = True
         size = 602
-        pause = MIN_DELAY_MSEC
         desc_steps = False
     else:
         size = args.size
@@ -261,19 +266,19 @@ def process_input_parameters(argx: list):
         if size > MAX_TAPE_SIZE:
             size = MAX_TAPE_SIZE
             lgr.warning(F"MAXIMUM tape size = {MAX_TAPE_SIZE}")
-        pause = args.pause
-        if MIN_DELAY_MSEC > pause > MAX_DELAY_MSEC:
-            pause = DEFAULT_DELAY_MSEC
-            lgr.warning(F"step delay MUST be between {MIN_DELAY_MSEC} and {MAX_DELAY_MSEC}!")
         newline = args.newline
         desc_steps = args.describe
+        if desc_steps:
+            pause = args.pause
+            if MIN_DELAY_MSEC > pause > MAX_DELAY_MSEC:
+                pause = DEFAULT_DELAY_MSEC
+                lgr.warning(F"step delay MUST be between {MIN_DELAY_MSEC} and {MAX_DELAY_MSEC}!")
 
     return size, pause, newline, desc_steps
 
-
 def main_turing(args:list):
     size, pause, newline, desc = process_input_parameters(args)
-    show(F"size = {size}; pause = {pause}; newline = {newline}; desc = {desc}")
+    show(F"tape size = {size}; newline = {newline}; show steps = {desc}; pause = {pause if desc else False}")
     try:
         turing = Turing3p2(size, pause, newline, desc)
         turing.generate()
