@@ -14,7 +14,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2021-05-05"
-__updated__ = "2023-10-26"
+__updated__ = "2023-10-27"
 
 import sys
 import time
@@ -23,24 +23,22 @@ import mhsLogging
 
 log_control = mhsLogging.MhsLogger(mhsLogging.get_base_filename(__file__))
 lgr = log_control.get_logger()
-dbg = lgr.debug
-show = log_control.show
-run_time = mhsLogging.run_ts
 lgr.warning("START LOGGING")
+show = log_control.show
 
 # number of 'squares' available on the 'tape'
 DEFAULT_TAPE_SIZE = 256
-# MAXIMUM number of 'squares' available on the 'tape'
-MAX_TAPE_SIZE = 1024 * 16
 # MINIMUM number of 'squares' available on the 'tape'
-MIN_TAPE_SIZE = 16
+MIN_TAPE_SIZE = DEFAULT_TAPE_SIZE / 16
+# MAXIMUM number of 'squares' available on the 'tape'
+MAX_TAPE_SIZE = DEFAULT_TAPE_SIZE * 64
 
 # if displaying each step of the algorithm, DEFAULT delay (in msec) between each step
-DEFAULT_DELAY_MSEC = 2000
+DEFAULT_DELAY_MSEC = 2048
 # if displaying each step of the algorithm, MINIMUM delay (in msec) between each step
-MIN_DELAY_MSEC = 50
+MIN_DELAY_MSEC = DEFAULT_DELAY_MSEC / 16
 # if displaying each step of the algorithm, MAXIMUM delay (in msec) between each step
-MAX_DELAY_MSEC = 60 * 1000
+MAX_DELAY_MSEC = DEFAULT_DELAY_MSEC * 64
 
 # tape symbols
 symBLANK  = ''
@@ -89,8 +87,7 @@ class Turing3p2:
     def begin(self):
         """set the INITIAL STATE of the machine >> should NEVER return to this state"""
         if self.state != STATE_BEGIN:
-            lgr.warning(F"UNEXPECTED return to {STATE_LABELS[STATE_BEGIN]}?!")
-            return
+            raise Exception(F"UNEXPECTED return to {STATE_LABELS[STATE_BEGIN]}?!")
 
         show(STATE_LABELS[STATE_BEGIN])
         if self.show_steps:
@@ -115,9 +112,9 @@ class Turing3p2:
         - set the next state
         """
         step = 0
-        dbg( F"Size of tape array = {str(len(self.tape.keys()))}")
+        lgr.debug( F"Size of tape array = {str(len(self.tape.keys()))}")
         if self.show_steps:
-            dbg( F"Step pause = {str(self.step_delay)} msec" )
+            lgr.debug( F"Step pause = {str(self.step_delay)} msec" )
         # set the initial state
         self.begin()
 
@@ -127,9 +124,9 @@ class Turing3p2:
             step += 1
             current_symbol = self.tape[str(self.position)]
             if self.show_steps:
-                dbg(F"current position = {self.position}; current symbol = {current_symbol}")
+                lgr.debug(F"current position = {self.position}; current symbol = {current_symbol}")
                 self.show_step(step)
-                dbg(STATE_LABELS[self.state])
+                lgr.debug(STATE_LABELS[self.state])
 
             if self.state == STATE_PRINT_X:
                 if current_symbol == SYM_ONE:
@@ -251,7 +248,7 @@ def process_args():
 
 def process_input_parameters(argx: list):
     args = process_args().parse_args(argx)
-    dbg(F"args = {args}")
+    lgr.debug(F"args = {args}")
 
     pause = 0
     if args.example:
@@ -289,7 +286,7 @@ def main_turing(args:list):
 
 if __name__ == "__main__":
     start = time.perf_counter()
-    show(F"Program started: {run_time}")
+    show(F"Program started @ {mhsLogging.run_ts}")
     main_turing(sys.argv[1:])
     show(F"\nProgram completed.\nelapsed time = {time.perf_counter() - start}")
     exit(0)
