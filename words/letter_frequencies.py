@@ -3,13 +3,13 @@
 #
 # letter_frequencies.py -- get the frequency of each letter in words of specified lengths from a word file
 #
-# Copyright (c) 2022 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2023-10-29"
+__updated__ = "2023-10-30"
 
 import time
 import json
@@ -18,19 +18,14 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json
 
 start = time.perf_counter()
-ordered_letters = 'SEAORILTNUDYCPMHGBKFWVZJXQ'
-# ordered_letters = ['s','e','a','o','r','i','l','t','n','u','d','y','c','p','m','h','g','b','k','f','w','v','z','j','x','q']
-numletters = len(ordered_letters)
-freqs = {}
-for lett in ordered_letters:
-    freqs[lett] = 0
-# freqs = [0 for f in range(numletters)]
-lower = 5
-upper = 9
+ORDERED_LETTERS = "SEAORILTNUDYCPMHGBKFWVZJXQ"
+MIN_LOWER = 5
+DEFAULT_UPPER = 9
+MAX_UPPER = 15
 
-def main_words(save_option:str):
-    print(f"lower word size = {lower}")
-    print(f"upper word size = {upper}")
+def main_words():
+    """get the frequency of each letter in words of specified lengths from a word file"""
+    freqs = dict.fromkeys(ORDERED_LETTERS, 0)
     wct = lct = 0
     scp = json.load(open("scrabble-plus.json"))
     for item in scp:
@@ -40,21 +35,48 @@ def main_words(save_option:str):
                 lct += 1
             wct += 1
 
-    print(f"word count = {wct}\n")
-    print(f"letter count = {lct}\n")
+    print(f"word count = {wct}")
+    print(f"letter count = {lct}")
+    rev_freqs = {}
+    sorted_freqs = {}
     print(f"letter frequencies:")
     for key in freqs.keys():
-        print(f"{key}: {freqs[key]}")
+        print(f"\t{key}: {freqs[key]}")
+        rev_freqs[freqs[key]] = key
 
-    save_option = save_option.upper()
-    if save_option == 'Y' or save_option == 'YES':
-        save_to_json("letter_frequencies", freqs)
+    print(f"\nsorted letter frequencies:")
+    for val in sorted(rev_freqs, reverse = True):
+        sorted_freqs[rev_freqs[val]] = val
+        print(f"\t{rev_freqs[val]}: {val}")
+
+    print(f"\nelapsed time = {time.perf_counter() - start}")
+    if save_option.upper()[0] == 'Y':
+        save_to_json(f"{lower}-{upper}_letter_frequencies", sorted_freqs)
 
 
-if __name__ == '__main__':
-    save_opt = 'No'
+if __name__ == "__main__":
+    save_option = "No"
     if len(argv) > 1 and argv[1].isalpha():
-        save_opt = argv[1]
-    main_words(save_opt)
+        save_option = argv[1]
+    print(f"save option = '{save_option}'")
+
+    lower = MIN_LOWER
+    upper = DEFAULT_UPPER
+    if len(argv) > 2:
+        request = int(argv[2])
+        if MAX_UPPER > request > MIN_LOWER:
+            print(f"requested lower size = {request}")
+            lower = request
+    if len(argv) > 3:
+        request = int(argv[3])
+        if MAX_UPPER >= request > MIN_LOWER:
+            print(f"requested upper size = {request}")
+            upper = request
+    if lower > upper:
+        lower = upper - 1
+    print(f"lower word size = {lower}")
+    print(f"upper word size = {upper}\n")
+
+    main_words()
     print(f"\nelapsed time = {time.perf_counter() - start}")
     exit()
