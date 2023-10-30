@@ -11,7 +11,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2023-10-29"
+__updated__ = "2023-10-30"
 
 import array
 import time
@@ -21,13 +21,15 @@ from scrabble_words_2019 import scrabble
 
 start = time.perf_counter()
 # highest to lowest letter frequencies in Scrabble 5-letter words
-ordered_letters = 'seaoriltnudycpmhgbkfwvzjxq'
-default_numletters = len(ordered_letters)
-min_num_letters = 12
-default_wordsize = 5
-default_initializer = (0, 0, 0, 0, 0)
-default_numwords = len(default_initializer)
-min_numwords = 2
+ORDERED_LETTERS = 'seaoriltnudycpmhgbkfwvzjxq'
+DEFAULT_NUMLETTERS = len(ORDERED_LETTERS)
+MIN_NUM_LETTERS = 12
+DEFAULT_WORDSIZE = 5
+DEFAULT_INITIALIZER = (0, 0, 0, 0, 0)
+DEFAULT_NUMWORDS = len(DEFAULT_INITIALIZER)
+MIN_NUMWORDS = 2
+
+# global vars
 count = 0
 wordnames = {}
 output = {}
@@ -60,10 +62,10 @@ def solve(alphabet:int, p_grace:int, progress:array, depth:int=0):
                             solve(alphabet & ~mask, p_grace - drop, progress, depth + 1)
         alphabet ^= 1<<first
 
-def main_find(save_option:str):
+def main_find():
+    """process a list of words to find groups of words of the same length with each having unique letters"""
     print(f"letters to use are: '{ordered_letters}'")
     print(f"find {num_words} 'uniquely lettered' words each with {word_size} letters.")
-    print(f"save option = '{save_option}'")
 
     ctr = 0
     first = 0
@@ -86,18 +88,19 @@ def main_find(save_option:str):
                 wordnames.setdefault( mask, set() ).add(word)
                 firstletter[first].setdefault( pack, set() ).add(mask)
 
+    # DEBUG
     print(f"found {ctr} words.")
     print(f"len wordnames = {len(wordnames)}")
     print(f"first = {first}")
     print(f"len firstletter[first] = {len(firstletter[first])}")
     print(f"firstletter[first] = {firstletter[first]}")
 
-    initializer = default_initializer
+    initializer = DEFAULT_INITIALIZER
     if num_words == 4:
         initializer = (0, 0, 0, 0)
     elif num_words == 3:
         initializer = (0, 0, 0)
-    elif num_words == min_numwords:
+    elif num_words == MIN_NUMWORDS:
         initializer = (0, 0)
     solve((1<<num_letters) - 1, grace, array.array('L', initializer))
 
@@ -111,45 +114,46 @@ def main_find(save_option:str):
     print(f"total groups = {count}")
 
     print(f"\nelapsed time = {time.perf_counter() - start}")
-    save_option = save_option.upper()
-    if save_option[0] == 'Y' and len(save_option) <= 4:
-        save_to_json(f"output/{word_size}x{num_words}f{num_letters}_words", output)
+    if save_option.upper()[0] == 'Y' and len(save_option) <= 4:
+        save_to_json(f"{word_size}x{num_words}f{num_letters}_words", output)
 
 
 if __name__ == '__main__':
-    save_opt = 'No'
-    word_size = default_wordsize
-    num_words = default_numwords
     print(f"argv = {argv}")
-
+    save_option = "No"
     if len(argv) > 1 and argv[1].isalpha():
-        save_opt = argv[1]
+        save_option = argv[1]
+    print(f"save option = '{save_option}'")
+
+    word_size = DEFAULT_WORDSIZE
+    num_words = DEFAULT_NUMWORDS
     if len(argv) > 2:
         word_size = int(argv[2])
         print(f"requested word size = {word_size}")
     if len(argv) > 3:
         num_words_reqtd = int(argv[3])
         print(f"number of words requested = {num_words_reqtd}")
-        if default_numwords > num_words_reqtd >= min_numwords:
+        if DEFAULT_NUMWORDS > num_words_reqtd >= MIN_NUMWORDS:
             num_words = num_words_reqtd
     if len(argv) > 4:
         num_letters_reqtd = int(argv[4])
         print(f"number of letters requested = {num_letters_reqtd}")
-        if min_num_letters <= num_letters_reqtd < default_numletters:
-            ordered_letters = ordered_letters[:num_letters_reqtd]
+        if MIN_NUM_LETTERS <= num_letters_reqtd < DEFAULT_NUMLETTERS:
+            ordered_letters = ORDERED_LETTERS[:num_letters_reqtd]
 
     # make sure the parameters for size of words & number of words and letters are safe and sensible
-    num_letters = len(ordered_letters)
+    num_letters = len(ORDERED_LETTERS)
     print(f"using {num_letters} letters")
     if word_size * num_words > num_letters:
-        word_size = default_wordsize
-        num_words = num_letters // default_wordsize
+        word_size = DEFAULT_WORDSIZE
+        num_words = num_letters // DEFAULT_WORDSIZE
     grace = num_letters - (word_size * num_words)
     print(f"grace = {grace}\n")
 
     firstletter = [{} for f in range(num_letters)]
+    # DEBUG
     print(firstletter)
 
-    main_find(save_opt)
+    main_find()
     print(f"\nelapsed time = {time.perf_counter() - start}")
     exit()
