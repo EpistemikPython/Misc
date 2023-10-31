@@ -20,13 +20,14 @@ from mhsUtils import save_to_json
 from scrabble_words_2019 import scrabble
 
 start = time.perf_counter()
-# highest to lowest letter frequencies in Scrabble 5-letter words
-ORDERED_LETTERS = 'seaoriltnudycpmhgbkfwvzjxq'
+# highest to lowest letter frequencies in Scrabble '5-13 letter' words
+ORDERED_LETTERS = "ESIARNOTLCDUPMGHBYFKVWZXQJ"
 DEFAULT_NUMLETTERS = len(ORDERED_LETTERS)
 MIN_NUM_LETTERS = 12
+MAX_WORDSIZE = 15
 DEFAULT_WORDSIZE = 5
 DEFAULT_INITIALIZER = (0, 0, 0, 0, 0)
-DEFAULT_NUMWORDS = len(DEFAULT_INITIALIZER)
+MAX_NUMWORDS = len(DEFAULT_INITIALIZER)
 MIN_NUMWORDS = 2
 
 # global vars
@@ -64,16 +65,12 @@ def solve(alphabet:int, p_grace:int, progress:array, depth:int=0):
 
 def main_find():
     """process a list of words to find groups of words of the same length with each having unique letters"""
-    print(f"letters to use are: '{ordered_letters}'")
-    print(f"find {num_words} 'uniquely lettered' words each with {word_size} letters.")
-
-    ctr = 0
+    ct = 0
     first = 0
     for word in scrabble.keys():
         if len(word) == word_size:
-            ctr += 1
+            ct += 1
             mask = 0
-            word = word.lower()
             for lett in word:
                 i = ordered_letters.find(lett)
                 if not(0 <= i < num_letters):
@@ -89,7 +86,7 @@ def main_find():
                 firstletter[first].setdefault( pack, set() ).add(mask)
 
     # DEBUG
-    print(f"found {ctr} words.")
+    print(f"found {ct} words.")
     print(f"len wordnames = {len(wordnames)}")
     print(f"first = {first}")
     print(f"len firstletter[first] = {len(firstletter[first])}")
@@ -126,27 +123,31 @@ if __name__ == '__main__':
     print(f"save option = '{save_option}'")
 
     word_size = DEFAULT_WORDSIZE
-    num_words = DEFAULT_NUMWORDS
     if len(argv) > 2:
-        word_size = int(argv[2])
-        print(f"requested word size = {word_size}")
+        request = int(argv[2])
+        if MAX_WORDSIZE >= request > DEFAULT_WORDSIZE:
+            print(f"requested word size = {request}")
+            word_size = request
+    num_words = MAX_NUMWORDS
     if len(argv) > 3:
-        num_words_reqtd = int(argv[3])
-        print(f"number of words requested = {num_words_reqtd}")
-        if DEFAULT_NUMWORDS > num_words_reqtd >= MIN_NUMWORDS:
-            num_words = num_words_reqtd
+        request = int(argv[3])
+        print(f"number of words requested = {request}")
+        if MAX_NUMWORDS > request >= MIN_NUMWORDS:
+            num_words = request
+    ordered_letters = ORDERED_LETTERS
     if len(argv) > 4:
-        num_letters_reqtd = int(argv[4])
-        print(f"number of letters requested = {num_letters_reqtd}")
-        if MIN_NUM_LETTERS <= num_letters_reqtd < DEFAULT_NUMLETTERS:
-            ordered_letters = ORDERED_LETTERS[:num_letters_reqtd]
+        request = int(argv[4])
+        print(f"number of letters requested = {request}")
+        if MIN_NUM_LETTERS <= request < DEFAULT_NUMLETTERS:
+            ordered_letters = ORDERED_LETTERS[:request]
 
     # make sure the parameters for size of words & number of words and letters are safe and sensible
-    num_letters = len(ORDERED_LETTERS)
-    print(f"using {num_letters} letters")
+    num_letters = len(ordered_letters)
+    print(f"letters to use are: '{ordered_letters}'")
     if word_size * num_words > num_letters:
         word_size = DEFAULT_WORDSIZE
         num_words = num_letters // DEFAULT_WORDSIZE
+    print(f"find {num_words} 'uniquely lettered' words each with {word_size} letters.")
     grace = num_letters - (word_size * num_words)
     print(f"grace = {grace}\n")
 
