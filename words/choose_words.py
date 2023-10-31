@@ -9,7 +9,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2023-10-30"
+__updated__ = "2023-10-31"
 
 import time
 from sys import path, argv
@@ -23,7 +23,7 @@ MIN_LENGTH = 2
 MAX_LENGTH = 15
 
 def main_choose():
-    """process a list of words to find words of the specified lengths and save to a json file"""
+    """process a list of words to find words of the specified length(s) and save to a json file"""
     newlist = []
     ix = 0
     for item in scrabble.keys():
@@ -32,6 +32,7 @@ def main_choose():
             ix += 1
     print(f"word count = {ix}\n")
 
+    # sample some of the output
     ni = 0
     nli = ix // 50
     for word in newlist:
@@ -51,20 +52,18 @@ if __name__ == '__main__':
     print(f"save option = '{save_option}'")
 
     lower = DEFAULT_LENGTH
-    upper = DEFAULT_LENGTH
     if len(argv) > 2:
         request = int(argv[2])
         print(f"requested lower word size = {request}")
         if MIN_LENGTH <= request < MAX_LENGTH:
             lower = request
+    print(f"lower word size = {lower}")
+    upper = lower
     if len(argv) > 3:
         request = int(argv[3])
         print(f"requested upper word size = {request}")
-        if MIN_LENGTH < request <= MAX_LENGTH:
+        if lower < request <= MAX_LENGTH:
             upper = request
-    if lower > upper:
-        lower = upper - 1
-    print(f"lower word size = {lower}")
     print(f"upper word size = {upper}")
 
     main_choose()
