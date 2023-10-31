@@ -18,16 +18,16 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json
 
 start = time.perf_counter()
+WORD_FILE = "scrabble-plus.json"
 ORDERED_LETTERS = "SEAORILTNUDYCPMHGBKFWVZJXQ"
 MIN_LOWER = 5
-DEFAULT_UPPER = 9
 MAX_UPPER = 15
 
 def main_words():
-    """get the frequency of each letter in words of specified lengths from a word file"""
+    """get the frequency of each letter in words of specified length(s) from a word file"""
     freqs = dict.fromkeys(ORDERED_LETTERS, 0)
     wct = lct = 0
-    scp = json.load(open("scrabble-plus.json"))
+    scp = json.load(open(WORD_FILE))
     for item in scp:
         if lower <= len(item) <= upper:
             for letter in item:
@@ -46,8 +46,8 @@ def main_words():
 
     print(f"\nsorted letter frequencies:")
     for val in sorted(rev_freqs, reverse = True):
-        sorted_freqs[rev_freqs[val]] = val
         print(f"\t{rev_freqs[val]}: {val}")
+        sorted_freqs[rev_freqs[val]] = val
 
     print(f"\nelapsed time = {time.perf_counter() - start}")
     if save_option.upper()[0] == 'Y':
@@ -55,18 +55,19 @@ def main_words():
 
 
 if __name__ == "__main__":
+    print(f"word file = '{WORD_FILE}'")
     save_option = "No"
     if len(argv) > 1 and argv[1].isalpha():
         save_option = argv[1]
     print(f"save option = '{save_option}'")
 
     lower = MIN_LOWER
-    upper = DEFAULT_UPPER
     if len(argv) > 2:
         request = int(argv[2])
         if MAX_UPPER > request > MIN_LOWER:
             print(f"requested lower size = {request}")
             lower = request
+    upper = lower
     if len(argv) > 3:
         request = int(argv[3])
         if MAX_UPPER >= request > MIN_LOWER:
