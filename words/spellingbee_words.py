@@ -18,6 +18,7 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json
 
 start = time.perf_counter()
+WORD_FILE = "scrabble-plus.json"
 DEFAULT_OUTER_LETTERS = "CONLAY"
 GROUP_SIZE = len(DEFAULT_OUTER_LETTERS)
 DEFAULT_REQD_LETTER = "I"
@@ -27,11 +28,11 @@ def main_sb():
     """find all words from a list that fulfill the specified spelling bee requirements"""
     solutions = []
     sct = 0
-    spj = json.load(open("scrabble-plus.json"))
+    spj = json.load( open(WORD_FILE) )
     for item in spj:
         if len(item) >= MIN_WORD_SIZE:
             for letter in item:
-                if not (letter in group + required):
+                if not( letter in group + required ):
                     break
             else:
                 if required in item:
@@ -39,7 +40,7 @@ def main_sb():
                     sct += 1
 
     print(f"solution count = {sct}")
-    # check for pangrams
+    # check for pangrams and print the solutions
     pgct = 0
     print(f"solutions:")
     for val in solutions:
@@ -62,25 +63,27 @@ def main_sb():
 
 
 if __name__ == '__main__':
+    print(f"word file = '{WORD_FILE}'")
     save_option = "No"
     if len(argv) > 1 and argv[1].isalpha():
         save_option = argv[1]
     print(f"save option = '{save_option}'")
 
-    group = DEFAULT_OUTER_LETTERS
     required = DEFAULT_REQD_LETTER
     if len(argv) > 2:
         request = argv[2]
         if len(request) == 1 and request.isalpha():
-            print(f"requested necessary letter = {request}")
+            print(f"requested mandatory letter = {request}")
             required = request.upper()
+    print(f"required letter = {required}")
+    # make sure the required letter is not among the outer letters?
+    group = DEFAULT_OUTER_LETTERS
     if len(argv) > 3:
         request = argv[3]
         if len(request) == GROUP_SIZE and request.isalpha():
             # make sure all the letters are different?
             print(f"requested outer letters = {request}")
             group = request.upper()
-    print(f"required letter = {required}")
     print(f"outer letters = {group}")
 
     main_sb()
