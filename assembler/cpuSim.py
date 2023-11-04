@@ -4,17 +4,19 @@
 # cpuSim.py -- CPU simulator program ported from Pascal source code
 #              - originally for CSI 1101,  Winter 1999, Assignment 8
 #
-# Copyright (c) 2021 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
 
 __author__       = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __created__ = "2021-05-02"
-__updated__ = "2021-05-05"
+__updated__ = "2023-11-03"
 
-import sys
-import mhsLogging
+from sys import argv, path
+path.append("/home/marksa/git/Python/utils")
+from mhsUtils import get_base_filename, get_current_time
+from mhsLogging import MhsLogger
 
-log_control = mhsLogging.MhsLogger(mhsLogging.get_base_filename(__file__))
+log_control = MhsLogger(get_base_filename(__file__))
 lgr = log_control.get_logger()
 info = lgr.info
 dbg  = lgr.debug
@@ -75,7 +77,7 @@ class Word:
 
     def inc(self):
         if self.value < self.MAX_VALUE:
-            self.value = self.value + 1
+            self.value += 1
         else:
             lgr.warning(F"ILLEGAL Increment attempt! ALREADY at Max value = {self.MAX_VALUE}!")
 
@@ -241,18 +243,18 @@ def run_sim():
             show(F"memory location {mar.get()} contains the value {mdr.get()}")
 
 def main_cpu_sim(filename:str):
-    show(F"Program started: {mhsLogging.run_ts}")
+    show(F"Program started: {get_current_time()}")
     try:
         load( filename )
         run_sim()
     except Exception as ex:
         lgr.error(F"PROBLEM with program: {repr(ex)}")
-        exit(257)
+        exit(66)
 
 
 if __name__ == "__main__":
-    if len( sys.argv ) > 1:
-        main_cpu_sim(sys.argv[1])
+    if len(argv) > 1:
+        main_cpu_sim(argv[1])
     else:
         lgr.warning("MISSING file name!")
     show("Program completed.")
