@@ -14,14 +14,16 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2021-05-05"
-__updated__ = "2023-10-27"
+__updated__ = "2023-11-03"
 
-import sys
+from sys import argv, path
 import time
 from argparse import ArgumentParser
-import mhsLogging
+path.append("/home/marksa/git/Python/utils")
+from mhsUtils import get_base_filename, get_current_time
+from mhsLogging import MhsLogger
 
-log_control = mhsLogging.MhsLogger(mhsLogging.get_base_filename(__file__))
+log_control = MhsLogger(get_base_filename(__file__))
 lgr = log_control.get_logger()
 lgr.warning("START LOGGING")
 show = log_control.show
@@ -286,7 +288,7 @@ def main_turing(args:list):
 
 if __name__ == "__main__":
     start = time.perf_counter()
-    show(F"Program started @ {mhsLogging.run_ts}")
-    main_turing(sys.argv[1:])
+    show(F"Program started @ {get_current_time()}")
+    main_turing(argv[1:])
     show(F"\nProgram completed.\nelapsed time = {time.perf_counter() - start}")
-    exit(0)
+    exit()
