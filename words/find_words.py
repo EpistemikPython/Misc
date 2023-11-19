@@ -11,7 +11,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2023-11-03"
+__updated__ = "2023-11-15"
 
 import array
 import json
@@ -37,10 +37,10 @@ wordnames = {}
 output = {}
 
 def compress(cmask:int):
-    return (cmask^(cmask - 1)).bit_length() - 1
+    return (cmask ^ (cmask - 1)).bit_length() - 1
 
 def decompress(dpack:int):
-    return 1<<dpack
+    return 1 << dpack
 
 def store(group:array):
     global count
@@ -54,15 +54,15 @@ def solve(highbit:int, p_extra:int, progress:array, depth:int=0):
         least = highbit.bit_length() - 1
         for pack in lc_letter[least]:
             required = decompress(pack)
-            if(highbit & required) == required:
+            if (highbit & required) == required:
                 for mask in lc_letter[least][pack]:
-                    if(mask & highbit) == mask:
+                    if (mask & highbit) == mask:
                         progress[depth] = mask
                         if depth >= depth_limit:
                             store(progress)
                         else:
                             solve(highbit & ~mask, p_extra - dx, progress, depth + 1)
-        highbit ^= 1<<least
+        highbit ^= 1 << least
 
 def main_find():
     """process a list of words to find groups of words of the same length with each having unique letters"""
@@ -77,7 +77,7 @@ def main_find():
                 lx = ordered_letters.find(lett)
                 if 0 > lx >= num_letters:
                     break
-                bx = 1<<lx
+                bx = 1 << lx
                 if mask & bx:
                     break
                 mask |= bx
@@ -101,7 +101,7 @@ def main_find():
         initializer = (0, 0, 0)
     elif num_words == MIN_NUMWORDS:
         initializer = (0, 0)
-    solve((1<<num_letters) - 1, extra, array.array('L', initializer))
+    solve((1 << num_letters) - 1, extra, array.array('L', initializer))
 
     # sample some of the output
     print(f"\nsolutions:")
