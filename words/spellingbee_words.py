@@ -9,13 +9,13 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2023-11-03"
+__updated__ = "2023-11-15"
 
 import time
 import json
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import save_to_json, get_base_filename
+from mhsUtils import save_to_json, get_base_filename, get_filename
 from mhsLogging import MhsLogger
 
 log_control = MhsLogger(get_base_filename(__file__))
@@ -34,11 +34,11 @@ def main_sb():
     """find all words from a list that fulfill the specified spelling bee requirements"""
     solutions = []
     sct = 0
-    spj = json.load( open(WORD_FILE) )
-    for item in spj:
+    sbw = json.load( open(WORD_FILE) )
+    for item in sbw:
         if len(item) >= MIN_WORD_SIZE:
             for letter in item:
-                if not( letter in group + required ):
+                if letter not in group + required:
                     break
             else:
                 if required in item:
@@ -52,7 +52,7 @@ def main_sb():
     for val in solutions:
         pg = True
         for lett in group:
-            if not lett in val:
+            if lett not in val:
                 pg = False
                 break
         if pg:
@@ -60,7 +60,7 @@ def main_sb():
             pgct += 1
         else:
             show(f"\t{val}")
-    show(f">> {pgct} Pangram{'' if pgct == 1 else 's'}!!")
+    show(f">> {pgct} Pangram{'' if pgct == 1 else 's'}{'!' * pgct}")
 
     show(f"\nelapsed time = {time.perf_counter() - start}")
     if save_option.upper()[0] == 'Y':
@@ -68,6 +68,10 @@ def main_sb():
 
 
 if __name__ == '__main__':
+    if len(argv) <= 1:
+        show(f"Usage: Python3.n[6+] {get_filename(argv[0])} save-option[Yes|No] required-letter[e.g. X] group-letters[e.g. MHSRED]")
+        exit(66)
+
     show(f"word file = '{WORD_FILE}'")
     save_option = "No"
     if len(argv) > 1 and argv[1].isalpha():
