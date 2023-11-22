@@ -1,7 +1,7 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# ideal_words.py -- from a word list find all the words that contain only the specified letters
+# ideal_words.py -- from a word list find all the words of the specified length that contain only the specified letters
 #
 # Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
 
@@ -14,6 +14,7 @@ __updated__ = "2023-11-22"
 import time
 import json
 from sys import path, argv
+from argparse import ArgumentParser
 path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json, get_base_filename, get_filename
 from mhsLogging import MhsLogger
@@ -25,23 +26,28 @@ show = log_control.show
 
 start = time.perf_counter()
 WORD_FILE = "scrabble-plus.json"
-DEFAULT_OUTER_LETTERS = "CONLAY"
-GROUP_SIZE = len(DEFAULT_OUTER_LETTERS)
-DEFAULT_REQD_LETTER = "I"
-MIN_WORD_SIZE = 4
+DEFAULT_EXTRA_LETTERS = "NDWPGHVJKXQZ"
+DEFAULT_REQUIRED_LETTERS = "AEO"
+DEFAULT_WORD_SIZE = 7
 
-def main_ideal():
+def run_ideal(save_option, required, group):
     """from a word list find all the words that contain only the specified letters"""
+
     solutions = []
     sct = 0
-    sbw = json.load( open(WORD_FILE) )
-    for item in sbw:
-        if len(item) >= MIN_WORD_SIZE:
+    wdf = json.load( open(WORD_FILE) )
+    for item in wdf:
+        if len(item) == DEFAULT_WORD_SIZE:
+            # good = True
             for letter in item:
                 if letter not in group + required:
                     break
             else:
-                if required in item:
+                for lt in required:
+                    if lt not in item:
+                        # good = False
+                        break
+                else:
                     solutions.append(item)
                     sct += 1
 
@@ -67,9 +73,55 @@ def main_ideal():
         save_to_json(f"{required}-{group}_spellbee_words", solutions)
 
 
-if __name__ == '__main__':
+def process_args():
+    arg_parser = ArgumentParser(description="Process Monarch or JSON input data to obtain Gnucash transactions",
+                                prog="parseMonarchCopyRep.py")
+    # required arguments
+    required = arg_parser.add_argument_group("REQUIRED")
+    required.add_argument('-i', '--inputfile', required=True, help="path & name of the Monarch or JSON input file")
+    # required if PROD
+    subparsers = arg_parser.add_subparsers(help="with gnc option: MUST specify -g FILENAME and -t TX_TYPE")
+    gnc_parser = subparsers.add_parser("gnc", help="Insert the parsed trade and/or price transactions to a Gnucash file")
+    gnc_parser.add_argument('-g', '--gncfile', required=True, help="path & name of the Gnucash file")
+    gnc_parser.add_argument('-t', '--type', required=True, choices=[TRADE, PRICE, BOTH],
+                            help="type of transaction to record: {} or {} or {}".format(TRADE, PRICE, BOTH))
+    # optional arguments
+    arg_parser.add_argument('-l', '--level', type=int, default=lg.INFO, help="set LEVEL of logging output")
+    arg_parser.add_argument('--json',  action="store_true", help="Write the parsed Monarch data to a JSON file")
+
+    return arg_parser
+
+
+def process_input_parameters(argx:list):
+    args = process_args().parse_args(argx)
+    info = [F"args = {args}"]
+
+    if not osp.isfile(args.inputfile):
+        raise Exception(F"File path '{args.inputfile}' does not exist! Exiting...")
+    info.append(F"Input file = {args.inputfile}")
+
+    mode = TEST
+    domain = BOTH
+    gnc_file = None
+    if "gncfile" in args:
+        if not osp.isfile(args.gncfile):
+            raise Exception(F"File path '{args.gncfile}' does not exist. Exiting...")
+        gnc_file = args.gncfile
+        info.append(F"writing to Gnucash file = {gnc_file}")
+        mode = SEND
+        domain = args.type
+        info.append(F"Inserting '{domain}' transaction types to Gnucash.")
+    else:
+        info.append("mode = TEST")
+
+    return args.inputfile, args.json, args.level, mode, gnc_file, domain, info
+
+
+def main_ideal(args:list):
+    in_file, save_monarch, level, mode, gnc_file, domain, parse_info = process_input_parameters(args)
+
     if len(argv) <= 1:
-        show(f"Usage: Python3.n[6+] {get_filename(argv[0])} save-option[Yes|No] required-letter[e.g. X] group-letters[e.g. MHSRED]")
+        show(f"Usage: Python3.n[6+] {get_filename(argv[0])} save-option[Yes|No] required-letters[e.g. AMO] other-letters[e.g. NXUPHSRD]")
         exit(66)
 
     show(f"word file = '{WORD_FILE}'")
@@ -78,23 +130,27 @@ if __name__ == '__main__':
         save_option = argv[1]
     show(f"save option = '{save_option}'")
 
-    required = DEFAULT_REQD_LETTER
+    required = DEFAULT_REQUIRED_LETTERS
     if len(argv) > 2:
         request = argv[2]
         if len(request) == 1 and request.isalpha():
-            show(f"requested mandatory letter = {request}")
+            show(f"requested mandatory letters = {request}")
             required = request.upper()
-    show(f"required letter = {required}")
+    show(f"required letters = {required}")
     # make sure the required letter is not among the outer letters?
-    group = DEFAULT_OUTER_LETTERS
+    group = DEFAULT_EXTRA_LETTERS
     if len(argv) > 3:
         request = argv[3]
-        if len(request) == GROUP_SIZE and request.isalpha():
+        if request.isalpha():
             # make sure all the letters are different?
-            show(f"requested outer letters = {request}")
+            show(f"requested other letters = {request}")
             group = request.upper()
     show(f"outer letters = {group}")
 
-    main_ideal()
+    run_ideal(save_option, required, group)
+
+
+if __name__ == '__main__':
+    main_ideal(argv[1:])
     show(f"\nelapsed time = {time.perf_counter() - start}")
     exit()
