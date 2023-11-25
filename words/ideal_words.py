@@ -33,7 +33,6 @@ def run_ideal(save_option:bool, word_size:int, required:str, group:str):
     """from a word list find all the words of the specified length that contain only the specified letters"""
 
     solutions = []
-    sct = 0
     wdf = json.load( open(WORD_FILE) )
     show(f"loaded file '{WORD_FILE}'")
     for item in wdf:
@@ -47,9 +46,8 @@ def run_ideal(save_option:bool, word_size:int, required:str, group:str):
                         break
                 else:
                     solutions.append(item)
-                    sct += 1
 
-    show(f"solution count = {sct}")
+    show(f"solution count = {len(solutions)}")
     # display the solutions
     show("solutions:")
     for val in solutions:
@@ -70,9 +68,10 @@ def process_args():
     return arg_parser
 
 
-def main_ideal(argl:list):
+def prep_ideal(argl:list):
     args = process_args().parse_args(argl)
 
+    lgr.warning("START LOGGING")
     show(f"save option = '{args.save}'")
 
     word_size = args.numletters if MIN_WORD_SIZE <= args.numletters <= MAX_WORD_SIZE else DEFAULT_WORD_SIZE
@@ -92,9 +91,8 @@ def main_ideal(argl:list):
 if __name__ == "__main__":
     log_control = MhsLogger(get_base_filename(__file__))
     lgr = log_control.get_logger()
-    lgr.warning("START LOGGING")
     show = log_control.show
 
-    main_ideal(argv[1:])
+    prep_ideal(argv[1:])
     show(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit()
