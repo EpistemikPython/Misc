@@ -9,7 +9,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-11-22"
-__updated__ = "2023-11-24"
+__updated__ = "2023-12-08"
 
 import time
 import json
@@ -68,7 +68,7 @@ def process_args():
     return arg_parser
 
 
-def prep_ideal(argl:list):
+def prep_ideal(argl:list) -> (bool, int, str, str):
     args = process_args().parse_args(argl)
 
     lgr.warning("START LOGGING")
@@ -77,15 +77,15 @@ def prep_ideal(argl:list):
     word_size = args.numletters if MIN_WORD_SIZE <= args.numletters <= MAX_WORD_SIZE else DEFAULT_WORD_SIZE
     show(f"word size = {word_size}")
 
-    required = args.required.upper() if len(args.required) <= MAX_REQUIRED_LETTERS else DEFAULT_REQUIRED_LETTERS
+    required = args.required.upper() if args.required.isalpha() and len(args.required) <= MAX_REQUIRED_LETTERS else DEFAULT_REQUIRED_LETTERS
     # make sure the required letters are not among the other letters?
     show(f"required letters = {required}")
 
-    others = args.other.upper() if len(args.other) <= MAX_EXTRA_LETTERS else DEFAULT_EXTRA_LETTERS
+    other = args.other.upper() if args.other.isalpha() and len(args.other) <= MAX_EXTRA_LETTERS else DEFAULT_EXTRA_LETTERS
     # make sure all the letters are different?
-    show(f"other letters = {others}")
+    show(f"other letters = {other}")
 
-    run_ideal(args.save, word_size, required, others)
+    return args.save, word_size, required, other
 
 
 if __name__ == "__main__":
@@ -93,6 +93,7 @@ if __name__ == "__main__":
     lgr = log_control.get_logger()
     show = log_control.show
 
-    prep_ideal(argv[1:])
+    save, size, reqd, others = prep_ideal(argv[1:])
+    run_ideal( save, size, reqd, others )
     show(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit()
