@@ -1,7 +1,7 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# spellingbee_words.py -- find all words from a list that fulfill the specified spelling bee requirements
+# spellingbee_words.py -- from a word list file, find all words that fulfill the specified spelling bee requirements
 #
 # Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
 
@@ -9,19 +9,15 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2023-11-15"
+__updated__ = "2023-12-08"
 
 import time
 import json
+from argparse import ArgumentParser
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import save_to_json, get_base_filename, get_filename
+from mhsUtils import save_to_json, get_base_filename
 from mhsLogging import MhsLogger
-
-log_control = MhsLogger(get_base_filename(__file__))
-lgr = log_control.get_logger()
-lgr.warning("START LOGGING")
-show = log_control.show
 
 start = time.perf_counter()
 WORD_FILE = "scrabble-plus.json"
@@ -30,10 +26,9 @@ GROUP_SIZE = len(DEFAULT_OUTER_LETTERS)
 DEFAULT_REQD_LETTER = "I"
 MIN_WORD_SIZE = 4
 
-def main_sb():
+def run_sb(save_option, required, group):
     """find all words from a list that fulfill the specified spelling bee requirements"""
     solutions = []
-    sct = 0
     sbw = json.load( open(WORD_FILE) )
     for item in sbw:
         if len(item) >= MIN_WORD_SIZE:
@@ -43,9 +38,8 @@ def main_sb():
             else:
                 if required in item:
                     solutions.append(item)
-                    sct += 1
 
-    show(f"solution count = {sct}")
+    show(f"solution count = {len(solutions)}")
     # check for pangrams and print the solutions
     pgct = 0
     show(f"solutions:")
@@ -60,41 +54,45 @@ def main_sb():
             pgct += 1
         else:
             show(f"\t{val}")
-    show(f">> {pgct} Pangram{'' if pgct == 1 else 's'}{'!' * pgct}")
+    show(f">> {pgct if pgct > 0 else 'NO'} Pangram{'' if pgct == 1 else 's'}{'!' * pgct}")
 
-    show(f"\nelapsed time = {time.perf_counter() - start}")
-    if save_option.upper()[0] == 'Y':
+    show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
+    if save_option:
         save_to_json(f"{required}-{group}_spellbee_words", solutions)
 
 
-if __name__ == '__main__':
-    if len(argv) <= 1:
-        show(f"Usage: Python3.n[6+] {get_filename(argv[0])} save-option[Yes|No] required-letter[e.g. X] group-letters[e.g. MHSRED]")
-        exit(66)
+def process_args():
+    arg_parser = ArgumentParser(description="get the save-to-file, required letter and outer letters options", prog="spellingbee_words.py")
+    # optional arguments
+    arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
+    arg_parser.add_argument('-r', '--required', type=str, default=DEFAULT_REQD_LETTER, help="this letter MUST be in each word")
+    arg_parser.add_argument('-o', '--outer', type=str, default=DEFAULT_OUTER_LETTERS, help="other possible letters in the words")
+    return arg_parser
 
-    show(f"word file = '{WORD_FILE}'")
-    save_option = "No"
-    if len(argv) > 1 and argv[1].isalpha():
-        save_option = argv[1]
-    show(f"save option = '{save_option}'")
 
-    required = DEFAULT_REQD_LETTER
-    if len(argv) > 2:
-        request = argv[2]
-        if len(request) == 1 and request.isalpha():
-            show(f"requested mandatory letter = {request}")
-            required = request.upper()
+def prep_sb(argl:list) -> (bool, str, str):
+    args = process_args().parse_args(argl)
+
+    lgr.warning("START LOGGING")
+    show(f"save option = '{args.save}'")
+
+    required = args.required[0].upper() if args.required.isalpha() else DEFAULT_REQD_LETTER
+    # make sure the required letter is not in the outer letters?
     show(f"required letter = {required}")
-    # make sure the required letter is not among the outer letters?
-    group = DEFAULT_OUTER_LETTERS
-    if len(argv) > 3:
-        request = argv[3]
-        if len(request) == GROUP_SIZE and request.isalpha():
-            # make sure all the letters are different?
-            show(f"requested outer letters = {request}")
-            group = request.upper()
-    show(f"outer letters = {group}")
 
-    main_sb()
-    show(f"\nelapsed time = {time.perf_counter() - start}")
+    outer = args.outer.upper() if args.outer.isalpha() and len(args.outer) == GROUP_SIZE else DEFAULT_OUTER_LETTERS
+    # make sure all the outer letters are different?
+    show(f"outer letters = {outer}")
+
+    return args.save, required, outer
+
+
+if __name__ == '__main__':
+    log_control = MhsLogger(get_base_filename(__file__))
+    lgr = log_control.get_logger()
+    show = log_control.show
+
+    save, reqd, others = prep_sb(argv[1:])
+    run_sb( save, reqd, others )
+    show(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit()
