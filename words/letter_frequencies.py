@@ -9,7 +9,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2023-12-11"
+__updated__ = "2023-12-16"
 
 import time
 import json
@@ -25,13 +25,13 @@ ALL_LETTERS = "SEAORILTNUDYCPMHGBKFWVZJXQ"
 MIN_WORD_LEN = 5
 MAX_WORD_LEN = 15
 
-def run_freqs(save_option:bool, lower:int, upper:int):
+def run_freqs():
     """get the frequency of each letter in words of specified length(s) from a word file"""
     freqs = dict.fromkeys(ALL_LETTERS, 0)
     wct = lct = 0
     wds = json.load( open(WORD_FILE) )
     for item in wds:
-        if lower <= len(item) <= upper:
+        if min_size <= len(item) <= max_size:
             for letter in item:
                 freqs[letter] += 1
                 lct += 1
@@ -55,10 +55,10 @@ def run_freqs(save_option:bool, lower:int, upper:int):
 
     show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
-        save_to_json(f"{lower}-{upper}_letter-frequencies", sorted_freqs)
+        save_to_json(f"{min_size}-{max_size}_letter-frequencies", sorted_freqs)
 
 def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, word size, required letters and possible letters options", prog="ideal_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, minimum and maximum word size options", prog="python3.10 letter_frequencies.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-n', '--minimum', type=int, default=MIN_WORD_LEN, help="minimum number of letters in each found word")
@@ -71,13 +71,13 @@ def prep_freqs(argl:list) -> (bool, int, int):
     lgr.info("START LOGGING")
     show(f"save option = '{args.save}'")
 
-    min_size = args.minimum if MIN_WORD_LEN <= args.minimum <= MAX_WORD_LEN else MIN_WORD_LEN
-    show(f"minimum word size = {min_size}")
+    lower = args.minimum if MIN_WORD_LEN <= args.minimum <= MAX_WORD_LEN else MIN_WORD_LEN
+    show(f"minimum word size = {lower}")
 
-    max_size = args.maximum if min_size <= args.maximum <= MAX_WORD_LEN else min_size
-    show(f"maximum word size = {max_size}")
+    upper = args.maximum if lower <= args.maximum <= MAX_WORD_LEN else lower
+    show(f"maximum word size = {upper}")
 
-    return args.save, min_size, max_size
+    return args.save, lower, upper
 
 
 if __name__ == "__main__":
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     lgr = log_control.get_logger()
     show = log_control.show
 
-    save, minf, maxf = prep_freqs(argv[1:])
-    run_freqs( save, minf, maxf )
+    save_option, min_size, max_size = prep_freqs(argv[1:])
+    run_freqs()
     show(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit()
