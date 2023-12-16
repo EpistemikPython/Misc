@@ -9,7 +9,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-11-22"
-__updated__ = "2023-12-08"
+__updated__ = "2023-12-16"
 
 import time
 import json
@@ -29,7 +29,7 @@ DEFAULT_WORD_SIZE = 7
 MIN_WORD_SIZE = 5
 MAX_WORD_SIZE = 15
 
-def run_ideal(save_option:bool, word_size:int, required:str, group:str):
+def run_ideal():
     """from a word list find all the words of the specified length that contain only the specified letters"""
 
     solutions = []
@@ -38,7 +38,7 @@ def run_ideal(save_option:bool, word_size:int, required:str, group:str):
     for item in wdf:
         if len(item) == word_size:
             for letter in item:
-                if letter not in group + required:
+                if letter not in others + required:
                     break
             else:
                 for lt in required:
@@ -55,11 +55,11 @@ def run_ideal(save_option:bool, word_size:int, required:str, group:str):
 
     show(f"\nsolve & display elapsed time = {time.perf_counter() - start}")
     if save_option:
-        save_to_json(f"{required}-{group}_ideal_words", solutions)
+        save_to_json(f"{required}-{others}_ideal-words", solutions)
 
 
 def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, word size, required letters and possible letters options", prog="ideal_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, word size, required and possible letters options", prog="python3.10 ideal_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-n', '--numletters', type=int, default=DEFAULT_WORD_SIZE, help="number of letters in each found word")
@@ -71,17 +71,17 @@ def process_args():
 def prep_ideal(argl:list) -> (bool, int, str, str):
     args = process_args().parse_args(argl)
 
-    lgr.warning("START LOGGING")
+    lgr.info("START LOGGING")
     show(f"save option = '{args.save}'")
 
-    word_size = args.numletters if MIN_WORD_SIZE <= args.numletters <= MAX_WORD_SIZE else DEFAULT_WORD_SIZE
-    show(f"word size = {word_size}")
+    word_sz = args.numletters if MIN_WORD_SIZE <= args.numletters <= MAX_WORD_SIZE else DEFAULT_WORD_SIZE
+    show(f"word size = {word_sz}")
 
-    required = args.required.upper() if args.required.isalpha() and len(args.required) <= MAX_REQUIRED_LETTERS else DEFAULT_REQUIRED_LETTERS
+    require = args.required.upper() if args.required.isalpha() and 0 < len(args.required) <= MAX_REQUIRED_LETTERS else DEFAULT_REQUIRED_LETTERS
     # make sure the required letters are not among the other letters?
-    show(f"required letters = {required}")
+    show(f"required letters = {require}")
 
-    other = args.other.upper() if args.other.isalpha() and len(args.other) <= MAX_EXTRA_LETTERS else DEFAULT_EXTRA_LETTERS
+    other = args.other.upper() if args.other.isalpha() and 0 < len(args.other) <= MAX_EXTRA_LETTERS else DEFAULT_EXTRA_LETTERS
     # make sure all the letters are different?
     show(f"other letters = {other}")
 
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     lgr = log_control.get_logger()
     show = log_control.show
 
-    save, size, reqd, others = prep_ideal(argv[1:])
-    run_ideal( save, size, reqd, others )
+    save_option, word_size, required, others = prep_ideal(argv[1:])
+    run_ideal()
     show(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit()
