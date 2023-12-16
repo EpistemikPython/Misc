@@ -9,7 +9,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2023-12-15"
+__updated__ = "2023-12-16"
 
 import time
 import json
@@ -58,11 +58,11 @@ def run_sb():
 
     show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
-        save_to_json(f"{required}-{outers}_spellbee_words", solutions)
+        save_to_json(f"{required}-{outers}_spellbee-words", solutions)
 
 
 def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, required letter and outer letters options", prog="spellingbee_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, required letter and outer letters options", prog="python3.10 spellingbee_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-r', '--required', type=str, default=DEFAULT_REQD_LETTER, help="this letter MUST be in each word")
