@@ -11,7 +11,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2023-12-15"
+__updated__ = "2023-12-16"
 
 import array
 import json
@@ -120,19 +120,19 @@ def run_find():
 
     show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
-        save_to_json(f"{word_size}x{num_words}f{num_letters}_words", output)
+        save_to_json(f"{word_size}x{num_words}f{num_letters}_find-words", output)
 
 
 def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, word size, required letters and possible letters options", prog="ideal_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, word size, number of words and number of letters options", prog="python3.10 find_words.py")
     # optional arguments
-    arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
+    arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="write the results to a JSON file")
     arg_parser.add_argument('-w', '--wordsize', type=int, default=MIN_WORDSIZE, help="number of letters in each found word")
     arg_parser.add_argument('-n', '--numwords', type=int, default=MAX_NUMWORDS, help="number of words in each found group")
-    arg_parser.add_argument('-l', '--numletters', type=int, default=MAX_NUMLETTERS, help="number of letters to search for each word")
+    arg_parser.add_argument('-l', '--numletters', type=int, default=MAX_NUMLETTERS, help="number of possible letters for each word")
     return arg_parser
 
-def prep_find(argl:list) -> (bool, int, int):
+def prep_find(argl:list) -> (bool, int, int, int):
     args = process_args().parse_args(argl)
 
     lgr.info("START LOGGING")
@@ -142,7 +142,7 @@ def prep_find(argl:list) -> (bool, int, int):
     word_sz = args.wordsize if MIN_WORDSIZE <= args.wordsize <= MAX_WORDSIZE else MIN_WORDSIZE
     show(f"requested number of words = {args.numwords}")
     num_wds = args.numwords if MIN_NUMWORDS <= args.numwords <= MAX_NUMWORDS else MAX_NUMWORDS
-    show(f"requested number of letters = {args.numletters}")
+    show(f"requested total number of letters = {args.numletters}")
     num_letts = args.numletters if MIN_NUM_LETTERS <= args.numletters <= MAX_NUMLETTERS else MAX_NUMLETTERS
 
     return args.save, word_sz, num_wds, num_letts
