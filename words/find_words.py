@@ -11,7 +11,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2023-12-16"
+__updated__ = "2023-12-18"
 
 import array
 import json
@@ -26,6 +26,8 @@ start = time.perf_counter()
 WORD_FILE = "scrabble-plus.json"
 # highest to lowest letter frequencies in Scrabble '5-13 letter' words
 ORDERED_LETTERS = "ESIARNOTLCDUPMGHBYFKVWZXQJ"
+# highest to lowest letter frequencies in Scrabble 7-letter words
+# ORDERED_LETTERS = "ESAIRNOTLDUCGPMHBYKFWVZXJQ"
 MAX_NUMLETTERS = len(ORDERED_LETTERS)
 MIN_NUM_LETTERS = 12
 MAX_WORDSIZE = 15
