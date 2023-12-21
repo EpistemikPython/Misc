@@ -16,7 +16,7 @@ from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json
 
-WORD_FILE = "test.json" # "scrabble-plus.json"
+WORD_FILE = "test1.json" # "scrabble-plus.json"
 ELEMENT_FILE = "periodic_table.json"
 BLANK = '_'
 
@@ -86,7 +86,7 @@ def solve_p2():
             dg_reqd = wd_len - 5
             dg_ct = 0
             prev_lett = BLANK
-            while not drop:
+            while step < wd_len:
                 lett = item[step]
                 if dg_ct > dg_reqd or sg_ct > sg_reqd:
                     # drop = True
@@ -97,6 +97,7 @@ def solve_p2():
                         if step > 1:
                             retry = True
                         else:
+                            drop = True
                             break
                     else:
                         stack.append(digraph)
@@ -114,23 +115,22 @@ def solve_p2():
                     else:
                         prev_lett = lett
                 if retry:
+                    retry = False
                     step -= 1
-                    while len(stack[-1]) == 2:
+                    while len(stack) > 0 and len(stack[-1]) == 2:
                         stack.pop()
+                        dg_ct -= 1
                         step -= 2
                     if len(stack) > 0:
-                        stack.pop()
-                        prev_lett = lett
+                        prev_lett = stack.pop()
+                        sg_ct -= 1
+                    else:
+                        drop = True
+                        # break
                 else:
                     step += 1
             if not drop:
                 prd_list.append(item)
-            # else:
-            #     first_lett = item[0]
-            #     second_lett = item[1]
-            #     first_dg = item[:2]
-            #     if first_lett in singles and second_lett in singles and first_dg in doubles:
-            #         possibles.append(item)
 
 def run_periodle():
     """process a words file to find periodle (5-10 letter) words and save to a separate file"""
