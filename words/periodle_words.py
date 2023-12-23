@@ -9,75 +9,31 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-12-18"
-__updated__ = "2023-12-20"
+__updated__ = "2023-12-22"
 
 import json
+import time
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json
 
-WORD_FILE = "test1.json" # "scrabble-plus.json"
+start = time.perf_counter()
+WORD_FILE = "test1.json" # "periodle_words.json"
 ELEMENT_FILE = "periodic_table.json"
 BLANK = '_'
 
-def solve_periodle():
+def solve():
     wdf = json.load( open(WORD_FILE) )
     for item in wdf:
         wd_len = len(item)
         if 10 >= wd_len >= 5:
             drop = False
-            sg_num = 10 - wd_len
-            sg_ct = 0
-            dg_num = wd_len - 5
-            dg_ct = 0
-            prev_lett = BLANK
-            for lett in item:
-                if dg_ct > dg_num or sg_ct > sg_num:
-                    drop = True
-                    break
-                if prev_lett != BLANK:
-                    digraph = prev_lett + lett
-                    if digraph not in doubles:
-                        drop = True
-                        break
-                    else:
-                        dg_ct += 1
-                        prev_lett = BLANK
-                else:
-                    if lett in singles:
-                        sg_ct += 1
-                        if sg_ct > sg_num:
-                            prev_lett = lett
-                            sg_ct -= 1
-                        continue
-                    else:
-                        prev_lett = lett
-            if not drop:
-                prd_list.append(item)
-            else:
-                first_lett = item[0]
-                second_lett = item[1]
-                first_dg = item[:2]
-                if first_lett in singles and second_lett in singles and first_dg in doubles:
-                    possibles.append(item)
-
-def solve_p2():
-    wdf = json.load( open(WORD_FILE) )
-    for item in wdf:
-        wd_len = len(item)
-        if 10 >= wd_len >= 5:
-            drop = False
-            # pop all the accepted symbols on a stack
-            # if reach an end: REWIND to the most recent single and use it and the next letter as a double
-            # and continue from there...
-            sg_locs = []
-            for lx in range(wd_len):
-                if item[lx] in singles:
-                    sg_locs.append(lx)
-            print(f"single locations = {sg_locs}")
-            sg_poss = len(sg_locs)
+            sg_poss = 0
+            for lx in item:
+                if lx in singles:
+                    sg_poss += 1
             sg_reqd = 10 - wd_len
-            if sg_poss < sg_reqd:
+            if sg_reqd > sg_poss:
                 continue
             retry = False
             stack = []
@@ -86,10 +42,13 @@ def solve_p2():
             dg_reqd = wd_len - 5
             dg_ct = 0
             prev_lett = BLANK
-            while step < wd_len:
+            # pop all the accepted symbols on a stack
+            # if reach an end: REWIND to the most recent single and use it and the next letter as a double
+            # and resume from there...
+            while step < wd_len and not drop:
                 lett = item[step]
                 if dg_ct > dg_reqd or sg_ct > sg_reqd:
-                    # drop = True
+                    drop = True
                     continue # break
                 if prev_lett != BLANK:
                     digraph = prev_lett + lett
@@ -111,9 +70,12 @@ def solve_p2():
                             sg_ct -= 1
                         else:
                             stack.append(lett)
-                        # continue
                     else:
-                        prev_lett = lett
+                        if step == wd_len - 1: # at the last letter
+                            step += 1 # correct for the decrement in retry
+                            retry = True
+                        else:
+                            prev_lett = lett
                 if retry:
                     retry = False
                     step -= 1
@@ -126,23 +88,22 @@ def solve_p2():
                         sg_ct -= 1
                     else:
                         drop = True
-                        # break
                 else:
                     step += 1
             if not drop:
                 prd_list.append(item)
+                print(stack)
 
 def run_periodle():
     """process a words file to find periodle (5-10 letter) words and save to a separate file"""
     print(f"save option = '{save_option}'\n")
 
-    solve_p2()
-    print(f"possibles = {possibles}")
+    solve()
 
     num_wd = len(prd_list)
     print(f"periodle word count = {num_wd}\n")
     ni = 0
-    nli = num_wd // 11 if num_wd > 150 else 5
+    nli = num_wd // 11 if num_wd > 150 else 5 if num_wd > 30 else 1
     # display a selection of the output
     print("sample output:")
     for word in prd_list:
@@ -150,13 +111,13 @@ def run_periodle():
             print(word)
         ni += 1
 
+    print(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option.upper()[0] == 'Y':
         save_to_json("periodle_words", prd_list)
 
 def get_symbols():
     elf = json.load( open(ELEMENT_FILE) )
     for sect in elf:
-        print(sect)
         if sect == "single":
             for symbol in elf[sect]:
                 singles.append(symbol)
@@ -168,9 +129,13 @@ def get_symbols():
 
 
 if __name__ == '__main__':
+    # logging
+    # ArgParser
+    
     save_option = "No"
     if len(argv) > 1 and argv[1].isalpha():
         save_option = argv[1]
+
     code = 0
     try:
         singles = []
@@ -178,7 +143,6 @@ if __name__ == '__main__':
         get_symbols()
 
         prd_list = []
-        possibles = []
         run_periodle()
     except KeyboardInterrupt:
         print(">> User interruption.")
@@ -186,4 +150,5 @@ if __name__ == '__main__':
         print(f"Problem = '{repr(ex)}'")
         code = 66
 
+    print(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit(code)
