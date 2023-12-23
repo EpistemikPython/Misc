@@ -136,9 +136,9 @@ def process_args():
     arg_parser = ArgumentParser(description="get the save-to-file, required letter and outer letters options", prog="python3.10 spellingbee_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
-    arg_parser.add_argument('-y', '--symbolfile', type=str, default=WORD_JSON_FILE,
+    arg_parser.add_argument('-y', '--symbolfile', type=str, default=ELEMENT_JSON_FILE,
                                 help= "JSON file name with the symbols to use (.json added to file name)")
-    arg_parser.add_argument('-w', '--wordfile', type=str, default=ELEMENT_JSON_FILE,
+    arg_parser.add_argument('-w', '--wordfile', type=str, default=WORD_JSON_FILE,
                                 help= "JSON file name with the words to test (.json added to file name)")
     return arg_parser
 
@@ -174,6 +174,7 @@ if __name__ == '__main__':
         run_periodle()
     except KeyboardInterrupt:
         show(">> User interruption.")
+        code = 13
     except Exception as ex:
         show(f"Problem = '{repr(ex)}'")
         code = 66
