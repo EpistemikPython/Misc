@@ -18,19 +18,22 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json
 
 start = time.perf_counter()
-WORD_FILE = "test1.json" # "periodle_words.json"
+WORD_FILE = "test2.json" # "periodle_words.json"
 ELEMENT_FILE = "periodic_table.json"
 BLANK = '_'
 
 def solve():
+    print(f"Word file = {WORD_FILE}")
+    wd_ct = 0
     wdf = json.load( open(WORD_FILE) )
     for item in wdf:
+        wd_ct += 1
         wd_len = len(item)
         if 10 >= wd_len >= 5:
             drop = False
             sg_poss = 0
             for lx in item:
-                if lx in singles:
+                if lx.upper() in singles:
                     sg_poss += 1
             sg_reqd = 10 - wd_len
             if sg_reqd > sg_poss:
@@ -46,7 +49,7 @@ def solve():
             # if reach an end: REWIND to the most recent single and use it and the next letter as a double
             # and resume from there...
             while step < wd_len and not drop:
-                lett = item[step]
+                lett = item[step].upper()
                 if dg_ct > dg_reqd or sg_ct > sg_reqd:
                     drop = True
                     continue # break
@@ -91,8 +94,9 @@ def solve():
                 else:
                     step += 1
             if not drop:
-                prd_list.append(item)
+                prd_list.append(item.upper())
                 print(stack)
+    print(f"{wd_ct} words in word file.")
 
 def run_periodle():
     """process a words file to find periodle (5-10 letter) words and save to a separate file"""
