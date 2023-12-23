@@ -23,6 +23,7 @@
 *.exe
 *.x
 *.term
+*.json
 json
 # find <dir/>* -type l >> .gitignore
 
