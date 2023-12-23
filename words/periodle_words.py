@@ -1,7 +1,7 @@
-##############################################################################################################################
+###################################################################################################################################################
 # coding=utf-8
 #
-# periodle_words.py -- process a words file to find periodle words (5-10 letters using element symbols) and save to a separate file
+# periodle_words.py -- process a words file to find periodle words (5-10 letters using element symbols) and optionally save results to a JSON file
 #
 # Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
 
@@ -21,9 +21,12 @@ from mhsUtils import save_to_json, get_base_filename, JSON_LABEL
 from mhsLogging import MhsLogger
 
 start = time.perf_counter()
+INPUT_FOLDER = "input"
 WORD_JSON_FILE = "test2" # "periodle_words"
 ELEMENT_JSON_FILE = "periodic_table"
 BLANK = '_'
+MIN_LETTERS = 5
+MAX_LETTERS = MIN_LETTERS * 2
 
 def solve():
     wd_ct = 0
@@ -31,20 +34,20 @@ def solve():
     for item in wdf:
         wd_ct += 1
         wd_len = len(item)
-        if 10 >= wd_len >= 5:
+        if MAX_LETTERS >= wd_len >= MIN_LETTERS:
             drop = False
             sg_poss = 0
             for lx in item:
                 if lx.upper() in singles:
                     sg_poss += 1
-            sg_reqd = 10 - wd_len
+            sg_reqd = MAX_LETTERS - wd_len
             if sg_reqd > sg_poss:
                 continue
             retry = False
             stack = []
             step = 0
             sg_ct = 0
-            dg_reqd = wd_len - 5
+            dg_reqd = wd_len - MIN_LETTERS
             dg_ct = 0
             prev_lett = BLANK
             # pop each accepted symbol on a stack
@@ -101,7 +104,7 @@ def solve():
     show(f"{wd_ct} words in word file.")
 
 def run_periodle():
-    """process a words file to find periodle words (5-10 letters using element symbols) and save to a separate file"""
+    """process a words file to find periodle words (5-10 letters using element symbols) and save to a JSON file"""
 
     solve()
     num_wd = len(prd_list)
@@ -110,7 +113,7 @@ def run_periodle():
     ni = 0
     nli = num_wd // 32 if num_wd > 150 else 12 if num_wd > 30 else 1
     # display a selection of the output
-    show("sample output:")
+    show("sample solutions:")
     for word in prd_list:
         if ni % nli == 0:
             show(word)
@@ -125,7 +128,7 @@ def get_symbols():
     for sect in symf:
         if sect == "single":
             for symbol in symf[sect]:
-                singles.append(symbol)
+                singles.append(symbol.upper())
         elif sect == "double":
             for symbol in symf[sect]:
                 doubles.append(symbol.upper())
@@ -133,7 +136,7 @@ def get_symbols():
     lgr.debug(f"doubles = {doubles}")
 
 def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, required letter and outer letters options", prog="python3.10 spellingbee_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, 'symbols file' name and 'words file' name options", prog="python3.11 periodle_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-y', '--symbolfile', type=str, default=ELEMENT_JSON_FILE,
@@ -149,11 +152,11 @@ def prep_sb(argl:list) -> (bool, str, str):
     show(f"save option = '{args.save}'")
 
     symbols = args.symbolfile if args.symbolfile.isprintable() else ELEMENT_JSON_FILE
-    symbols += (os.extsep + JSON_LABEL)
+    symbols = INPUT_FOLDER + os.sep + symbols + os.extsep + JSON_LABEL
     show(f"symbol file = {symbols}")
 
     words = args.wordfile if args.wordfile.isprintable() else WORD_JSON_FILE
-    words += (os.extsep + JSON_LABEL)
+    words = INPUT_FOLDER + os.sep + words + os.extsep + JSON_LABEL
     show(f"word file = {words}")
 
     return args.save, symbols, words
