@@ -1,7 +1,7 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# choose_words.py -- process a list of words to find words of the specified lengths and save to a json file
+# choose_words.py -- process a list of words to find words of the specified lengths and optionally save to a JSON file
 #
 # Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
 
@@ -32,23 +32,23 @@ def run_choose():
     for item in wdf:
         if lower <= len(item) <= upper:
             newlist.append(item)
-    print(f"word count = {len(newlist)}\n")
+    show(f"word count = {len(newlist)}\n")
 
-    print("sample output:")
+    show("sample output:")
     ni = 0
     nli = len(newlist) // 50
     for word in newlist:
         if ni % nli == 0:
-            print(f'"{word}",')
+            show(f'"{word}",')
         ni += 1
 
-    print(f"\nelapsed time = {time.perf_counter() - start}")
+    show(f"\nelapsed time = {time.perf_counter() - start}")
     if save_option:
         save_to_json(f"{lower}-{upper}_letter_words", newlist)
 
 
 def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, lower and upper limits options", prog="python3.11 choose_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, lower limit and upper limit options", prog="python3.11 choose_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-l', '--lower', type=int, default=DEFAULT_LENGTH, help="minimum number of letters in the words")
@@ -56,7 +56,7 @@ def process_args():
     return arg_parser
 
 
-def prep_choose(argl:list) -> (bool, str, str):
+def prep_choose(argl:list) -> (bool, int, int):
     args = process_args().parse_args(argl)
 
     lgr.info("START LOGGING")
