@@ -20,7 +20,7 @@ from mhsUtils import save_to_json, get_base_filename
 from mhsLogging import MhsLogger
 
 start = time.perf_counter()
-WORD_FILE = "scrabble-plus.json"
+DEFAULT_WORD_FILE = "input/scrabble-plus.json"
 DEFAULT_LENGTH = 5
 MIN_LENGTH = 2
 MAX_LENGTH = 15
@@ -28,7 +28,7 @@ MAX_LENGTH = 15
 def run_choose():
     """process a list of words to find words of the specified length(s) and save to a json file"""
     newlist = []
-    wdf = json.load( open(WORD_FILE) )
+    wdf = json.load(open(DEFAULT_WORD_FILE))
     for item in wdf:
         if lower <= len(item) <= upper:
             newlist.append(item)
