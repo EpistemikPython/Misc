@@ -9,7 +9,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-12-18"
-__updated__ = "2023-12-24"
+__updated__ = "2023-12-27"
 
 import os
 import json
@@ -29,30 +29,33 @@ MIN_LETTERS = 5
 MAX_LETTERS = MIN_LETTERS * 2
 
 def solve():
+    """
+        pop each accepted symbol on a stack
+        - if reach a failure point: REWIND to the most recent accepted single and try it and the following letter as a digraph
+          and resume from there...
+    """
     wd_ct = 0
     wdf = json.load( open(word_file) )
     for item in wdf:
         wd_ct += 1
         wd_len = len(item)
         if MAX_LETTERS >= wd_len >= MIN_LETTERS:
-            drop = False
             sg_poss = 0
             for lx in item:
                 if lx.upper() in singles:
                     sg_poss += 1
             sg_reqd = MAX_LETTERS - wd_len
             if sg_reqd > sg_poss:
+                rejects.append(item.upper())
                 continue
+            drop = False
             retry = False
-            stack = []
             step = 0
             sg_ct = 0
             dg_reqd = wd_len - MIN_LETTERS
             dg_ct = 0
+            stack = []
             prev_lett = BLANK
-            # pop each accepted symbol on a stack
-            # if reach a failure point: REWIND to the most recent accepted single and try it and the following letter as a digraph
-            # and resume from there...
             while step < wd_len and not drop:
                 lett = item[step].upper()
                 if prev_lett != BLANK:
@@ -62,16 +65,14 @@ def solve():
                             retry = True
                         else: # first letter NOT in singles or NO solution if used as a single, and first digraph NOT in doubles, so...
                             drop = True
-                            # break
                     else:
                         stack.append(digraph)
                         prev_lett = BLANK
                         dg_ct += 1
                         if dg_ct > dg_reqd:
                             # always try singles FIRST, so if reached too many digraphs, current word CANNOT be a solution
-                            lgr.debug(f"dg_ct violation with '{item}'.")
+                            lgr.debug(f"digraph count violation with '{item}'.")
                             drop = True
-                            # break
                 else:
                     if lett in singles:
                         sg_ct += 1
@@ -84,8 +85,6 @@ def solve():
                         if step == wd_len - 1: # if reach this point, the last letter is REQUIRED to be a single, so...
                             lgr.debug(f"Last letter of '{item}' NOT in singles!")
                             drop = True
-                            # step += 1 # adjust for the decrement in retry
-                            # retry = True
                         else:
                             prev_lett = lett
                 if retry:
@@ -109,28 +108,30 @@ def solve():
                     solution_list.append(item.upper())
                     stack_dict[wd_ct] = stack
                     lgr.info(stack)
-    show(f"{wd_ct} words in word file.")
+            else:
+                rejects.append(item.upper())
+    show(f"\n{wd_ct} words in input file.")
 
 def run_periodle():
     """process a words file to find periodle words (5-10 letters using element symbols) and save to a JSON file"""
 
     solve()
     num_wd = len(solution_list)
-    show(f"Found {num_wd} periodle words.\n")
+    show(f"Found {num_wd} periodle words.\n{len(rejects)} words in rejects file.\nsolve elapsed time = {time.perf_counter() - start}")
 
-    ni = 0
-    nli = num_wd // 32 if num_wd > 150 else 12 if num_wd > 30 else 1
-    # display a selection of the output
-    show("sample solutions:")
-    for word in solution_list:
-        if ni % nli == 0:
-            show(word)
-        ni += 1
-
-    show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
         save_to_json(f"periodle-solutions_f-{get_base_filename(word_file)}", solution_list)
+        save_to_json(f"periodle-rejects_f-{get_base_filename(word_file)}", rejects)
         save_to_json(f"periodle-stack_f-{get_base_filename(word_file)}", stack_dict)
+    else:
+        ni = 0
+        nli = num_wd // 32 if num_wd > 150 else 12 if num_wd > 30 else 1
+        # display a selection of the output
+        show("\nsample solutions:")
+        for word in solution_list:
+            if ni % nli == 0:
+                show(word)
+            ni += 1
 
 def get_symbols():
     symf = json.load( open(symbol_file) )
@@ -178,6 +179,7 @@ if __name__ == '__main__':
 
     save_option, symbol_file, word_file = prep_sb(argv[1:])
     code = 0
+    rejects = []
     solution_list = []
     stack_dict = {}
     singles = []
