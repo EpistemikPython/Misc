@@ -48,7 +48,7 @@ def run_choose():
 
 
 def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, lower limit and upper limit options", prog="python3.11 choose_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, lower limit and upper limit options", prog="python3 choose_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-l', '--lower', type=int, default=DEFAULT_LENGTH, help="minimum number of letters in the words")

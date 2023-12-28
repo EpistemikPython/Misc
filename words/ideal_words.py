@@ -63,7 +63,7 @@ def run_ideal():
 
 
 def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, word size, required and possible letters options", prog="python3.10 ideal_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, word size, required and possible letters options", prog="python3 ideal_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-n', '--numletters', type=int, default=DEFAULT_WORD_SIZE, help="number of letters in each found word")
