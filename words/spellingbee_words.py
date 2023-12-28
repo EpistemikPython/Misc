@@ -9,7 +9,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2023-12-16"
+__updated__ = "2023-12-28"
 
 import time
 import json
@@ -20,7 +20,7 @@ from mhsUtils import save_to_json, get_base_filename
 from mhsLogging import MhsLogger
 
 start = time.perf_counter()
-WORD_FILE = "scrabble-plus.json"
+WORD_FILE = "input/scrabble-plus.json"
 DEFAULT_OUTER_LETTERS = "CONLAY"
 GROUP_SIZE = len(DEFAULT_OUTER_LETTERS)
 DEFAULT_REQD_LETTER = "I"
@@ -62,7 +62,7 @@ def run_sb():
 
 
 def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, required letter and outer letters options", prog="python3.10 spellingbee_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, required letter and outer letters options", prog="python3 spellingbee_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-r', '--required', type=str, default=DEFAULT_REQD_LETTER, help="this letter MUST be in each word")
