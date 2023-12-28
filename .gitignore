@@ -8,9 +8,7 @@
 **/out/
 **/code/
 **/logs/
-**/venv/
 **/Downloads
-**/json*/
 **/copy*/
 **/bin/
 *.py[cdo]
@@ -24,6 +22,7 @@
 *.x
 *.term
 *.json
-json
+json*
+venv*
 # find <dir/>* -type l >> .gitignore
 
