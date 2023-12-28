@@ -9,7 +9,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-11-22"
-__updated__ = "2023-12-16"
+__updated__ = "2023-12-28"
 
 import time
 import json
@@ -20,11 +20,11 @@ from mhsUtils import save_to_json, get_base_filename
 from mhsLogging import MhsLogger
 
 start = time.perf_counter()
-WORD_FILE = "scrabble-plus.json"
+WORD_FILE = "input/scrabble-plus.json"
 DEFAULT_EXTRA_LETTERS = "NDWPGHVJKXQZ"
 MAX_EXTRA_LETTERS = 20
 DEFAULT_REQUIRED_LETTERS = "AEO"
-MAX_REQUIRED_LETTERS = 5
+MAX_REQUIRED_LETTERS = 8
 DEFAULT_WORD_SIZE = 7
 MIN_WORD_SIZE = 5
 MAX_WORD_SIZE = 15
@@ -48,10 +48,14 @@ def run_ideal():
                     solutions.append(item)
 
     show(f"solution count = {len(solutions)}")
-    # display the solutions
-    show("solutions:")
-    for val in solutions:
-        show(f"\t{val}")
+
+    show("sample output:")
+    ni = 0
+    nli = len(solutions) // 30
+    for word in solutions:
+        if ni % nli == 0:
+            show(f'"{word}",')
+        ni += 1
 
     show(f"\nsolve & display elapsed time = {time.perf_counter() - start}")
     if save_option:
@@ -85,7 +89,7 @@ def prep_ideal(argl:list) -> (bool, int, str, str):
     # make sure all the letters are different?
     show(f"other letters = {other}")
 
-    return args.save, word_size, required, other
+    return args.save, word_sz, require, other
 
 
 if __name__ == "__main__":
