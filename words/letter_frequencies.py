@@ -9,7 +9,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2023-12-16"
+__updated__ = "2023-12-28"
 
 import time
 import json
@@ -20,7 +20,7 @@ from mhsUtils import save_to_json
 from mhsLogging import MhsLogger, get_base_filename
 
 start = time.perf_counter()
-WORD_FILE = "scrabble-plus.json"
+WORD_FILE = "input/scrabble-plus.json"
 ALL_LETTERS = "SEAORILTNUDYCPMHGBKFWVZJXQ"
 MIN_WORD_LEN = 5
 MAX_WORD_LEN = 15
@@ -58,7 +58,7 @@ def run_freqs():
         save_to_json(f"{min_size}-{max_size}_letter-frequencies", sorted_freqs)
 
 def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, minimum and maximum word size options", prog="python3.10 letter_frequencies.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, minimum and maximum word size options", prog="python3 letter_frequencies.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-n', '--minimum', type=int, default=MIN_WORD_LEN, help="minimum number of letters in each found word")
