@@ -9,7 +9,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2023-12-23"
+__updated__ = "2023-12-28"
 
 import time
 import json
@@ -36,13 +36,13 @@ def run_choose():
 
     show("sample output:")
     ni = 0
-    nli = len(newlist) // 50
+    nli = len(newlist) // 30
     for word in newlist:
         if ni % nli == 0:
             show(f'"{word}",')
         ni += 1
 
-    show(f"\nelapsed time = {time.perf_counter() - start}")
+    show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
         save_to_json(f"{lower}-{upper}_letter_words", newlist)
 
