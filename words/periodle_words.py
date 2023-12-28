@@ -36,17 +36,19 @@ def solve():
     """
     wd_ct = 0
     wdf = json.load( open(word_file) )
-    for item in wdf:
+    for it in wdf:
+        item = it.upper()
         wd_ct += 1
         wd_len = len(item)
         if MAX_LETTERS >= wd_len >= MIN_LETTERS:
             sg_poss = 0
             for lx in item:
-                if lx.upper() in singles:
+                if lx in singles:
                     sg_poss += 1
             sg_reqd = MAX_LETTERS - wd_len
+            # quick initial test
             if sg_reqd > sg_poss:
-                rejects.append(item.upper())
+                rejects.append(item)
                 continue
             drop = False
             retry = False
@@ -57,13 +59,13 @@ def solve():
             stack = []
             prev_lett = BLANK
             while step < wd_len and not drop:
-                lett = item[step].upper()
+                lett = item[step]
                 if prev_lett != BLANK:
                     digraph = prev_lett + lett
                     if digraph not in doubles:
-                        if step > 1: # i.e. beyond the first two letters
+                        if step > 1: # beyond the first two letters
                             retry = True
-                        else: # first letter NOT in singles or NO solution if used as a single, and first digraph NOT in doubles, so...
+                        else: # first letter NOT in singles or NO solution if used as a single and first digraph NOT in doubles
                             drop = True
                     else:
                         stack.append(digraph)
@@ -102,14 +104,14 @@ def solve():
                 else:
                     step += 1
             if not drop:
-                if len(stack) != 5: # should NEVER happen, but just in case...
+                if len(stack) != 5: # should NEVER happen, but just in case
                     lgr.error(f"Problem with stack '{stack}' for word '{item}'?!")
                 else:
-                    solution_list.append(item.upper())
+                    solution_list.append(item)
                     stack_dict[wd_ct] = stack
                     lgr.info(stack)
             else:
-                rejects.append(item.upper())
+                rejects.append(item)
     show(f"\n{wd_ct} words in input file.")
 
 def run_periodle():
@@ -124,10 +126,10 @@ def run_periodle():
         save_to_json(f"periodle-rejects_f-{get_base_filename(word_file)}", rejects)
         save_to_json(f"periodle-stack_f-{get_base_filename(word_file)}", stack_dict)
     else:
-        ni = 0
-        nli = num_wd // 32 if num_wd > 150 else 12 if num_wd > 30 else 1
         # display a selection of the output
         show("\nsample solutions:")
+        ni = 0
+        nli = num_wd // 32 if num_wd > 150 else 12 if num_wd > 30 else 1
         for word in solution_list:
             if ni % nli == 0:
                 show(word)
@@ -146,7 +148,7 @@ def get_symbols():
     lgr.debug(f"doubles = {doubles}")
 
 def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, 'symbols file' name and 'words file' name options", prog="python3.11 periodle_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, 'symbols file' name and 'words file' name options", prog="python3 periodle_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-y', '--symbolfile', type=str, default=ELEMENT_JSON_FILE,
