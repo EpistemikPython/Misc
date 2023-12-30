@@ -147,7 +147,7 @@ def get_symbols():
     lgr.debug(f"singles = {singles}")
     lgr.debug(f"doubles = {doubles}")
 
-def process_args():
+def set_args():
     arg_parser = ArgumentParser(description="get the save-to-file, 'symbols file' name and 'words file' name options", prog="python3 periodle_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
@@ -157,8 +157,8 @@ def process_args():
                                 help= "JSON file name with the words to test (.json added to file name)")
     return arg_parser
 
-def prep_sb(argl:list) -> (bool, str, str):
-    args = process_args().parse_args(argl)
+def prep_args(argl:list) -> (bool, str, str):
+    args = set_args().parse_args(argl)
 
     lgr.info("START LOGGING")
     show(f"save option = '{args.save}'")
@@ -179,7 +179,7 @@ if __name__ == '__main__':
     lgr = log_control.get_logger()
     show = log_control.show
 
-    save_option, symbol_file, word_file = prep_sb(argv[1:])
+    save_option, symbol_file, word_file = prep_args(argv[1:])
     code = 0
     rejects = []
     solution_list = []
