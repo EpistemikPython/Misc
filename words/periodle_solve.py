@@ -1,7 +1,7 @@
 ###################################################################################################################################################
 # coding=utf-8
 #
-# periodle_solve.py -- solve a periodle game
+# periodle_solve.py -- solve a periodle game with information about fixed, required, partial and excluded symbols
 # see https://heptaveegesimal.com/periodle/
 #
 # Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-12-29"
-__updated__ = "2023-12-29"
+__updated__ = "2023-12-30"
 
 import os
 import json
@@ -27,11 +27,10 @@ WORD_JSON_FILE = "periodle_words"
 ELEMENT_JSON_FILE = "periodic_table"
 BLANK = '_'
 NUM_SYMBOLS = 5
-MAX_LETTERS = NUM_SYMBOLS * 2
 
 def solve():
     """
-    a simple brute force method:
+    a simple brute force method which is fast but does find some words that DO NOT meet the exact criteria:
     check all the possible periodle words:
       for fixed symbols in the proper positions
       for the presence of required symbols
@@ -39,26 +38,29 @@ def solve():
       - and retain the words that fulfill all the criteria
     """
     wdf = json.load( open(word_file) )
-    for item in wdf:
+    for it in wdf:
+        item = it.upper()
         drop = False
+        # can set a boolean 'have_fixed' to skip this step if not needed, but doesn't make any noticeable difference to the runtime
         for r in range(NUM_SYMBOLS):
-            if form[r] != BLANK:
-                idx = r * 2
-                if item[idx:idx+len(form[r])] != form[r]:
-                    lgr.debug(f"MISSING fixed symbol '{form[r]}' at position#{idx} in '{item}'!")
+            if not drop and form[r] != BLANK:
+                drop = True
+                # fixed symbols may be in different positions in the word, depending on number of singles or doubles preceding
+                for idx in range(r, 2*r+1):
+                    if item[idx:idx+len(form[r])] == form[r]:
+                        lgr.debug(f"FOUND fixed symbol '{form[r]}' at position#{idx} in '{item}'.")
+                        drop = False
+                        break
+        if not drop and required:
+            for ri in required:
+                if ri not in item:
+                    lgr.debug(f"MISSING required symbol '{ri}' in '{item}'!")
                     drop = True
                     break
         if not drop:
-            if required:
-                for ri in required:
-                    if ri.upper() not in item:
-                        lgr.debug(f"MISSING required symbol '{ri}' in '{item}'!")
-                        drop = True
-                        break
-        if not drop:
             if excluded:
                 for xi in excluded:
-                    if xi.upper() in item:
+                    if xi in item:
                         lgr.debug(f"excluded symbol '{xi}' FOUND in '{item}'!")
                         drop = True
                         break
@@ -66,25 +68,34 @@ def solve():
             solution_list.append(item)
 
 def run():
-    """process a words file to find periodle words (5-10 letters using element symbols) and save to a JSON file"""
+    """solve a periodle game with information about fixed, required, partial and excluded symbols"""
 
     solve()
     num_wd = len(solution_list)
-    show(f"\nFound {num_wd} periodle words.\nsolve elapsed time = {time.perf_counter() - start}")
+    show(f"\nFound {num_wd} periodle words.\n")
+    # display a selection of the output
+    skip = 10 if num_wd > 150 else 5 if num_wd > 30 else 1
+    show(f"{'Sample' if skip >= 5 else 'All'} tentative solutions:")
+    ni = 0
+    for word in solution_list:
+        ni += 1
+        if ni % skip == 0:
+            show(word)
 
+    show(f"\nSolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
-        save_to_json(f"periodle-solutions_f-{get_base_filename(word_file)}", solution_list)
-    else:
-        # display a selection of the output
-        show("\nsample solutions:")
-        ni = 0
-        nli = num_wd // 32 if num_wd > 150 else 12 if num_wd > 30 else 1
-        for word in solution_list:
-            if ni % nli == 0:
-                show(word)
-            ni += 1
+        formstr = ''.join(map(str, form.values())).replace(BLANK, '')
+        fixstr = formstr if formstr.isalpha() else '0'
+        lgr.debug(f"fixstr = {fixstr}")
+        reqstr = ''.join(map(str, required)) if required else '0'
+        lgr.debug(f"reqstr = {reqstr}")
+        exstr = ''.join(map(str, excluded)) if required else '0'
+        lgr.debug(f"exstr = {exstr}")
+        save_to_json(f"periodle-solutions_f-{fixstr}_r-{reqstr}_x-{exstr}", solution_list)
 
 def get_symbols():
+    """default is the periodic table JSON file"""
+
     symf = json.load( open(INPUT_FOLDER + os.sep + ELEMENT_JSON_FILE + os.extsep + JSON_LABEL) )
     for sect in symf:
         if sect == "single":
@@ -112,43 +123,25 @@ def prep_args(argl:list) -> (bool, str, str):
     lgr.info("START LOGGING")
     show(f"save option = '{args.save}'")
 
-    fixed = args.fixed.split(sep=',') if args.fixed else []
+    fixed = args.fixed.upper().split(sep=',') if args.fixed else []
     show(f"fixed = {fixed}")
     if fixed:
         for fi in fixed:
             if fi[0].isnumeric():
                 posn = int(fi[0])-1
-                # show(f"posn = {posn}")
                 if posn < NUM_SYMBOLS:
-                    sym = fi[1:].upper()
-                    # show(f"sym = {sym}")
+                    sym = fi[1:]
                     if sym in singles or sym in doubles:
                         form[posn] = sym
     show(f"form = {form}")
 
-    require = args.required.split(sep=',') if args.required else []
-    show(f"required = {require}")
-
-    partial = args.partial.split(sep=',') if args.partial else []
-    show(f"partial = {partial}")
-
+    require = args.required.upper().split(sep=',') if args.required else []
+    partial = args.partial.upper().split(sep=',') if args.partial else []
     require = require + partial
     show(f"required + partial = {require}")
 
-    exclude = args.exclude.split(sep=',') if args.exclude else []
+    exclude = args.exclude.upper().split(sep=',') if args.exclude else []
     show(f"exclude = {exclude}")
-    # for exi in exclude:
-    #     exiu = exi.upper()
-    #     if exiu in singles:
-    #         singles.remove(exiu)
-    #         for item in doubles:
-    #             if exiu in item:
-    #                 doubles.remove(item)
-    #     elif exiu in doubles:
-    #         doubles.remove(exiu)
-    # show(f"adjusted singles = {singles}")
-    # show(f"adjusted doubles = {doubles}")
-    # show(f"size adj doubles = {len(doubles)}")
 
     return args.save, require, exclude
 
@@ -159,13 +152,14 @@ if __name__ == '__main__':
     show = log_control.show
 
     try:
-        form = {0:BLANK,1:BLANK,2:BLANK,3:BLANK,4:BLANK}
         singles = []
         doubles = []
         get_symbols()
-        save_option, required, excluded = prep_args(argv[1:])
-        word_file = INPUT_FOLDER + os.sep + WORD_JSON_FILE + os.extsep + JSON_LABEL
 
+        form = {0:BLANK,1:BLANK,2:BLANK,3:BLANK,4:BLANK}
+        save_option, required, excluded = prep_args(argv[1:])
+
+        word_file = INPUT_FOLDER + os.sep + WORD_JSON_FILE + os.extsep + JSON_LABEL
         code = 0
         solution_list = []
         run()
