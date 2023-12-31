@@ -135,10 +135,25 @@ def prep_args(argl:list) -> (bool, str, str):
                         form[posn] = sym
     show(f"form = {form}")
 
+    # TODO: make required, partial and excluded sets instead of lists?
     require = args.required.upper().split(sep=',') if args.required else []
     partial = args.partial.upper().split(sep=',') if args.partial else []
     require = require + partial
     show(f"required + partial = {require}")
+    # find any adjacent fixed symbols that can be concatenated and added to the required symbols
+    concat3 = BLANK
+    span = NUM_SYMBOLS-1
+    for r in range(span):
+        if form[r] != BLANK and form[r+1] != BLANK:
+            if r < span-1 and form[r+2] != BLANK:
+                concat3 = form[r] + form[r+1] + form[r+2]
+                require.append(concat3)
+                show(f"appended {concat3} to required = {require}")
+            else:
+                concat2 = form[r] + form[r+1]
+                if concat2 not in concat3:
+                    require.append(concat2)
+                    show(f"appended {concat2} to required = {require}")
 
     exclude = args.exclude.upper().split(sep=',') if args.exclude else []
     show(f"exclude = {exclude}")
