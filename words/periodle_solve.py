@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-12-29"
-__updated__ = "2023-12-30"
+__updated__ = "2023-12-31"
 
 import os
 import json
@@ -19,7 +19,7 @@ from argparse import ArgumentParser
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json, get_base_filename, JSON_LABEL
-from mhsLogging import MhsLogger
+from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
 start = time.perf_counter()
 INPUT_FOLDER = "input"
@@ -30,12 +30,12 @@ NUM_SYMBOLS = 5
 
 def solve():
     """
-    a simple brute force method which is fast but does find some words that DO NOT meet the exact criteria:
-    check all the possible periodle words:
+    A simple and fast 'brute force' method (but which does find some words that DO NOT meet the exact criteria).
+    Check all the possible periodle words:
       for fixed symbols in the proper positions
       for the presence of required symbols
       for the absence of excluded symbols
-      - and retain the words that fulfill all the criteria
+      - and retain the words that fulfill all these criteria
     """
     wdf = json.load( open(word_file) )
     for it in wdf:
@@ -44,6 +44,7 @@ def solve():
         # can set a boolean 'have_fixed' to skip this step if not needed, but doesn't make any noticeable difference to the runtime
         for r in range(NUM_SYMBOLS):
             if not drop and form[r] != BLANK:
+                # IDEA: keep track of total length of preceding symbols
                 drop = True
                 # fixed symbols may be in different positions in the word, depending on number of singles or doubles preceding
                 for idx in range(r, 2*r+1):
@@ -57,13 +58,12 @@ def solve():
                     lgr.debug(f"MISSING required symbol '{ri}' in '{item}'!")
                     drop = True
                     break
-        if not drop:
-            if excluded:
-                for xi in excluded:
-                    if xi in item:
-                        lgr.debug(f"excluded symbol '{xi}' FOUND in '{item}'!")
-                        drop = True
-                        break
+        if not drop and excluded:
+            for xi in excluded:
+                if xi in item:
+                    lgr.debug(f"excluded symbol '{xi}' FOUND in '{item}'!")
+                    drop = True
+                    break
         if not drop:
             solution_list.append(item)
 
@@ -135,7 +135,7 @@ def prep_args(argl:list) -> (bool, str, str):
                         form[posn] = sym
     show(f"form = {form}")
 
-    # TODO: make required, partial and excluded sets instead of lists?
+    # IDEA: make required, partial and excluded sets instead of lists?
     require = args.required.upper().split(sep=',') if args.required else []
     partial = args.partial.upper().split(sep=',') if args.partial else []
     require = require + partial
@@ -148,12 +148,12 @@ def prep_args(argl:list) -> (bool, str, str):
             if r < span-1 and form[r+2] != BLANK:
                 concat3 = form[r] + form[r+1] + form[r+2]
                 require.append(concat3)
-                show(f"appended {concat3} to required = {require}")
+                show(f"appended '{concat3}' to required = {require}")
             else:
                 concat2 = form[r] + form[r+1]
                 if concat2 not in concat3:
                     require.append(concat2)
-                    show(f"appended {concat2} to required = {require}")
+                    show(f"appended '{concat2}' to required = {require}")
 
     exclude = args.exclude.upper().split(sep=',') if args.exclude else []
     show(f"exclude = {exclude}")
@@ -162,7 +162,7 @@ def prep_args(argl:list) -> (bool, str, str):
 
 
 if __name__ == '__main__':
-    log_control = MhsLogger( get_base_filename(__file__) )
+    log_control = MhsLogger( get_base_filename(__file__), file_level = DEFAULT_LOG_LEVEL )
     lgr = log_control.get_logger()
     show = log_control.show
 
@@ -171,6 +171,7 @@ if __name__ == '__main__':
         doubles = []
         get_symbols()
 
+        # IDEA: keep track of previous symbols to calculate possible starting position
         form = {0:BLANK,1:BLANK,2:BLANK,3:BLANK,4:BLANK}
         save_option, required, excluded = prep_args(argv[1:])
 
