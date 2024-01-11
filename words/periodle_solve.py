@@ -4,13 +4,13 @@
 # periodle_solve.py -- solve a periodle game with information about fixed, required, partial and excluded symbols
 # see https://heptaveegesimal.com/periodle/
 #
-# Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-12-29"
-__updated__ = "2023-12-31"
+__updated__ = "2024-01-11"
 
 import os
 import json
@@ -41,10 +41,10 @@ def solve():
     for it in wdf:
         item = it.upper()
         drop = False
-        # can set a boolean 'have_fixed' to skip this step if not needed, but doesn't make any noticeable difference to the runtime
+        # can use a boolean 'have_fixed' to skip this step if no fixed symbols, but doesn't make any noticeable difference to the runtime
         for r in range(NUM_SYMBOLS):
             if not drop and form[r] != BLANK:
-                # IDEA: keep track of total length of preceding symbols
+                # IDEA: keep track of preceding symbols and whether single or double to get a better estimate of possible positions
                 drop = True
                 # fixed symbols may be in different positions in the word, depending on number of singles or doubles preceding
                 for idx in range(r, 2*r+1):
@@ -91,7 +91,9 @@ def run():
         lgr.debug(f"reqstr = {reqstr}")
         exstr = ''.join(map(str, excluded)) if required else '0'
         lgr.debug(f"exstr = {exstr}")
-        save_to_json(f"periodle-solutions_f-{fixstr}_r-{reqstr}_x-{exstr}", solution_list)
+        save_name = f"periodle-solutions_f-{fixstr}_r-{reqstr}_x-{exstr}"
+        save_to_json(save_name, solution_list)
+        show(f"Save output to file '{save_name}'.")
 
 def get_symbols():
     """default is the periodic table JSON file"""
@@ -108,7 +110,8 @@ def get_symbols():
     lgr.debug(f"doubles = {doubles}")
 
 def set_args():
-    arg_parser = ArgumentParser(description="get the save-to-file plus the fixed, required, partial and exclude options", prog="python3 periodle_solve.py")
+    arg_parser = ArgumentParser(description="solve a periodle game with information about fixed, required, partial and excluded symbols",
+                                prog="python3 periodle_solve.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-f', '--fixed', type=str, help= "csv list of location and symbol where the position and value are KNOWN, e.g. 1fe,3p")
@@ -135,8 +138,8 @@ def prep_args(argl:list) -> (bool, str, str):
                         form[posn] = sym
     show(f"form = {form}")
 
-    # IDEA: make required, partial and excluded sets instead of lists?
     require = args.required.upper().split(sep=',') if args.required else []
+    # IDEA: keep separate track of partial and check before and after symbols in the solve loop to make sure actually 'partial'
     partial = args.partial.upper().split(sep=',') if args.partial else []
     require = require + partial
     show(f"required + partial = {require}")
