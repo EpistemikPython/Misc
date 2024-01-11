@@ -9,7 +9,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2023-12-28"
+__updated__ = "2024-01-11"
 
 import time
 import json
@@ -25,7 +25,7 @@ DEFAULT_LENGTH = 5
 MIN_LENGTH = 2
 MAX_LENGTH = 15
 
-def run_choose():
+def run():
     """process a list of words to find words of the specified length(s) and save to a json file"""
     newlist = []
     wdf = json.load(open(DEFAULT_WORD_FILE))
@@ -44,20 +44,20 @@ def run_choose():
 
     show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
-        save_to_json(f"{lower}-{upper}_letter_words", newlist)
+        save_name = f"{lower}-{upper}_letter_words" if lower != upper else f"{lower}-letter_words"
+        save_to_json(save_name, newlist)
+        show(f"Save output to file '{save_name}'.")
 
-
-def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, lower limit and upper limit options", prog="python3 choose_words.py")
+def set_args():
+    arg_parser = ArgumentParser(description="process a list of words to find words of the specified length(s)", prog="python3 choose_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-l', '--lower', type=int, default=DEFAULT_LENGTH, help="minimum number of letters in the words")
     arg_parser.add_argument('-u', '--upper', type=int, default=MAX_LENGTH, help="maximum number of letters in the words")
     return arg_parser
 
-
-def prep_choose(argl:list) -> (bool, int, int):
-    args = process_args().parse_args(argl)
+def prep_args(argl:list) -> (bool, int, int):
+    args = set_args().parse_args(argl)
 
     lgr.info("START LOGGING")
     show(f"save option = '{args.save}'")
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     lgr = log_control.get_logger()
     show = log_control.show
 
-    save_option, lower, upper = prep_choose(argv[1:])
-    run_choose()
+    save_option, lower, upper = prep_args(argv[1:])
+    run()
     show(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit()
