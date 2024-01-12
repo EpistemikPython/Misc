@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-12-29"
-__updated__ = "2024-01-11"
+__updated__ = "2024-01-12"
 
 import os
 import json
@@ -117,7 +117,7 @@ def set_args():
     arg_parser.add_argument('-f', '--fixed', type=str, help= "csv list of location and symbol where the position and value are KNOWN, e.g. 1fe,3p")
     arg_parser.add_argument('-r', '--required', type=str, help= "csv list of required symbols with an unknown position, e.g. c,la")
     arg_parser.add_argument('-p', '--partial', type=str, help= "csv list of partial symbols, e.g. ar,h")
-    arg_parser.add_argument('-x', '--exclude', type=str, help= "csv list of symbols that DO NOT appear in the game, eg. i,v,er,y,w,se")
+    arg_parser.add_argument('-x', '--exclude', type=str, help= "csv list of symbols that DO NOT appear in the game, e.g. i,v,er,y,w,se")
     return arg_parser
 
 def prep_args(argl:list) -> (bool, str, str):
@@ -169,18 +169,17 @@ if __name__ == '__main__':
     lgr = log_control.get_logger()
     show = log_control.show
 
+    code = 0
+    solution_list = []
+    singles = []
+    doubles = []
     try:
-        singles = []
-        doubles = []
         get_symbols()
 
-        # IDEA: keep track of previous symbols to calculate possible starting position
-        form = {0:BLANK,1:BLANK,2:BLANK,3:BLANK,4:BLANK}
+        form = dict.fromkeys( (r for r in range(NUM_SYMBOLS)), BLANK )
         save_option, required, excluded = prep_args(argv[1:])
 
         word_file = INPUT_FOLDER + os.sep + WORD_JSON_FILE + os.extsep + JSON_LABEL
-        code = 0
-        solution_list = []
         run()
     except KeyboardInterrupt:
         show(">> User interruption.")
