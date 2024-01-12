@@ -86,9 +86,9 @@ def run():
         formstr = ''.join(map(str, form.values())).replace(BLANK, '')
         fixstr = formstr if formstr.isalpha() else '0'
         lgr.debug(f"fixstr = {fixstr}")
-        reqstr = ''.join(map(str, required)) if required else '0'
+        reqstr = required if required else '0'
         lgr.debug(f"reqstr = {reqstr}")
-        exstr = ''.join(map(str, excluded)) if required else '0'
+        exstr = excluded if excluded else '0'
         lgr.debug(f"exstr = {exstr}")
         save_name = f"septle-solutions_f-{fixstr}_r-{reqstr}_x-{exstr}"
         save_to_json(save_name, solution_list)
