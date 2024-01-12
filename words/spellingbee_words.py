@@ -3,13 +3,13 @@
 #
 # spellingbee_words.py -- from a word list file, find all words that fulfill the specified spelling bee requirements
 #
-# Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
 __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2023-12-30"
+__updated__ = "2024-01-12"
 
 import time
 import json
@@ -62,7 +62,9 @@ def run():
 
     show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
-        save_to_json(f"{required}-{outers}_spellbee-words", solutions)
+        save_name = f"{required}-{outers}_spellbee-words"
+        save_to_json(save_name, solutions)
+        show(f"Save output to file '{save_name}'.")
 
 def set_args():
     arg_parser = ArgumentParser(description="get the save-to-file, required letter and outer letters options", prog="python3 spellingbee_words.py")
