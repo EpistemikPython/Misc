@@ -23,7 +23,9 @@ from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
 start = time.perf_counter()
 INPUT_FOLDER = "input"
-WORD_JSON_FILE = "seven-letter_words"
+SIXLETTER_WORD_FILE = "six-letter_words"
+SEVENLETTER_WORD_FILE = "seven-letter_words"
+DEFAULT_WORD_FILE = "scrabble-plus"
 BLANK = '_'
 DEFAULT_WORD_LENGTH = 7
 MIN_WORD_LENGTH = 4
@@ -38,31 +40,31 @@ def solve():
       for the absence of excluded symbols
       - and retain the words that fulfill all these criteria
     """
-    wdf = json.load( open(word_file) )
+    wdf = json.load( open(file_location) )
     for it in wdf:
-        item = it.upper()
-        drop = False
-        # can use a boolean 'have_fixed' to skip this step if no fixed symbols, but doesn't make any noticeable difference to the runtime
-        for fr in range( len(form) ):
-            if not drop and form[fr] != BLANK:
-                if item[fr] != form[fr]:
+        if len(it) == word_length:
+            item = it.upper()
+            drop = False
+            # can use a boolean 'have_fixed' to skip this step if no fixed symbols, but doesn't make any noticeable difference to the runtime
+            for fr in range(word_length):
+                if form[fr] != BLANK and item[fr] != form[fr]:
                     lgr.debug(f"MISSING fixed symbol '{form[fr]}' in '{item}' at position '{fr}'!")
                     drop = True
                     break
-        if not drop and required:
-            for ri in required:
-                if ri not in item:
-                    lgr.debug(f"MISSING required symbol '{ri}' in '{item}'!")
-                    drop = True
-                    break
-        if not drop and excluded:
-            for xi in excluded:
-                if xi in item:
-                    lgr.debug(f"excluded symbol '{xi}' FOUND in '{item}'!")
-                    drop = True
-                    break
-        if not drop:
-            solution_list.append(item)
+            if not drop and required:
+                for ri in required:
+                    if ri not in item:
+                        lgr.debug(f"MISSING required symbol '{ri}' in '{item}'!")
+                        drop = True
+                        break
+            if not drop and excluded:
+                for xi in excluded:
+                    if xi in item:
+                        lgr.debug(f"excluded symbol '{xi}' FOUND in '{item}'!")
+                        drop = True
+                        break
+            if not drop:
+                solution_list.append(item)
 
 def run():
     """solve a septle-type game with information about the fixed, required and excluded symbols"""
@@ -88,17 +90,19 @@ def run():
         lgr.debug(f"reqstr = {reqstr}")
         exstr = ''.join(map(str, excluded)) if required else '0'
         lgr.debug(f"exstr = {exstr}")
-        save_to_json(f"septle-solutions_f-{fixstr}_r-{reqstr}_x-{exstr}", solution_list)
+        save_name = f"septle-solutions_f-{fixstr}_r-{reqstr}_x-{exstr}"
+        save_to_json(save_name, solution_list)
+        show(f"Save output to file '{save_name}'.")
 
 def set_args():
     arg_parser = ArgumentParser(description="solve a septle-type game with information about the fixed, required and excluded symbols",
                                 prog="python3 solve_septle.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
-    arg_parser.add_argument('-l', '--length', type=int, default=DEFAULT_WORD_LENGTH, help= "length of the word to find")
-    arg_parser.add_argument('-f', '--fixed', type=str, help= "csv list of location and letter where the position and value are KNOWN, e.g. 1f,3p")
-    arg_parser.add_argument('-r', '--required', type=str, help= "csv list of required letters with an unknown position, e.g. c,l,a")
-    arg_parser.add_argument('-x', '--exclude', type=str, help= "csv list of symbols that DO NOT appear in the game, eg. i,v,e,y,w,s")
+    arg_parser.add_argument('-l', '--length', type=int, default=DEFAULT_WORD_LENGTH, help="length of the word to find")
+    arg_parser.add_argument('-f', '--fixed', type=str, help="csv list of location and letter where the position and value are KNOWN, e.g. 1f,3p")
+    arg_parser.add_argument('-r', '--required', type=str, help="required letters with an unknown position, e.g. cla")
+    arg_parser.add_argument('-x', '--exclude', type=str, help="letters that DO NOT appear in the word, eg. iveyws")
     return arg_parser
 
 def prep_args(argl:list) -> (bool, str, str):
@@ -108,7 +112,7 @@ def prep_args(argl:list) -> (bool, str, str):
     show(f"save option = '{args.save}'")
 
     leng = args.length if MIN_WORD_LENGTH <= args.length <= MAX_WORD_LENGTH else DEFAULT_WORD_LENGTH
-    argform = dict.fromkeys( (r for r in range(leng)), BLANK)
+    argform = dict.fromkeys( (r for r in range(leng)), BLANK )
     show(f"argform = {argform}")
 
     fixed = args.fixed.upper().split(sep=',') if args.fixed else []
@@ -117,16 +121,16 @@ def prep_args(argl:list) -> (bool, str, str):
         for fi in fixed:
             if fi[0].isnumeric():
                 posn = int(fi[0])-1
-                if posn < DEFAULT_WORD_LENGTH:
-                    lett = fi[1:]
-                    if lett.isalphabetic():
+                if posn < leng:
+                    lett = fi[1]
+                    if lett.isalpha():
                         argform[posn] = lett
-    show(f"form = {argform}")
+    show(f"fixed form = {argform}")
 
-    require = args.required.upper().split(sep=',') if args.required else []
+    require = args.required.upper() if args.required else ""
     show(f"required = {require}")
 
-    exclude = args.exclude.upper().split(sep=',') if args.exclude else []
+    exclude = args.exclude.upper() if args.exclude else ""
     show(f"excluded = {exclude}")
 
     return args.save, argform, require, exclude
@@ -140,7 +144,9 @@ if __name__ == '__main__':
     try:
         save_option, form, required, excluded = prep_args(argv[1:])
 
-        word_file = INPUT_FOLDER + os.sep + WORD_JSON_FILE + os.extsep + JSON_LABEL
+        word_length = len(form)
+        json_word_file = SEVENLETTER_WORD_FILE if word_length == 7 else SIXLETTER_WORD_FILE if word_length == 6 else DEFAULT_WORD_FILE
+        file_location = INPUT_FOLDER + os.sep + json_word_file + os.extsep + JSON_LABEL
         code = 0
         solution_list = []
         run()
