@@ -89,7 +89,7 @@ def run():
         lgr.debug(f"fixstr = {fixstr}")
         reqstr = ''.join(map(str, required)) if required else '0'
         lgr.debug(f"reqstr = {reqstr}")
-        exstr = ''.join(map(str, excluded)) if required else '0'
+        exstr = ''.join(map(str, excluded)) if excluded else '0'
         lgr.debug(f"exstr = {exstr}")
         save_name = f"periodle-solutions_f-{fixstr}_r-{reqstr}_x-{exstr}"
         save_to_json(save_name, solution_list)
