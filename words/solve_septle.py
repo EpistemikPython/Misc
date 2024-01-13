@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-01-10"
-__updated__ = "2024-01-11"
+__updated__ = "2024-01-12"
 
 import os
 import json
@@ -102,7 +102,7 @@ def set_args():
     arg_parser.add_argument('-l', '--length', type=int, default=DEFAULT_WORD_LENGTH, help="length of the word to find")
     arg_parser.add_argument('-f', '--fixed', type=str, help="csv list of location and letter where the position and value are KNOWN, e.g. 1f,3p")
     arg_parser.add_argument('-r', '--required', type=str, help="required letters with an unknown position, e.g. cla")
-    arg_parser.add_argument('-x', '--exclude', type=str, help="letters that DO NOT appear in the word, eg. iveyws")
+    arg_parser.add_argument('-x', '--exclude', type=str, help="letters that DO NOT appear in the word, e.g. iveyws")
     return arg_parser
 
 def prep_args(argl:list) -> (bool, str, str):
@@ -113,8 +113,6 @@ def prep_args(argl:list) -> (bool, str, str):
 
     leng = args.length if MIN_WORD_LENGTH <= args.length <= MAX_WORD_LENGTH else DEFAULT_WORD_LENGTH
     argform = dict.fromkeys( (r for r in range(leng)), BLANK )
-    show(f"argform = {argform}")
-
     fixed = args.fixed.upper().split(sep=',') if args.fixed else []
     show(f"fixed = {fixed}")
     if fixed:
@@ -125,7 +123,7 @@ def prep_args(argl:list) -> (bool, str, str):
                     lett = fi[1]
                     if lett.isalpha():
                         argform[posn] = lett
-    show(f"fixed form = {argform}")
+        show(f"fixed form = {argform}")
 
     require = args.required.upper() if args.required else ""
     show(f"required = {require}")
@@ -141,14 +139,15 @@ if __name__ == '__main__':
     lgr = log_control.get_logger()
     show = log_control.show
 
+    code = 0
+    solution_list = []
     try:
         save_option, form, required, excluded = prep_args(argv[1:])
 
         word_length = len(form)
         json_word_file = SEVENLETTER_WORD_FILE if word_length == 7 else SIXLETTER_WORD_FILE if word_length == 6 else DEFAULT_WORD_FILE
         file_location = INPUT_FOLDER + os.sep + json_word_file + os.extsep + JSON_LABEL
-        code = 0
-        solution_list = []
+
         run()
     except KeyboardInterrupt:
         show(">> User interruption.")
