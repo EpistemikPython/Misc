@@ -1,28 +1,36 @@
-from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
-QDialogButtonBox, QFormLayout, QGridLayout, QGroupBox, QHBoxLayout,
-QLabel, QLineEdit, QMenu, QMenuBar, QPushButton, QSpinBox, QTextEdit,
-QVBoxLayout)
- 
 import sys
- 
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QApplication, QDialog, QPushButton, QVBoxLayout
+
+
 class Dialog(QDialog):
- 
-	def slot_method(self):
-		print('slot method called.')
-	 
+
 	def __init__(self):
 		super(Dialog, self).__init__()
-		 
-		button=QPushButton("Click")
+
+		button = QPushButton("Click me!")
 		button.clicked.connect(self.slot_method)
-		 
-		mainLayout = QVBoxLayout()
-		mainLayout.addWidget(button)
-		 
-		self.setLayout(mainLayout)
+
+		self.left = 640
+		self.top = 280
+		self.width = 300
+		self.height = 200
+
+		main_layout = QVBoxLayout()
+		main_layout.addWidget(button)
+
+		self.setGeometry(self.left, self.top, self.width, self.height)
 		self.setWindowTitle("Button Example - pythonspot.com")
- 
+		self.setLayout(main_layout)
+		# self.show()
+
+	@pyqtSlot()
+	def slot_method(self):
+		print('slot method called.')
+
+
 if __name__ == '__main__':
 	app = QApplication(sys.argv)
 	dialog = Dialog()
-	sys.exit(dialog.exec_())
+	dialog.show()
+	sys.exit(app.exec_())
