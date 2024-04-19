@@ -24,7 +24,7 @@
 *.term
 *.json
 json*
-test*
 venv*
+tests*
 # find <dir/>* -type l >> .gitignore
 
