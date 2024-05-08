@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-12-29"
-__updated__ = "2024-01-12"
+__updated__ = "2024-05-08"
 
 import os
 import json
@@ -96,7 +96,7 @@ def run():
         show(f"Save output to file '{save_name}'.")
 
 def get_symbols():
-    """default is the periodic table JSON file"""
+    """default input is the periodic table JSON file"""
 
     symf = json.load( open(INPUT_FOLDER + os.sep + ELEMENT_JSON_FILE + os.extsep + JSON_LABEL) )
     for sect in symf:
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         form = dict.fromkeys( (r for r in range(NUM_SYMBOLS)), BLANK )
         save_option, required, excluded = prep_args(argv[1:])
 
-        word_file = INPUT_FOLDER + os.sep + WORD_JSON_FILE + os.extsep + JSON_LABEL
+        word_file = os.path.join(INPUT_FOLDER, WORD_JSON_FILE + os.extsep + JSON_LABEL)
         run()
     except KeyboardInterrupt:
         show(">> User interruption.")
