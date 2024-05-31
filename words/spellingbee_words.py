@@ -9,7 +9,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2024-05-08"
+__updated__ = "2024-05-30"
 
 import time
 import json
@@ -21,9 +21,9 @@ from mhsLogging import MhsLogger
 
 start = time.perf_counter()
 WORD_FILE = "input/scrabble-plus.json"
-OUTER_SIZE = 6
+NUM_OUTERS = 6
 MIN_WORD_SIZE = 4
-DEFAULT_SKIP = 4
+MAX_PRINT = 30
 
 def run():
     """from a word list file, find all words that fulfill the specified spelling bee requirements"""
@@ -38,12 +38,14 @@ def run():
                 if required in item:
                     solutions.append(item)
 
-    show(f"solution count = {len(solutions)}")
+    num_solns = len(solutions)
+    show(f"solution count = {num_solns}")
     # check for pangrams and print the solutions
-    skip = 1 if len(solutions) < 50 else DEFAULT_SKIP
+    skip = 1 if num_solns <= MAX_PRINT else num_solns // MAX_PRINT + 1
+    print(f"skip = {skip}")
     ct = 0
     pgct = 0
-    show(f"{'Sample of' if skip == DEFAULT_SKIP else 'ALL'} solutions:")
+    show(f"{'Sample of' if skip > 1 else 'ALL'} solutions:")
     for val in solutions:
         pg = True
         for lett in outers:
@@ -83,20 +85,26 @@ def prep_args(argl:list) -> (bool, str, str):
     if central.isalpha() and len(central) == 1:
         show(f"central letter = {central}")
     else:
-        show(f"INVALID central letter '{central}'!")
-        raise Exception("bad central letter")
+        raise Exception(f"INVALID central letter '{central}'.")
 
-    # make sure all the outer letters are different?
     outer = args.outer.upper()
-    if outer.isalpha() and len(outer) == OUTER_SIZE:
-        if central in outer:
-            show(f"INVALID outer letters '{outer}'! Required letter '{central}' CANNOT be in outers!")
-            raise Exception("central letter in outers")
+    if outer.isalpha():
+        if len(outer) == NUM_OUTERS:
+            if central in outer:
+                raise Exception(f"INVALID outer letters: '{outer}'. REQUIRED letter '{central}' CANNOT be in outers.")
+            else:
+                # make sure all the outer letters are different
+                test = args.outer
+                while test:
+                    lett = test[0]
+                    test = test.removeprefix(lett)
+                    if lett in test:
+                        raise Exception(f"Duplicate letter: '{lett}' in outers.")
+                show(f"outer letters = {outer}")
         else:
-            show(f"outer letters = {outer}")
+            raise Exception(f"Invalid NUMBER of outer letters: {len(outer)}.")
     else:
-        show(f"INVALID outer letters '{outer}'!!")
-        raise Exception("bad outer letters")
+        raise Exception(f"NON-LETTER in outer letters: '{outer}'.")
 
     return args.save, central, outer
 
@@ -114,7 +122,7 @@ if __name__ == '__main__':
         show(">> User interruption.")
         code = 13
     except Exception as ex:
-        show(f"Problem = '{repr(ex)}'")
+        show(f"Problem: '{repr(ex)}'")
         code = 66
 
     show(f"\nfinal elapsed time = {time.perf_counter() - start}")
