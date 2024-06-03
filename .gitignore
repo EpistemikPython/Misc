@@ -23,7 +23,6 @@
 *.x
 *.term
 *.json
-json*
 venv*
 VENV*
 tests*
