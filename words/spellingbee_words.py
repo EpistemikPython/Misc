@@ -14,6 +14,7 @@ __updated__ = "2024-05-30"
 import time
 import json
 from argparse import ArgumentParser
+import os.path as osp
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json, get_base_filename
@@ -28,7 +29,7 @@ MAX_PRINT = 30
 def run():
     """from a word list file, find all words that fulfill the specified spelling bee requirements"""
     solutions = []
-    wdf = json.load( open(WORD_FILE) )
+    wdf = json.load( open(file_name) )
     for item in wdf:
         if len(item) >= MIN_WORD_SIZE:
             for letter in item:
@@ -68,9 +69,11 @@ def run():
         show(f"Save output to file '{save_name}'.")
 
 def set_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, central and outer letters options", prog="python3 spellingbee_words.py")
+    arg_parser = ArgumentParser(description="from a word list file, find all words that fulfill the specified spelling bee requirements",
+                                prog="python3 spellingbee_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
+    arg_parser.add_argument('-f', '--file', type=str, default=WORD_FILE, help="path to file with list of all acceptable words")
     arg_parser.add_argument('-c', '-r', '--central', type=str, required=True, help="this ONE letter MUST be in each word")
     arg_parser.add_argument('-o', '-p', '--outer', type=str, required=True, help="SIX other POSSIBLE letters in the words")
     return arg_parser
@@ -79,19 +82,23 @@ def prep_args(argl:list) -> (bool, str, str):
     args = set_args().parse_args(argl)
 
     lgr.info("START LOGGING")
-    show(f"save option = '{args.save}'")
+    show(f"save option = {args.save}")
+
+    if not osp.isfile(args.file):
+        raise Exception(f"File path '{args.file}' does not exist.")
+    show(f"using word file '{args.file}'")
 
     central = args.central.upper()
     if central.isalpha() and len(central) == 1:
         show(f"central letter = {central}")
     else:
-        raise Exception(f"INVALID central letter '{central}'.")
+        raise Exception(f"INVALID central letter: {central}.")
 
     outer = args.outer.upper()
     if outer.isalpha():
         if len(outer) == NUM_OUTERS:
             if central in outer:
-                raise Exception(f"INVALID outer letters: '{outer}'. REQUIRED letter '{central}' CANNOT be in outers.")
+                raise Exception(f"INVALID outer letters '{outer}'. REQUIRED letter '{central}' CANNOT be in outers.")
             else:
                 # make sure all the outer letters are different
                 test = args.outer
@@ -99,14 +106,14 @@ def prep_args(argl:list) -> (bool, str, str):
                     lett = test[0]
                     test = test.removeprefix(lett)
                     if lett in test:
-                        raise Exception(f"Duplicate letter: '{lett}' in outers.")
+                        raise Exception(f"Duplicate letter '{lett}' in outer letters.")
                 show(f"outer letters = {outer}")
         else:
             raise Exception(f"Invalid NUMBER of outer letters: {len(outer)}.")
     else:
-        raise Exception(f"NON-LETTER in outer letters: '{outer}'.")
+        raise Exception(f"NON-LETTER '{outer}' in outer letters.")
 
-    return args.save, central, outer
+    return args.save, args.file, central, outer
 
 
 if __name__ == '__main__':
@@ -116,13 +123,13 @@ if __name__ == '__main__':
 
     code = 0
     try:
-        save_option, required, outers = prep_args(argv[1:])
+        save_option, file_name, required, outers = prep_args(argv[1:])
         run()
     except KeyboardInterrupt:
         show(">> User interruption.")
         code = 13
     except Exception as ex:
-        show(f"Problem: '{repr(ex)}'")
+        show(f"Problem: {repr(ex)}.")
         code = 66
 
     show(f"\nfinal elapsed time = {time.perf_counter() - start}")
