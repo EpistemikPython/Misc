@@ -9,7 +9,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2024-05-30"
+__updated__ = "2024-06-05"
 
 import time
 import json
@@ -25,21 +25,26 @@ WORD_FILE = "input/scrabble-plus.json"
 NUM_OUTERS = 6
 MIN_WORD_SIZE = 4
 MAX_PRINT = 30
+MAX_RANGE = 12 # possible word sizes from 4 to 15
 
 def run():
     """from a word list file, find all words that fulfill the specified spelling bee requirements"""
-    solutions = []
+    solutions = [ [] for _ in range(MAX_RANGE) ]
+    num_solns = 0
     wdf = json.load( open(file_name) )
     for item in wdf:
-        if len(item) >= MIN_WORD_SIZE:
+        leng = len(item)
+        if leng >= MAX_RANGE+MIN_WORD_SIZE:
+            show(f"Word size = {leng} >> GREATER than acceptable MAX!")
+        elif leng >= MIN_WORD_SIZE:
             for letter in item:
                 if letter not in outers + required:
                     break
             else:
                 if required in item:
-                    solutions.append(item)
+                    solutions[leng-MIN_WORD_SIZE].append(item)
+                    num_solns += 1
 
-    num_solns = len(solutions)
     show(f"solution count = {num_solns}")
     # check for pangrams and print the solutions
     skip = 1 if num_solns <= MAX_PRINT else num_solns // MAX_PRINT + 1
@@ -47,19 +52,20 @@ def run():
     ct = 0
     pgct = 0
     show(f"{'Sample of' if skip > 1 else 'ALL'} solutions:")
-    for val in solutions:
-        pg = True
-        for lett in outers:
-            if lett not in val:
-                pg = False
-                break
-        if pg:
-            show(f"\t{val} : Pangram!")
-            pgct += 1
-        else:
-            ct += 1
-            if ct % skip == 0:
-                show(f"\t{val}")
+    for idx in range(MAX_RANGE):
+        for val in solutions[idx]:
+            pg = True
+            for lett in outers:
+                if lett not in val:
+                    pg = False
+                    break
+            if pg:
+                show(f"\t{val} : Pangram!")
+                pgct += 1
+            else:
+                ct += 1
+                if ct % skip == 0:
+                    show(f"\t{val}")
     show(f">> {pgct if pgct > 0 else 'NO'} Pangram{'' if pgct == 1 else 's'}{'!' * pgct}")
 
     show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
