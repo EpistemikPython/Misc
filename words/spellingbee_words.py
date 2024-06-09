@@ -9,7 +9,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2024-06-05"
+__updated__ = "2024-06-07"
 
 import time
 import json
@@ -17,7 +17,7 @@ from argparse import ArgumentParser
 import os.path as osp
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import save_to_json, get_base_filename
+from mhsUtils import save_to_json, get_base_filename, get_current_date
 from mhsLogging import MhsLogger
 
 start = time.perf_counter()
@@ -34,7 +34,7 @@ def run():
     wdf = json.load( open(file_name) )
     for item in wdf:
         leng = len(item)
-        if leng >= MAX_RANGE+MIN_WORD_SIZE:
+        if leng >= MAX_RANGE + MIN_WORD_SIZE:
             show(f"Word size = {leng} >> GREATER than acceptable MAX!")
         elif leng >= MIN_WORD_SIZE:
             for letter in item:
@@ -42,13 +42,13 @@ def run():
                     break
             else:
                 if required in item:
-                    solutions[leng-MIN_WORD_SIZE].append(item)
+                    solutions[leng - MIN_WORD_SIZE].append(item)
                     num_solns += 1
 
     show(f"solution count = {num_solns}")
     # check for pangrams and print the solutions
     skip = 1 if num_solns <= MAX_PRINT else num_solns // MAX_PRINT + 1
-    print(f"skip = {skip}")
+    show(f"skip = {skip}")
     ct = 0
     pgct = 0
     show(f"{'Sample of' if skip > 1 else 'ALL'} solutions:")
@@ -70,8 +70,9 @@ def run():
 
     show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
-        save_name = f"{required}-{outers}_spellbee-words"
-        save_to_json(save_name, solutions)
+        save_dict = {f"{dict_name}":solutions}
+        base_name = f"{required}-{outers}_spellbee-words"
+        save_name = save_to_json(base_name, save_dict)
         show(f"Save output to file '{save_name}'.")
 
 def set_args():
@@ -79,6 +80,7 @@ def set_args():
                                 prog="python3 spellingbee_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
+    arg_parser.add_argument('-n', '--name', type=str, default=get_current_date(), help="if saving, optional name of key for dictionary of results")
     arg_parser.add_argument('-f', '--file', type=str, default=WORD_FILE, help="path to file with list of all acceptable words")
     arg_parser.add_argument('-c', '-r', '--central', type=str, required=True, help="this ONE letter MUST be in each word")
     arg_parser.add_argument('-o', '-p', '--outer', type=str, required=True, help="SIX other POSSIBLE letters in the words")
@@ -89,6 +91,8 @@ def prep_args(argl:list) -> (bool, str, str):
 
     lgr.info("START LOGGING")
     show(f"save option = {args.save}")
+    if args.save:
+        show(f"saved results dictionary name = {args.name}")
 
     if not osp.isfile(args.file):
         raise Exception(f"File path '{args.file}' does not exist.")
@@ -119,7 +123,7 @@ def prep_args(argl:list) -> (bool, str, str):
     else:
         raise Exception(f"NON-LETTER '{outer}' in outer letters.")
 
-    return args.save, args.file, central, outer
+    return args.save, args.name, args.file, central, outer
 
 
 if __name__ == '__main__':
@@ -129,7 +133,7 @@ if __name__ == '__main__':
 
     code = 0
     try:
-        save_option, file_name, required, outers = prep_args(argv[1:])
+        save_option, dict_name, file_name, required, outers = prep_args(argv[1:])
         run()
     except KeyboardInterrupt:
         show(">> User interruption.")
