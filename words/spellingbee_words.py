@@ -9,7 +9,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2024-06-07"
+__updated__ = "2024-06-11"
 
 import time
 import json
@@ -121,7 +121,7 @@ def prep_args(argl:list) -> (bool, str, str):
         else:
             raise Exception(f"Invalid NUMBER of outer letters: {len(outer)}.")
     else:
-        raise Exception(f"NON-LETTER '{outer}' in outer letters.")
+        raise Exception(f"NON-LETTER in outer letters: {outer}.")
 
     return args.save, args.name, args.file, central, outer
 
