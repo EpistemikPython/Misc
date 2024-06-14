@@ -24,6 +24,7 @@
 *.term
 *.json
 **/json/
+*link*
 output*
 venv*
 VENV*
