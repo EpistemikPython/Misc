@@ -10,7 +10,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-06-11"
-__updated__ = "2024-06-14"
+__updated__ = "2024-06-17"
 
 import time
 import json
@@ -29,7 +29,7 @@ MAX_WORD_SIZE = 15
 MAX_PRINT = 30
 
 def run():
-    """from a word list file, find all words that fulfill the specified spelling bee requirements"""
+    """from a word list file, find all words of a chosen size that fulfill the specified spelling bee requirements"""
     solutions = []
     wdf = json.load( open(file_name) )
     for item in wdf:
@@ -48,34 +48,46 @@ def run():
     skip = 1 if num_solns <= MAX_PRINT else num_solns // MAX_PRINT + 1
     show(f"skip = {skip}")
     ct = 0
+    pgct = 0
     show(f"{'Sample of' if skip > 1 else 'ALL'} solutions:")
     for val in solutions:
-        ct += 1
-        if ct % skip == 0:
-            show(f"\t{val}")
+        pg = True
+        for lett in outers:
+            if lett not in val:
+                pg = False
+                break
+        if pg:
+            show(f"\t{val} : Pangram!")
+            pgct += 1
+        else:
+            ct += 1
+            if ct % skip == 0:
+                show(f"\t{val}")
+    show(f">> {pgct if pgct > 0 else 'NO'} Pangram{'' if pgct == 1 else 's'}{'!' * pgct}")
 
     show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
         save_dict = {f"{dict_name}":solutions}
         base_name = f"{required}-{outers}_spellbee-words"
         save_name = save_to_json(base_name, save_dict)
-        show(f"Save output to file '{save_name}'.")
+        show(f"Saved output to file '{save_name}'.")
 
 def set_args():
     arg_parser = ArgumentParser(description="from a word list file, find all words of a particular size that fulfill the specified spelling bee requirements",
                                 prog="python3 spellingbee_words.py")
     # optional arguments
-    arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
+    arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file.")
     arg_parser.add_argument('-n', '--name', type=str, default=get_current_date(),
-                            help="if saving to file, optional name of key for dictionary of results")
+                            help="if saving to file, optional name of key for dictionary of results.")
     arg_parser.add_argument('-f', '--file', type=str, default=WORD_FILE,
                             help=f"path to alternate file with list of all acceptable words; DEFAULT = {WORD_FILE}.")
-    arg_parser.add_argument('-l', '--length', type=int, default=MIN_WORD_SIZE, help="number of letters in the words to be found")
+    arg_parser.add_argument('-l', '--length', type=int, default=MIN_WORD_SIZE,
+                            help=f"number of letters in each word to be found; DEFAULT = {MIN_WORD_SIZE}, MIN = {MIN_WORD_SIZE}, MAX = {MAX_WORD_SIZE}.")
     arg_parser.add_argument('-c', '-r', '--central', type=str, required=True, help="this ONE letter MUST be in each word")
     arg_parser.add_argument('-o', '-p', '--outer', type=str, required=True, help="SIX other POSSIBLE letters in the words")
     return arg_parser
 
-def prep_args(argl:list) -> (bool, str, str):
+def prep_args(argl:list):
     args = set_args().parse_args(argl)
 
     lgr.info("START LOGGING")
@@ -83,13 +95,13 @@ def prep_args(argl:list) -> (bool, str, str):
     if args.save:
         show(f"Saved results dictionary name = {args.name}")
 
-    if args.length.isdigit():
-        length = args.length
-    else:
+    try:
+        length = int(args.length)
+    except ValueError:
         raise Exception(f"'{args.length}' is NOT an integer.")
     if length < MIN_WORD_SIZE or length > MAX_WORD_SIZE:
         length = MIN_WORD_SIZE
-    show(f"Looking for words with '{length}' letters.")
+    show(f"Looking for words with {length} letters.")
 
     if not osp.isfile(args.file):
         raise Exception(f"File path '{args.file}' does not exist.")
