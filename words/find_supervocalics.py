@@ -28,7 +28,7 @@ MAX_PRINT = 30
 
 def run():
     """from a word list file, find all the supervocalics"""
-    solutions = []
+    solutions = [[],[]]
     wdf = json.load( open(file_name) )
     for item in wdf:
         if len(item) >= MIN_WORD_SIZE:
@@ -36,16 +36,28 @@ def run():
                 if item.count(vowel) != 1:
                     break
             else:
-                solutions.append(item)
+                if item.count("Y") == 1:
+                    solutions[0].append(item)
+                else:
+                    solutions[1].append(item)
 
-    num_solns = len(solutions)
-    show(f"solution count = {num_solns}")
+    num_solys = len(solutions[0])
+    num_solns = num_solys + len(solutions[1])
+    show(f"Total solution count = {num_solns}\nSupervocalickY count = {num_solys}")
     # print some of the solutions
     skip = 1 if num_solns <= MAX_PRINT else num_solns // MAX_PRINT + 1
-    show(f"skip = {skip}")
+    yskip = 1 if num_solys <= MAX_PRINT else num_solys // MAX_PRINT + 1
+    show(f"skip = {skip}; yskip = {yskip}")
     ct = 0
+    yct = 0
+    show(f"{'Sample of' if yskip > 1 else 'ALL'} SupervocalickYs:")
+    for val in solutions[0]:
+        yct += 1
+        if yct % yskip == 0:
+            show(f"\t{val}")
+    show(f">> {yct if yct > 0 else 'NO'} SupervocalickY{'' if yct == 1 else 's'}!\n")
     show(f"{'Sample of' if skip > 1 else 'ALL'} solutions:")
-    for val in solutions:
+    for val in solutions[1]:
         ct += 1
         if ct % skip == 0:
             show(f"\t{val}")
