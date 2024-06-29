@@ -9,7 +9,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-06-25"
-__updated__ = "2024-06-25"
+__updated__ = "2024-06-29"
 
 import time
 import json
@@ -17,11 +17,11 @@ from argparse import ArgumentParser
 import os.path as osp
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import save_to_json, get_base_filename, get_current_date
+from mhsUtils import save_to_json, get_base_filename, get_filename, get_current_date
 from mhsLogging import MhsLogger
 
 start = time.perf_counter()
-WORD_FILE = "input/scrabble-plus.json"
+INPUT_FILE = "input/scrabble-plus.json"
 VOWELS = "AEIOU"
 MIN_WORD_SIZE = 6
 MAX_PRINT = 30
@@ -36,55 +36,60 @@ def run():
                 if item.count(vowel) != 1:
                     break
             else:
+                # save SupervocalickYs separately
                 if item.count("Y") == 1:
                     solutions[0].append(item)
                 else:
                     solutions[1].append(item)
 
     num_solys = len(solutions[0])
-    num_solns = num_solys + len(solutions[1])
-    show(f"Total solution count = {num_solns}\nSupervocalickY count = {num_solys}")
-    # print some of the solutions
-    skip = 1 if num_solns <= MAX_PRINT else num_solns // MAX_PRINT + 1
+    num_solns = len(solutions[1])
+    total_solns = num_solys + num_solns
+    show(f"Total solution count = {total_solns}\nSupervocalickY count = {num_solys}")
+    solutions[0].sort()
+    solutions[1].sort()
+
+    # display some of the solutions
     yskip = 1 if num_solys <= MAX_PRINT else num_solys // MAX_PRINT + 1
-    show(f"skip = {skip}; yskip = {yskip}")
-    ct = 0
+    show(f"yskip = {yskip}")
     yct = 0
     show(f"{'Sample of' if yskip > 1 else 'ALL'} SupervocalickYs:")
-    for val in solutions[0]:
+    for yval in solutions[0]:
         yct += 1
         if yct % yskip == 0:
-            show(f"\t{val}")
+            show(f"\t{yval}")
     show(f">> {yct if yct > 0 else 'NO'} SupervocalickY{'' if yct == 1 else 's'}!\n")
+    skip = 1 if num_solns <= MAX_PRINT else num_solns // MAX_PRINT + 1
+    show(f"skip = {skip}")
     show(f"{'Sample of' if skip > 1 else 'ALL'} solutions:")
+    ct = 0
     for val in solutions[1]:
         ct += 1
         if ct % skip == 0:
             show(f"\t{val}")
+    show(f"\nsolve, sort and display elapsed time = {time.perf_counter() - start}")
 
-    show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
-        save_dict = {f"{dict_name}":solutions}
+        save_dict = {f"{list_name}":solutions}
         save_name = save_to_json("Supervocalics", save_dict)
         show(f"Saved output to file '{save_name}'.")
 
 def set_args():
-    arg_parser = ArgumentParser(description="from a word list file, find all the supervocalics", prog="python3 find_supervocalics.py")
+    arg_parser = ArgumentParser(description="from a word list file, find all the supervocalics", prog=f"python3 {get_filename(__file__)}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-n', '--name', type=str, default=get_current_date(),
-                            help="if saving results to a file, optional name for list of results")
-    arg_parser.add_argument('-f', '--file', type=str, default=WORD_FILE,
-                            help=f"path to file with list of all acceptable words; DEFAULT = '{WORD_FILE}'")
+                            help="if saving results to a file, optional name for the list of results")
+    arg_parser.add_argument('-f', '--file', type=str, default=INPUT_FILE,
+                            help=f"path to a file with a list of candidate words; DEFAULT = '{INPUT_FILE}'")
     return arg_parser
 
 def prep_args(argl:list) -> (bool, str, str):
     args = set_args().parse_args(argl)
 
-    lgr.info("START LOGGING")
     show(f"save option = {args.save}")
     if args.save:
-        show(f"saved results dictionary name = {args.name}")
+        show(f"saved results list name = '{args.name}'.")
 
     if not osp.isfile(args.file):
         raise Exception(f"File path '{args.file}' does not exist.")
@@ -95,12 +100,11 @@ def prep_args(argl:list) -> (bool, str, str):
 
 if __name__ == '__main__':
     log_control = MhsLogger(get_base_filename(__file__))
-    lgr = log_control.get_logger()
     show = log_control.show
 
     code = 0
     try:
-        save_option, dict_name, file_name = prep_args(argv[1:])
+        save_option, list_name, file_name = prep_args(argv[1:])
         run()
     except KeyboardInterrupt:
         show(">> User interruption.")
