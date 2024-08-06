@@ -9,15 +9,13 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-06-25"
-__updated__ = "2024-06-29"
+__updated__ = "2024-08-04"
 
 import time
-import json
 from argparse import ArgumentParser
-import os.path as osp
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import save_to_json, get_base_filename, get_filename, get_current_date
+from mhsUtils import *
 from mhsLogging import MhsLogger
 
 start = time.perf_counter()
