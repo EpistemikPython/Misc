@@ -1,11 +1,30 @@
 
+import pydoc
+
+def rconcat(a, b):
+    """use 'return' in a loop"""
+    for ia in a:
+        return ia
+    for ib in b:
+        return ib
+
 def yconcat(a, b):
-    for i in a:
-        yield i
-    for i in b:
-        yield i
+    """using 'yield' in a  loop"""
+    for ia in a:
+        yield ia
+    for ib in b:
+        yield ib
 
-# Notice the use of the yield statement, instead of return. We can now use this something like
 
-for i in yconcat(range(5), range(6, 13)):
-    print(i)
+# for r in rconcat(range(5), range(9, 13)):
+#     print(r)
+print( rconcat(range(5), range(13)) )
+
+print('break')
+
+# Notice the use of the yield statement, instead of return. We can now use something like
+for y in yconcat(range(5), range(9, 13)):
+    print(y)
+
+# help(yconcat)
+pydoc.writedoc('yield_test')
