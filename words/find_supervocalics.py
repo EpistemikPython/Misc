@@ -73,7 +73,8 @@ def run():
         show(f"Saved output to file '{save_name}'.")
 
 def set_args():
-    arg_parser = ArgumentParser(description="from a word list file, find all the supervocalics", prog=f"python3 {get_filename(__file__)}")
+    arg_parser = ArgumentParser(description="from a word list file, find all the supervocalics and supervocalickYs",
+                                prog=f"python3 {get_filename(__file__)}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-n', '--name', type=str, default=get_current_date(),
@@ -82,7 +83,7 @@ def set_args():
                             help=f"path to a file with a list of candidate words; DEFAULT = '{INPUT_FILE}'")
     return arg_parser
 
-def prep_args(argl:list) -> (bool, str, str):
+def prep_args(argl:list):
     args = set_args().parse_args(argl)
 
     show(f"save option = {args.save}")
