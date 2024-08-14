@@ -23,6 +23,7 @@
 *.x
 *.term
 *.json
+*.html
 **/json/
 *link*
 output*
