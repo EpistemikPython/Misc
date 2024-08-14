@@ -9,7 +9,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2024-06-11"
+__updated__ = "2024-08-12"
 
 import time
 import json
@@ -80,13 +80,15 @@ def set_args():
                                 prog="python3 spellingbee_words.py")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
-    arg_parser.add_argument('-n', '--name', type=str, default=get_current_date(), help="if saving, optional name of key for dictionary of results")
-    arg_parser.add_argument('-f', '--file', type=str, default=WORD_FILE, help="path to file with list of all acceptable words")
+    arg_parser.add_argument('-n', '--name', type=str, default=get_current_date(),
+                            help="if saving, optional name of key for dictionary of results")
+    arg_parser.add_argument('-f', '--file', type=str, default=WORD_FILE,
+                            help=f"path to file with list of all acceptable words; DEFAULT = '{WORD_FILE}'")
     arg_parser.add_argument('-c', '-r', '--central', type=str, required=True, help="this ONE letter MUST be in each word")
     arg_parser.add_argument('-o', '-p', '--outer', type=str, required=True, help="SIX other POSSIBLE letters in the words")
     return arg_parser
 
-def prep_args(argl:list) -> (bool, str, str):
+def prep_args(argl:list):
     args = set_args().parse_args(argl)
 
     lgr.info("START LOGGING")
