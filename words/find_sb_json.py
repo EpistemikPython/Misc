@@ -14,12 +14,12 @@ __updated__ = "2024-08-19"
 
 import time
 import json
-from sys import path
+from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json
 
 start = time.perf_counter()
-WORD_FILE = "/home/marksa/Documents/Words/SpellBeeWords.json"
+WORD_FILE = "/home/marksa/Documents/Words/SpellingBee/SpellBeeWords.json"
 WORD_KEY = "answers"
 DATA_KEY = "data"
 
@@ -33,25 +33,33 @@ def run():
             words = current_dict[WORD_KEY]
         else:
             words = current_dict[DATA_KEY][WORD_KEY]
-        print(f"{item}: {words}")
+        if save_opt == 'DEBUG':
+            print(f"{item}: {words}")
         for wd in words:
             lowd = wd.lower()
             if lowd not in word_list:
                 word_list.append(lowd)
 
-    save_to_json("sb_json", word_list)
+    save_option = save_opt.upper()
+    if save_option == 'Y' or save_option == 'YES':
+        save_to_json("sb_json", word_list)
 
 
 if __name__ == '__main__':
     code = 0
     try:
-        run()
+        save_opt = 'No'
+        if len(argv) > 1:
+            save_opt = argv[1]
+        if save_opt.isalpha():
+            run()
+            print(f"\nfinal elapsed time = {time.perf_counter()-start}")
+        else:
+            print(f"usage: python3 {argv[0]} [yes (save results to json file)]")
     except KeyboardInterrupt:
         print(">> User interruption.")
         code = 13
     except Exception as ex:
-        print(f"Problem: {repr(ex)}")
+        print(f"Problem >> '{repr(ex)}'")
         code = 66
-
-    print(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit(code)
