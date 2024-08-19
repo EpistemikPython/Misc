@@ -1,7 +1,8 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# spellingbee_words.py -- from a word list file, find all words that fulfill the specified spelling bee requirements
+# solve_spellingbee.py
+#   -- from a word list file, find all words that fulfill the specified SPELLING BEE requirements
 #
 # Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
@@ -9,7 +10,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2024-08-12"
+__updated__ = "2024-08-18"
 
 import time
 import json
@@ -21,14 +22,14 @@ from mhsUtils import save_to_json, get_base_filename, get_current_date
 from mhsLogging import MhsLogger
 
 start = time.perf_counter()
-WORD_FILE = "input/scrabble-plus.json"
+WORD_FILE = "input/spellbee_words.json"
 NUM_OUTERS = 6
 MIN_WORD_SIZE = 4
 MAX_PRINT = 30
 MAX_RANGE = 12 # possible word sizes from 4 to 15
 
 def run():
-    """from a word list file, find all words that fulfill the specified spelling bee requirements"""
+    """from a word list file, find all words that fulfill the specified SPELLING BEE requirements"""
     solutions = [ [] for _ in range(MAX_RANGE) ]
     num_solns = 0
     wdf = json.load( open(file_name) )
@@ -77,13 +78,13 @@ def run():
 
 def set_args():
     arg_parser = ArgumentParser(description="from a word list file, find all words that fulfill the specified spelling bee requirements",
-                                prog="python3 spellingbee_words.py")
+                                prog=f"python3 {argv[0]}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
-    arg_parser.add_argument('-n', '--name', type=str, default=get_current_date(),
-                            help="if saving, optional name of key for dictionary of results")
-    arg_parser.add_argument('-f', '--file', type=str, default=WORD_FILE,
-                            help=f"path to file with list of all acceptable words; DEFAULT = '{WORD_FILE}'")
+    arg_parser.add_argument('-n', '--name', type=str, default = get_current_date(),
+                            help = "if saving, optional name of key for dictionary of results")
+    arg_parser.add_argument('-f', '--file', type=str, default = WORD_FILE,
+                            help = f"path to file with list of all acceptable words; DEFAULT = '{WORD_FILE}'")
     arg_parser.add_argument('-c', '-r', '--central', type=str, required=True, help="this ONE letter MUST be in each word")
     arg_parser.add_argument('-o', '-p', '--outer', type=str, required=True, help="SIX other POSSIBLE letters in the words")
     return arg_parser
@@ -91,7 +92,7 @@ def set_args():
 def prep_args(argl:list):
     args = set_args().parse_args(argl)
 
-    lgr.info("START LOGGING")
+    lgr.logl("START LOGGING")
     show(f"save option = {args.save}")
     if args.save:
         show(f"saved results dictionary name = {args.name}")
@@ -129,9 +130,8 @@ def prep_args(argl:list):
 
 
 if __name__ == '__main__':
-    log_control = MhsLogger(get_base_filename(__file__))
-    lgr = log_control.get_logger()
-    show = log_control.show
+    lgr = MhsLogger(get_base_filename(__file__))
+    show = lgr.show
 
     code = 0
     try:

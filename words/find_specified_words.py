@@ -1,7 +1,8 @@
 ################################################################################################################################
 # coding=utf-8
 #
-# ideal_words.py -- from a word list find all the words of the specified length that contain only the specified letters
+# find_specified_words.py
+#   -- from a word list find all the words of the specified length that contain only the specified letters
 #
 # Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
@@ -9,7 +10,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-11-22"
-__updated__ = "2024-01-01"
+__updated__ = "2024-08-19"
 
 import time
 import json
@@ -29,9 +30,8 @@ DEFAULT_WORD_SIZE = 7
 MIN_WORD_SIZE = 5
 MAX_WORD_SIZE = 15
 
-def run_ideal():
+def run():
     """from a word list find all the words of the specified length that contain only the specified letters"""
-
     solutions = []
     wdf = json.load( open(WORD_FILE) )
     show(f"loaded file '{WORD_FILE}'")
@@ -63,18 +63,21 @@ def run_ideal():
         save_to_json(f"{required}-{others}_ideal-words", solutions)
 
 def set_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, word size, required and possible letters options", prog="python3 ideal_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, word size, required and possible letters options", prog=f"python3 {argv[0]}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
-    arg_parser.add_argument('-n', '--numletters', type=int, default=DEFAULT_WORD_SIZE, help="number of letters in each found word")
-    arg_parser.add_argument('-r', '--required', type=str, default=DEFAULT_REQUIRED_LETTERS, help="each of these letters MUST be in EACH word")
-    arg_parser.add_argument('-o', '--other', type=str, default=DEFAULT_EXTRA_LETTERS, help="other possible letters in the words")
+    arg_parser.add_argument('-n', '--numletters', type=int, default = DEFAULT_WORD_SIZE,
+                            help = f"number of letters in each found word; DEFAULT = {DEFAULT_WORD_SIZE}")
+    arg_parser.add_argument('-r', '--required', type=str, default = DEFAULT_REQUIRED_LETTERS,
+                            help = f"each of these letters MUST be in EACH word; DEFAULT = {DEFAULT_REQUIRED_LETTERS}")
+    arg_parser.add_argument('-o', '--other', type=str, default = DEFAULT_EXTRA_LETTERS,
+                            help = f"other possible letters in the words; DEFAULT = {DEFAULT_EXTRA_LETTERS}")
     return arg_parser
 
 def prep_args(argl:list) -> (bool, int, str, str):
     args = set_args().parse_args(argl)
 
-    lgr.info("START LOGGING")
+    lgr.logl("START LOGGING")
     show(f"save option = {args.save}")
 
     word_sz = args.numletters if MIN_WORD_SIZE <= args.numletters <= MAX_WORD_SIZE else DEFAULT_WORD_SIZE
@@ -92,11 +95,10 @@ def prep_args(argl:list) -> (bool, int, str, str):
 
 
 if __name__ == "__main__":
-    log_control = MhsLogger(get_base_filename(__file__))
-    lgr = log_control.get_logger()
-    show = log_control.show
+    lgr = MhsLogger( get_base_filename(__file__) )
+    show = lgr.show
 
     save_option, word_size, required, others = prep_args(argv[1:])
-    run_ideal()
+    run()
     show(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit()

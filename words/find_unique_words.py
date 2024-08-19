@@ -1,17 +1,18 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# find_words.py -- process a list of words to find groups of words of the same length with each having unique letters
+# find_unique_words.py
+#   -- process a list of words to find groups of words of the same length with each having unique letters
 # adapted from: https://github.com/sh1boot/fivewords.git
 # see: https://www.youtube.com/watch?v=c33AZBnRHks
 #
-# Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
 __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2023-12-18"
+__updated__ = "2024-08-19"
 
 import array
 import json
@@ -64,7 +65,7 @@ def solve(highbit:int, p_extra:int, progress:array, depth:int=0):
                             solve(highbit & ~mask, p_extra - dx, progress, depth + 1)
         highbit ^= 1 << least
 
-def run_find():
+def run():
     """process a list of words to find groups of words of the same length with each having unique letters"""
     global word_pack
     extra = num_letters - (word_size * num_words)
@@ -72,7 +73,6 @@ def run_find():
     word_pack = [{} for _ in range(num_letters)]
 
     wct = 0
-    least = 0
     wf = json.load( open(WORD_FILE) )
     for word in wf:
         if len(word) == word_size:
@@ -93,11 +93,6 @@ def run_find():
                 word_pack[least].setdefault( pack, set() ).add(mask)
 
     show(f"found {wct} words.")
-    # DEBUG
-    lgr.debug(f"len word_names = {len(word_names)}")
-    lgr.debug(f"last 'least' = {least}")
-    lgr.debug(f"len word_pack[least] = {len(word_pack[least])}")
-    lgr.debug(f"word_pack[least] = {word_pack[least]}")
 
     initializer = DEFAULT_INITIALIZER
     if num_words == 4:
@@ -125,19 +120,22 @@ def run_find():
         save_to_json(f"{word_size}x{num_words}f{num_letters}_find-words", output)
 
 
-def process_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, word size, number of words and number of letters options", prog="python3.10 find_words.py")
+def set_args():
+    arg_parser = ArgumentParser(description="get the save-to-file, word size, number of words and number of letters options", prog=f"python3 {argv[0]}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="write the results to a JSON file")
-    arg_parser.add_argument('-w', '--wordsize', type=int, default=MIN_WORDSIZE, help="number of letters in each found word")
-    arg_parser.add_argument('-n', '--numwords', type=int, default=MAX_NUMWORDS, help="number of words in each found group")
-    arg_parser.add_argument('-l', '--numletters', type=int, default=MAX_NUMLETTERS, help="number of possible letters for each word")
+    arg_parser.add_argument('-w', '--wordsize', type=int, default = MIN_WORDSIZE,
+                            help = f"number of letters in each found word; DEFAULT = {MIN_WORDSIZE}")
+    arg_parser.add_argument('-n', '--numwords', type=int, default = MAX_NUMWORDS,
+                            help = f"number of words in each found group; DEFAULT = {MAX_NUMWORDS}")
+    arg_parser.add_argument('-l', '--numletters', type=int, default = MAX_NUMLETTERS,
+                            help = f"number of possible letters for each word; DEFAULT = {MAX_NUMLETTERS}")
     return arg_parser
 
-def prep_find(argl:list) -> (bool, int, int, int):
-    args = process_args().parse_args(argl)
+def prep_args(argl:list) -> (bool, int, int, int):
+    args = set_args().parse_args(argl)
 
-    lgr.info("START LOGGING")
+    lgr.logl("START LOGGING")
     show(f"save option = '{args.save}'")
 
     show(f"requested word size = {args.wordsize}")
@@ -151,25 +149,24 @@ def prep_find(argl:list) -> (bool, int, int, int):
 
 
 if __name__ == '__main__':
-    log_control = MhsLogger(get_base_filename(__file__))
-    lgr = log_control.get_logger()
-    show = log_control.show
+    lgr = MhsLogger( get_base_filename(__file__) )
+    show = lgr.show
 
     count = 0
     word_names = {}
     word_pack = []
     output = {}
 
-    save_option, word_size, num_words, num_letters = prep_find(argv[1:])
+    save_option, word_size, num_words, num_letters = prep_args(argv[1:])
 
     ordered_letters = ORDERED_LETTERS[:num_letters]
-    show(f"letters to use are: '{ordered_letters}'")
+    show(f"letters being used: '{ordered_letters}'")
     # make sure the parameters for size of words & number of words and letters are safe and sensible
     if word_size * num_words > num_letters:
         word_size = MIN_WORDSIZE
         num_words = num_letters // word_size
     show(f"Find groups of {num_words} 'uniquely lettered' words each with {word_size} letters.")
 
-    run_find()
+    run()
     show(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit()

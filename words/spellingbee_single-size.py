@@ -10,7 +10,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-06-11"
-__updated__ = "2024-06-17"
+__updated__ = "2024-08-19"
 
 import time
 import json
@@ -22,7 +22,7 @@ from mhsUtils import save_to_json, get_base_filename, get_current_date
 from mhsLogging import MhsLogger
 
 start = time.perf_counter()
-WORD_FILE = "input/scrabble-plus.json"
+WORD_FILE = "input/spellbee_words.json"
 NUM_OUTERS = 6
 MIN_WORD_SIZE = 4
 MAX_WORD_SIZE = 15
@@ -74,23 +74,23 @@ def run():
 
 def set_args():
     arg_parser = ArgumentParser(description="from a word list file, find all words of a particular size that fulfill the specified spelling bee requirements",
-                                prog="python3 spellingbee_words.py")
+                                prog=f"python3 {argv[0]}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file.")
     arg_parser.add_argument('-n', '--name', type=str, default=get_current_date(),
-                            help="if saving to file, optional name of key for dictionary of results.")
-    arg_parser.add_argument('-f', '--file', type=str, default=WORD_FILE,
-                            help=f"path to alternate file with list of all acceptable words; DEFAULT = {WORD_FILE}.")
-    arg_parser.add_argument('-l', '--length', type=int, default=MIN_WORD_SIZE,
-                            help=f"number of letters in each word to be found; DEFAULT = {MIN_WORD_SIZE}, MIN = {MIN_WORD_SIZE}, MAX = {MAX_WORD_SIZE}.")
-    arg_parser.add_argument('-c', '-r', '--central', type=str, required=True, help="this ONE letter MUST be in each word")
-    arg_parser.add_argument('-o', '-p', '--outer', type=str, required=True, help="SIX other POSSIBLE letters in the words")
+                            help = "if saving to file, optional name of key for dictionary of results.")
+    arg_parser.add_argument('-f', '--file', type=str, default = WORD_FILE,
+                            help = f"path to alternate file with list of all acceptable words; DEFAULT = {WORD_FILE}.")
+    arg_parser.add_argument('-l', '--length', type=int, default = MIN_WORD_SIZE,
+                            help = f"number of letters in each word to be found; DEFAULT = {MIN_WORD_SIZE}, MIN = {MIN_WORD_SIZE}, MAX = {MAX_WORD_SIZE}.")
+    arg_parser.add_argument('-c', '-r', '--central', type=str, required=True, help = "this ONE letter MUST be in each word")
+    arg_parser.add_argument('-o', '-p', '--outer', type=str, required=True, help = "SIX other POSSIBLE letters in the words")
     return arg_parser
 
 def prep_args(argl:list):
     args = set_args().parse_args(argl)
 
-    lgr.info("START LOGGING")
+    lgr.logl("START LOGGING")
     show(f"save option = {args.save}")
     if args.save:
         show(f"Saved results dictionary name = {args.name}")
@@ -136,9 +136,8 @@ def prep_args(argl:list):
 
 
 if __name__ == '__main__':
-    log_control = MhsLogger(get_base_filename(__file__))
-    lgr = log_control.get_logger()
-    show = log_control.show
+    lgr = MhsLogger( get_base_filename(__file__) )
+    show = lgr.show
 
     code = 0
     try:
