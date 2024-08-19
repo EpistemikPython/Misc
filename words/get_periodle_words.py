@@ -1,7 +1,8 @@
 ###################################################################################################################################################
 # coding=utf-8
 #
-# periodle_words.py -- process a words file to find periodle words (5-10 letters using element symbols) and optionally save results to a JSON file
+# get_periodle_words.py
+#   -- process a words file to find periodle words (5-10 letters using element symbols) and optionally save results to a JSON file
 #
 # Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
 
@@ -9,21 +10,19 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-12-18"
-__updated__ = "2023-12-27"
+__updated__ = "2024-08-19"
 
-import os
 import json
 import time
 from argparse import ArgumentParser
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import save_to_json, get_base_filename, JSON_LABEL
-from mhsLogging import MhsLogger
+from mhsUtils import save_to_json
+from mhsLogging import *
 
 start = time.perf_counter()
-INPUT_FOLDER = "input"
-WORD_JSON_FILE = "test3" # "periodle_words"
-ELEMENT_JSON_FILE = "periodic_table"
+WORD_JSON_FILE = "input/test3.json" # "periodle_words"
+ELEMENT_JSON_FILE = "input/periodic_table.json"
 BLANK = '_'
 MIN_LETTERS = 5
 MAX_LETTERS = MIN_LETTERS * 2
@@ -73,7 +72,7 @@ def solve():
                         dg_ct += 1
                         if dg_ct > dg_reqd:
                             # always try singles FIRST, so if reached too many digraphs, current word CANNOT be a solution
-                            lgr.debug(f"digraph count violation with '{item}'.")
+                            lgr.logl(f"digraph count violation with '{item}'.", logging.DEBUG)
                             drop = True
                 else:
                     if lett in singles:
@@ -85,7 +84,7 @@ def solve():
                             stack.append(lett)
                     else:
                         if step == wd_len - 1: # if reach this point, the last letter is REQUIRED to be a single, so...
-                            lgr.debug(f"Last letter of '{item}' NOT in singles!")
+                            lgr.logl(f"Last letter of '{item}' NOT in singles!", logging.DEBUG)
                             drop = True
                         else:
                             prev_lett = lett
@@ -105,18 +104,17 @@ def solve():
                     step += 1
             if not drop:
                 if len(stack) != 5: # should NEVER happen, but just in case
-                    lgr.error(f"Problem with stack '{stack}' for word '{item}'?!")
+                    lgr.logl(f"Problem with stack '{stack}' for word '{item}'?!", logging.ERROR)
                 else:
                     solution_list.append(item)
                     stack_dict[wd_ct] = stack
-                    lgr.info(stack)
+                    lgr.logl(repr(stack))
             else:
                 rejects.append(item)
     show(f"\n{wd_ct} words in input file.")
 
-def run_periodle():
+def run():
     """process a words file to find periodle words (5-10 letters using element symbols) and save to a JSON file"""
-
     solve()
     num_wd = len(solution_list)
     show(f"Found {num_wd} periodle words.\n{len(rejects)} words in rejects file.\nsolve elapsed time = {time.perf_counter() - start}")
@@ -144,42 +142,41 @@ def get_symbols():
         elif sect == "double":
             for symbol in symf[sect]:
                 doubles.append(symbol.upper())
-    lgr.debug(f"singles = {singles}")
-    lgr.debug(f"doubles = {doubles}")
+    lgr.logl(f"singles = {singles}", logging.DEBUG)
+    lgr.logl(f"doubles = {doubles}", logging.DEBUG)
 
 def set_args():
-    arg_parser = ArgumentParser(description="get the save-to-file, 'symbols file' name and 'words file' name options", prog="python3 periodle_words.py")
+    arg_parser = ArgumentParser(description="get the save-to-file, 'symbols file' name and 'words file' name options",
+                                prog=f"python3 {argv[0]}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
-    arg_parser.add_argument('-y', '--symbolfile', type=str, default=ELEMENT_JSON_FILE,
-                                help= "JSON file name with the symbols to use (.json added to file name)")
-    arg_parser.add_argument('-w', '--wordfile', type=str, default=WORD_JSON_FILE,
-                                help= "JSON file name with the words to test (.json added to file name)")
+    arg_parser.add_argument('-y', '--symbolfile', type=str, default = ELEMENT_JSON_FILE,
+                            help = f"JSON file name with the symbols to use; DEFAULT = {ELEMENT_JSON_FILE}")
+    arg_parser.add_argument('-w', '--wordfile', type=str, default = WORD_JSON_FILE,
+                            help = f"JSON file name with the words to test; DEFAULT = {WORD_JSON_FILE}")
     return arg_parser
 
 def prep_args(argl:list) -> (bool, str, str):
     args = set_args().parse_args(argl)
 
-    lgr.info("START LOGGING")
+    lgr.logl("START LOGGING")
     show(f"save option = '{args.save}'")
 
-    symbols = args.symbolfile if args.symbolfile.isprintable() else ELEMENT_JSON_FILE
-    symbols = INPUT_FOLDER + os.sep + symbols + os.extsep + JSON_LABEL
-    show(f"symbol file = {symbols}")
+    if not osp.isfile(args.symbolfile):
+        raise Exception(f"File path '{args.symbolfile}' does not exist.")
+    show(f"Using symbols file '{args.symbolfile}'")
 
-    words = args.wordfile if args.wordfile.isprintable() else WORD_JSON_FILE
-    words = INPUT_FOLDER + os.sep + words + os.extsep + JSON_LABEL
-    show(f"word file = {words}")
+    if not osp.isfile(args.wordfile):
+        raise Exception(f"File path '{args.wordfile}' does not exist.")
+    show(f"Using word file '{args.wordfile}'")
 
-    return args.save, symbols, words
+    return args.save, args.symbolfile, args.wordfile
 
 
 if __name__ == '__main__':
-    log_control = MhsLogger( get_base_filename(__file__) )
-    lgr = log_control.get_logger()
-    show = log_control.show
+    lgr = MhsLogger( get_base_filename(__file__) )
+    show = lgr.show
 
-    save_option, symbol_file, word_file = prep_args(argv[1:])
     code = 0
     rejects = []
     solution_list = []
@@ -187,8 +184,9 @@ if __name__ == '__main__':
     singles = []
     doubles = []
     try:
+        save_option, symbol_file, word_file = prep_args(argv[1:])
         get_symbols()
-        run_periodle()
+        run()
     except KeyboardInterrupt:
         show(">> User interruption.")
         code = 13
