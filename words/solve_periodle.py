@@ -1,7 +1,8 @@
 ###################################################################################################################################################
 # coding=utf-8
 #
-# periodle_solve.py -- solve a periodle game with information about fixed, required, partial and excluded symbols
+# solve_periodle.py
+#   -- solve a periodle game with information about fixed, required, partial and excluded symbols
 # see https://heptaveegesimal.com/periodle/
 #
 # Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
@@ -10,21 +11,19 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-12-29"
-__updated__ = "2024-05-08"
+__updated__ = "2024-08-19"
 
-import os
 import json
 import time
 from argparse import ArgumentParser
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import save_to_json, get_base_filename, JSON_LABEL
+from mhsUtils import save_to_json, get_base_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
 start = time.perf_counter()
-INPUT_FOLDER = "input"
-WORD_JSON_FILE = "periodle_words"
-ELEMENT_JSON_FILE = "periodic_table"
+WORD_JSON_FILE = "input/periodle_words.json"
+ELEMENT_JSON_FILE = "input/periodic_table.json"
 BLANK = '_'
 NUM_SYMBOLS = 5
 
@@ -37,7 +36,7 @@ def solve():
       for the absence of excluded symbols
       - and retain the words that fulfill all these criteria
     """
-    wdf = json.load( open(word_file) )
+    wdf = json.load( open(WORD_JSON_FILE) )
     for it in wdf:
         item = it.upper()
         drop = False
@@ -69,7 +68,7 @@ def solve():
 
 def run():
     """solve a periodle game with information about fixed, required, partial and excluded symbols"""
-
+    get_symbols()
     solve()
     num_wd = len(solution_list)
     show(f"\nFound {num_wd} periodle words.\n")
@@ -97,8 +96,7 @@ def run():
 
 def get_symbols():
     """default input is the periodic table JSON file"""
-
-    symf = json.load( open(INPUT_FOLDER + os.sep + ELEMENT_JSON_FILE + os.extsep + JSON_LABEL) )
+    symf = json.load( open(ELEMENT_JSON_FILE) )
     for sect in symf:
         if sect == "single":
             for symbol in symf[sect]:
@@ -111,13 +109,13 @@ def get_symbols():
 
 def set_args():
     arg_parser = ArgumentParser(description="solve a periodle game with information about fixed, required, partial and excluded symbols",
-                                prog="python3 periodle_solve.py")
+                                prog=f"python3 {argv[0]}")
     # optional arguments
-    arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
-    arg_parser.add_argument('-f', '--fixed', type=str, help= "csv list of location and symbol where the position and value are KNOWN, e.g. 1fe,3p")
-    arg_parser.add_argument('-r', '--required', type=str, help= "csv list of required symbols with an unknown position, e.g. c,la")
-    arg_parser.add_argument('-p', '--partial', type=str, help= "csv list of partial symbols, e.g. ar,h")
-    arg_parser.add_argument('-x', '--exclude', type=str, help= "csv list of symbols that DO NOT appear in the game, e.g. i,v,er,y,w,se")
+    arg_parser.add_argument('-s', '--save', action="store_true", default=False, help = "Write the results to a JSON file")
+    arg_parser.add_argument('-f', '--fixed', type=str, help = "csv list of location and symbol where the position and value are KNOWN, e.g. 1fe,3p")
+    arg_parser.add_argument('-r', '--required', type=str, help = "csv list of required symbols with an unknown position, e.g. c,la")
+    arg_parser.add_argument('-p', '--partial', type=str, help = "csv list of partial symbols, e.g. ar,h")
+    arg_parser.add_argument('-x', '--exclude', type=str, help = "csv list of symbols that DO NOT appear in the game, e.g. i,v,er,y,w,se")
     return arg_parser
 
 def prep_args(argl:list) -> (bool, str, str):
@@ -174,12 +172,8 @@ if __name__ == '__main__':
     singles = []
     doubles = []
     try:
-        get_symbols()
-
-        form = dict.fromkeys( (r for r in range(NUM_SYMBOLS)), BLANK )
+        form = dict.fromkeys((r for r in range(NUM_SYMBOLS)), BLANK)
         save_option, required, excluded = prep_args(argv[1:])
-
-        word_file = os.path.join(INPUT_FOLDER, WORD_JSON_FILE + os.extsep + JSON_LABEL)
         run()
     except KeyboardInterrupt:
         show(">> User interruption.")
