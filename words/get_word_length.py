@@ -13,11 +13,15 @@ __created__ = "2022-02-15"
 __updated__ = "2024-08-19"
 
 from sys import path, argv
+import time
 path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json
+path.append("./input")
 from words_2019 import eng_words
 
-def main_words(save_option:str):
+start = time.perf_counter()
+
+def run():
     newdict = {}
     ie = 0
     for item in eng_words:
@@ -37,14 +41,26 @@ def main_words(save_option:str):
         if np > 66:
             break
 
-    save_option = save_option.upper()
+    save_option = save_opt.upper()
     if save_option == 'Y' or save_option == 'YES':
         save_to_json("len_words", newdict)
 
 
 if __name__ == '__main__':
-    save_opt = 'No'
-    if len(argv) > 1 and argv[1].isalpha():
-        save_opt = argv[1]
-    main_words(save_opt)
-    exit()
+    code = 0
+    try:
+        save_opt = 'No'
+        if len(argv) > 1:
+            save_opt = argv[1]
+        if save_opt.isalpha():
+            run()
+            print(f"\nfinal elapsed time = {time.perf_counter()-start}")
+        else:
+            print(f"usage: python3 {argv[0]} [yes (save results to json file)]")
+    except KeyboardInterrupt:
+        print(">> User interruption.")
+        code = 13
+    except Exception as ex:
+        print(f"Problem >> '{repr(ex)}'")
+        code = 66
+    exit(code)
