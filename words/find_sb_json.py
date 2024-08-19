@@ -1,7 +1,8 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# json_test.py -- see the dictionary details inside a json file and find the listed words and save to a new file
+# find_sb_json.py
+#   -- open a spellingbee results json file and find the listed words and save to a new file
 #
 # Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
@@ -9,7 +10,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-06-01"
-__updated__ = "2024-06-04"
+__updated__ = "2024-08-19"
 
 import time
 import json
@@ -23,7 +24,7 @@ WORD_KEY = "answers"
 DATA_KEY = "data"
 
 def run():
-    """see the dictionary details inside a json file and find the listed words and save to a new file"""
+    """open a spellingbee results json file and find the listed words and save to a new file"""
     word_list = []
     sbd = json.load( open(WORD_FILE) )
     for item in sbd:
