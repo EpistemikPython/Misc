@@ -1,15 +1,16 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# wordle_words.py -- process a words dict to find wordle (5-letter) words and save to a separate file
+# get_wordle_words.py
+#   -- process a words dict to find wordle (5-letter) words and save to a separate file
 #
-# Copyright (c) 2023 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-09-15"
-__updated__ = "2023-09-15"
+__updated__ = "2024-08-19"
 
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")

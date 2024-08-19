@@ -1,15 +1,16 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# scrabble_words.py -- process a scrabble words dict to record the score of each word
+# get_scrabble_score.py
+#   -- process a scrabble words dict to record the score of each word
 #
-# Copyright (c) 2022 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2022-03-05"
-__updated__ = "2023-01-12"
+__updated__ = "2024-08-19"
 
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")

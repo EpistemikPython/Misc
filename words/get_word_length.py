@@ -1,15 +1,16 @@
 ##############################################################################################################################
 # coding=utf-8
 #
-# words.py -- get the length of each item in a words dict
+# get_word_length.py
+#   -- get the length of each item in a words dict
 #
-# Copyright (c) 2022 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2022-02-15"
-__updated__ = "2023-01-12"
+__updated__ = "2024-08-19"
 
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
