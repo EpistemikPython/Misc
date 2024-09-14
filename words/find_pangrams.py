@@ -10,7 +10,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-09-13"
-__updated__ = "2024-09-13"
+__updated__ = "2024-09-14"
 
 import time
 from sys import path, argv
@@ -20,7 +20,7 @@ from mhsUtils import FILE_DATETIME_FORMAT, JSON_LABEL, get_current_time
 
 start = time.perf_counter()
 # IN_FILE  = "/home/marksa/Documents/Words/SpellingBee/SpellBeeWords.json"
-IN_FILE  = "./input/SpellBeeTest.json"
+DEFAULT_INFILE  = "./input/SpellBeeTest.json"
 ANSWER_KEY = "answers"
 END_KEY    = "]"
 
@@ -28,7 +28,7 @@ outfile_name = osp.join("output", "pangrams" + '_' + get_current_time(FILE_DATET
 
 def is_pangram(p_line:str) -> bool:
     testline = p_line.strip(', \n')
-    print(f"\ntesting {testline}", end = None)
+    # print(f"\ntesting {testline}", end = None)
     result = ""
     for lett in testline:
         # print(f"testing '{lett}'")
@@ -36,7 +36,7 @@ def is_pangram(p_line:str) -> bool:
             continue
         if lett not in result:
             result += lett
-    print(f"result = '{result}'")
+    # print(f"result = '{result}'")
     if len(result) == 7:
         print(f">> {testline} is a Pangram!")
         return True
@@ -44,7 +44,7 @@ def is_pangram(p_line:str) -> bool:
 
 def run():
     """Open a spellingbee results json file and find the pangrams and convert to UPPERCASE and save results to a new file."""
-    with open(IN_FILE) as file_in:
+    with open(infile) as file_in:
         with open(outfile_name, 'w') as file_out:
             search_state = False
             for line in file_in:
@@ -62,13 +62,17 @@ def run():
 
 if __name__ == '__main__':
     code = 0
+    infile = None
     try:
-        save_opt = 'No'
         if len(argv) == 1:
+            infile = DEFAULT_INFILE
+        elif len(argv) == 2 and osp.isfile(argv[1]):
+            infile = argv[1]
+        else:
+            print(f"usage: python3 {argv[0]} <input file>")
+        if infile:
             run()
             print(f"\nfinal elapsed time = {time.perf_counter()-start}")
-        else:
-            print(f"usage: python3 {argv[0]}")
     except KeyboardInterrupt:
         print(">> User interruption.")
         code = 13
