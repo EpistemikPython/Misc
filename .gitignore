@@ -22,7 +22,6 @@
 *.exe
 *.x
 *.term
-*.json
 *.html
 **/json/
 *link*
