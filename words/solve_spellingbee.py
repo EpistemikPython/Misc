@@ -18,7 +18,7 @@ from argparse import ArgumentParser
 import os.path as osp
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import save_to_json, get_base_filename, get_current_date
+from mhsUtils import save_to_json, get_base_filename, get_current_date, get_filename
 from mhsLogging import MhsLogger
 
 start = time.perf_counter()
@@ -78,7 +78,7 @@ def run():
 
 def set_args():
     arg_parser = ArgumentParser(description="from a word list file, find all words that fulfill the specified spelling bee requirements",
-                                prog=f"python3 {argv[0]}")
+                                prog=f"python3 {get_filename(argv[0])}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-n', '--name', type=str, default = get_current_date(),
