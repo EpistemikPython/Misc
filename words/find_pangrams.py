@@ -2,7 +2,7 @@
 # coding=utf-8
 #
 # find_pangrams.py
-#   -- from a word list file, find all the pangrams and make UPPERCASE and save in a copy of the input file
+#   -- from a word list file, find all non-uppercase pangrams and make UPPERCASE and save in a copy of the input file
 #
 # Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
@@ -10,7 +10,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-09-13"
-__updated__ = "2024-09-14"
+__updated__ = "2024-09-19"
 
 import time
 from sys import path, argv
@@ -19,7 +19,6 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import FILE_DATETIME_FORMAT, JSON_LABEL, get_current_time
 
 start = time.perf_counter()
-# IN_FILE  = "/home/marksa/Documents/Words/SpellingBee/SpellBeeWords.json"
 DEFAULT_INFILE  = "./input/SpellBeeTest.json"
 ANSWER_KEY = "answers"
 END_KEY    = "]"
@@ -29,6 +28,9 @@ outfile_name = osp.join("output", "pangrams" + '_' + get_current_time(FILE_DATET
 def is_pangram(p_line:str) -> bool:
     testline = p_line.strip(', \n')
     # print(f"\ntesting {testline}", end = None)
+    # check if already uppercase
+    if testline == testline.upper():
+        return False
     result = ""
     for lett in testline:
         # print(f"testing '{lett}'")
@@ -43,7 +45,7 @@ def is_pangram(p_line:str) -> bool:
     return False
 
 def run():
-    """Open a spellingbee results json file and find the pangrams and convert to UPPERCASE and save results to a new file."""
+    """Open a spellingbee results json file and find non-uppercase pangrams and convert to UPPERCASE and save results to a new file."""
     with open(infile) as file_in:
         with open(outfile_name, 'w') as file_out:
             search_state = False
