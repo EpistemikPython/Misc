@@ -2,7 +2,7 @@
 # coding=utf-8
 #
 # solve_wordle.py
-#   -- solve a wordle game with information about the fixed, hindered and excluded symbols
+#   -- solve a wordle game with information about the fixed, hindered and excluded letters
 #
 # Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-09-14"
-__updated__ = "2024-09-16"
+__updated__ = "2024-09-19"
 
 import logging
 import json
@@ -65,7 +65,7 @@ def solve(p_loglev:int):
     return solution_list
 
 def run(p_loglev:int):
-    """solve a wordle game with information about the fixed, hindered and excluded symbols"""
+    """solve a wordle game with information about the fixed, hindered and excluded letters"""
     solutions = solve(logging.NOTSET)
     num_wd = len(solutions)
     lgr.log(p_loglev, f"\nFound {num_wd} solutions.\n")
@@ -118,18 +118,18 @@ def get_forms(p_loglev:int, p_fixed:str, p_hindered:str):
     return fform, hform
 
 def set_args():
-    arg_parser = ArgumentParser(description="solve a wordle game with information about the fixed, hindered and excluded symbols",
+    arg_parser = ArgumentParser(description="solve a wordle game with information about the fixed, hindered and excluded letters",
                                 prog=f"python3 {get_filename(argv[0])}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
     arg_parser.add_argument('-w', '--wordfile', type=str, default = DEFAULT_WORD_FILE,
                             help = f"path to JSON file with list of all acceptable words; DEFAULT = '{DEFAULT_WORD_FILE}'")
     arg_parser.add_argument('-f', '--fixed', type=str,
-                            help="csv list of location and letter where both are KNOWN, i.e green hilited, e.g. '5n' or '1p,3r'")
+                            help="csv list of location & letter where both are KNOWN (i.e. green hilited squares) e.g. '5n' or '1p,3r'")
     arg_parser.add_argument('-d', '--hindered', type=str,
-                            help="csv list of location and letter where the letter IS IN the solution "
-                                 "but HINDERED at one or more positions, i.e. yellow hilited, e.g. '2w,3w' or '1t,4mu'")
-    arg_parser.add_argument('-x', '--exclude', type=str, help="letters that DO NOT appear in the solution, e.g. 'iveyls'")
+                            help="csv list of location & letter where the letter IS IN the solution "
+                                 "but HINDERED at one or more positions (i.e. yellow hilited squares) e.g. '2w,3w' or '1t,4mu'")
+    arg_parser.add_argument('-x', '--exclude', type=str, help="letters that ARE NOT in the solution, e.g. 'iveyls'")
     return arg_parser
 
 def get_args(argl:list) -> (bool, str, str):
@@ -154,22 +154,20 @@ def get_args(argl:list) -> (bool, str, str):
 if __name__ == '__main__':
     log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
     lgr = log_control.get_logger()
-    lgr.info("START LOGGING")
-
     code = 0
     try:
         save_option, words_file, fixed_str, hindered_str, excluded = get_args(argv[1:])
         input_file = words_file if osp.isfile(words_file) else DEFAULT_WORD_FILE
         fixed_form, hindered_form = get_forms(logging.DEBUG, fixed_str, hindered_str)
         run(logging.INFO)
-    except KeyboardInterrupt as mki:
-        lgr.exception(">> User interruption.", mki)
+    except KeyboardInterrupt:
+        lgr.exception(">> User interruption.")
         code = 13
-    except ValueError as mve:
-        lgr.exception(">> Value Error.", mve)
+    except ValueError:
+        lgr.exception(">> Value Error.")
         code = 27
     except Exception as mex:
-        lgr.exception(f"Problem = '{repr(mex)}'", mex)
+        lgr.exception(f">> PROBLEM: {repr(mex)}")
         code = 66
 
     lgr.info(f"\nfinal elapsed time = {time.perf_counter() - start} seconds")
