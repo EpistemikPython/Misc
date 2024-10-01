@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-09-14"
-__updated__ = "2024-09-19"
+__updated__ = "2024-09-30"
 
 import logging
 import json
@@ -21,7 +21,6 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json, get_base_filename, osp, get_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
-start = time.perf_counter()
 DEFAULT_WORD_FILE = "input/five-letter_words.json"
 BLANK = '_'
 WORD_LENGTH = 5
@@ -29,7 +28,7 @@ WORD_LENGTH = 5
 def solve(p_loglev:int):
     """
     A simple and fast 'brute force' method.
-    Check all the possible five-letter words:
+    Check each candidate five-letter word:
       for fixed letters in the proper positions
       for the presence of hindered letters but NOT in the hindered positions
       for the absence of excluded letters
@@ -152,6 +151,7 @@ def get_args(argl:list) -> (bool, str, str):
 
 
 if __name__ == '__main__':
+    start = time.perf_counter()
     log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
     lgr = log_control.get_logger()
     code = 0

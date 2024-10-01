@@ -6,11 +6,11 @@
 #
 # Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
 
-__author__ = "Mark Sattolo"
-__author_email__ = "epistemik@gmail.com"
+__author__         = "Mark Sattolo"
+__author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-09-13"
-__updated__ = "2024-09-20"
+__updated__ = "2024-09-30"
 
 import os
 import time
@@ -20,7 +20,6 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import osp, FILE_DATETIME_FORMAT, JSON_LABEL, get_current_time, get_base_filename, get_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
-start = time.perf_counter()
 DEFAULT_INPUT_FILE    = "input/SpellBeeTest.json"
 DEFAULT_OUTPUT_FOLDER = "./output"
 ANSWER_KEY = "answers"
@@ -102,9 +101,9 @@ def get_args(argl:list) -> (bool, str, str):
 
 
 if __name__ == '__main__':
+    start = time.perf_counter()
     log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
     lgr = log_control.get_logger()
-
     code = 0
     try:
         save_option, input_file, output_folder, skip = get_args(argv[1:])
