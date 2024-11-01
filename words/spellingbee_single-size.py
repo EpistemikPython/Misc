@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-06-11"
-__updated__ = "2024-09-30"
+__updated__ = "2024-10-31"
 
 import logging
 import time
@@ -68,8 +68,7 @@ def run(p_loglev:int):
     lgr.info(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
         save_dict = {f"{dict_name}":solutions}
-        base_name = f"{required}-{outers}_spellbee-words"
-        save_name = save_to_json(base_name, save_dict)
+        save_name = save_to_json(f"{required}-{outers}_spellbee-size{word_size}", save_dict)
         lgr.info(f"Saved output to file '{save_name}'.")
 
 def set_args():
@@ -138,7 +137,7 @@ def get_args(argl:list):
 
 if __name__ == '__main__':
     start = time.perf_counter()
-    log_control = MhsLogger(get_base_filename(__file__))
+    log_control = MhsLogger(get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL)
     lgr = log_control.get_logger()
     code = 0
     try:
