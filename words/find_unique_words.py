@@ -12,27 +12,27 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2024-08-19"
+__updated__ = "2024-11-28"
 
 import array
-import json
 import time
 from argparse import ArgumentParser
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import save_to_json, get_base_filename
-from mhsLogging import MhsLogger
+from mhsUtils import json, save_to_json, get_base_filename
+from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
-start = time.perf_counter()
-WORD_FILE = "scrabble-plus.json"
+WORD_FILE = "input/scrabble-plus.json"
+# five-letter testing
+# WORD_FILE = "input/five-letter_test.json"
 # highest to lowest letter frequencies in Scrabble '5-13 letter' words
 ORDERED_LETTERS = "ESIARNOTLCDUPMGHBYFKVWZXQJ"
 # highest to lowest letter frequencies in Scrabble 7-letter words
 # ORDERED_LETTERS = "ESAIRNOTLDUCGPMHBYKFWVZXJQ"
 MAX_NUMLETTERS = len(ORDERED_LETTERS)
-MIN_NUM_LETTERS = 12
+MIN_NUM_LETTERS = 10
 MAX_WORDSIZE = 15
-MIN_WORDSIZE = 5
+MIN_WORDSIZE = 3
 DEFAULT_INITIALIZER = (0, 0, 0, 0, 0)
 MAX_NUMWORDS = len(DEFAULT_INITIALIZER)
 MIN_NUMWORDS = 2
@@ -69,7 +69,7 @@ def run():
     """process a list of words to find groups of words of the same length with each having unique letters"""
     global word_pack
     extra = num_letters - (word_size * num_words)
-    show(f"num extra letters = {extra}\n")
+    lgr.info(f"num extra letters = {extra}")
     word_pack = [{} for _ in range(num_letters)]
 
     wct = 0
@@ -91,8 +91,7 @@ def run():
                 pack = compress(mask)
                 word_names.setdefault( mask, set() ).add(word)
                 word_pack[least].setdefault( pack, set() ).add(mask)
-
-    show(f"found {wct} words.")
+    lgr.info(f"found {wct} words.")
 
     initializer = DEFAULT_INITIALIZER
     if num_words == 4:
@@ -104,20 +103,21 @@ def run():
     solve( (1 << num_letters) - 1, extra, array.array('L', initializer) )
 
     # sample some of the output
-    show(f"\nsolutions:")
+    lgr.info(f"\n\t\t\t Solutions:")
     nx = 0
     for index in output.keys():
-        show(output[index])
+        lgr.info(output[index])
         nx += 1
         if nx == 32:
             if count > 32:
-                show("etc...")
+                lgr.info("etc...")
             break
-    show(f"total groups = {count}")
+    lgr.info(f"total groups = {count}")
 
-    show(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
+    lgr.info(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
     if save_option:
-        save_to_json(f"{word_size}x{num_words}f{num_letters}_find-words", output)
+        json_save_name = save_to_json(f"{word_size}x{num_words}from{num_letters}_find-unique-words", output)
+        lgr.info(f"Saved results to: {json_save_name}")
 
 
 def set_args():
@@ -132,41 +132,45 @@ def set_args():
                             help = f"number of possible letters for each word; DEFAULT = {MAX_NUMLETTERS}")
     return arg_parser
 
-def prep_args(argl:list) -> (bool, int, int, int):
+def prep_args(argl:list):
     args = set_args().parse_args(argl)
-
-    lgr.logl("START LOGGING")
-    show(f"save option = '{args.save}'")
-
-    show(f"requested word size = {args.wordsize}")
+    lgr.info(f"save option = '{args.save}'")
     word_sz = args.wordsize if MIN_WORDSIZE <= args.wordsize <= MAX_WORDSIZE else MIN_WORDSIZE
-    show(f"requested number of words = {args.numwords}")
+    lgr.info(f"using word size = {word_sz}")
     num_wds = args.numwords if MIN_NUMWORDS <= args.numwords <= MAX_NUMWORDS else MAX_NUMWORDS
-    show(f"requested total number of letters = {args.numletters}")
+    lgr.info(f"using number of words = {num_wds}")
     num_letts = args.numletters if MIN_NUM_LETTERS <= args.numletters <= MAX_NUMLETTERS else MAX_NUMLETTERS
-
+    lgr.info(f"using total number of letters = {num_letts}")
     return args.save, word_sz, num_wds, num_letts
 
 
 if __name__ == '__main__':
-    lgr = MhsLogger( get_base_filename(__file__) )
-    show = lgr.show
-
+    start = time.perf_counter()
+    log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
+    lgr = log_control.get_logger()
     count = 0
     word_names = {}
     word_pack = []
     output = {}
-
-    save_option, word_size, num_words, num_letters = prep_args(argv[1:])
-
-    ordered_letters = ORDERED_LETTERS[:num_letters]
-    show(f"letters being used: '{ordered_letters}'")
-    # make sure the parameters for size of words & number of words and letters are safe and sensible
-    if word_size * num_words > num_letters:
-        word_size = MIN_WORDSIZE
-        num_words = num_letters // word_size
-    show(f"Find groups of {num_words} 'uniquely lettered' words each with {word_size} letters.")
-
-    run()
-    show(f"\nfinal elapsed time = {time.perf_counter() - start}")
-    exit()
+    code = 0
+    try:
+        save_option, word_size, num_words, num_letters = prep_args(argv[1:])
+        ordered_letters = ORDERED_LETTERS[:num_letters]
+        lgr.info(f"letters being used: '{ordered_letters}'")
+        # make sure the parameters for size of words & number of words and letters are safe and sensible
+        if word_size*num_words > num_letters:
+            word_size = MIN_WORDSIZE
+            num_words = num_letters//word_size
+        lgr.info(f"Find groups of {num_words} 'uniquely lettered' words each with {word_size} letters.")
+        run()
+    except KeyboardInterrupt as mki:
+        lgr.exception(mki)
+        code = 13
+    except ValueError as mve:
+        lgr.exception(mve)
+        code = 27
+    except Exception as mex:
+        lgr.exception(mex)
+        code = 66
+    lgr.info(f"\nfinal elapsed time = {time.perf_counter() - start}")
+    exit(code)
