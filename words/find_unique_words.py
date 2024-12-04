@@ -64,6 +64,50 @@ def store(group:array):
     results[group_count] = group
     group_count += 1
 
+def get_words_easy():
+    words = []
+    wf = json.load(open(WORD_FILE))
+    for word in wf:
+        if len(word) == word_size:
+            mask = 0
+            for lett in word:
+                lx = ordered_letters.find(lett)
+                if lx < 0:
+                    break
+                bx = 1 << lx
+                if mask & bx:
+                    break
+                mask |= bx
+            else:
+                words.append(word)
+                word_names.setdefault(mask, []).append(word)
+                least = mask.bit_length()-1
+                pack = compress(mask)
+                word_pack[least].setdefault(pack, set()).add(mask)
+    return words
+
+def get_words_fast():
+    words = []
+    wf = json.load(open(WORD_FILE))
+    for word in wf:
+        if len(word) == word_size:
+            mask = 0
+            for lett in word:
+                lx = ordered_letters.find(lett)
+                if lx < 0:
+                    break
+                bx = 1 << lx
+                if mask & bx:
+                    break
+                mask |= bx
+            else:
+                words.append(word)
+                word_names.setdefault(mask, []).append(word)
+                least = mask.bit_length()-1
+                pack = compress(mask)
+                word_pack[least].setdefault(pack, set()).add(mask)
+    return words
+
 def easy_solve(p_highbit:int, p_extra:int, p_progress:array, p_depth:int=0):
     """RECURSIVE solving algorithm
        >> WARNING: small changes in parameters can lead to massive increases in run time and memory usage!"""
@@ -117,25 +161,7 @@ def run():
     extra = num_letters - (word_size * num_words)
     lgr.info(f"num extra letters = {extra}")
 
-    words = []
-    wf = json.load( open(WORD_FILE) )
-    for word in wf:
-        if len(word) == word_size:
-            mask = 0
-            for lett in word:
-                lx = ordered_letters.find(lett)
-                if lx < 0:
-                    break
-                bx = 1 << lx
-                if mask & bx:
-                    break
-                mask |= bx
-            else:
-                words.append(word)
-                word_names.setdefault( mask, [] ).append(word)
-                least = mask.bit_length() - 1
-                pack = compress(mask)
-                word_pack[least].setdefault( pack, set() ).add(mask)
+    words = get_words_fast()
     lgr.info(f"found {len(words)} uniquely-lettered {word_size}-letter words.")
     if save_option and len(words) <= MAX_SAVE_COUNT:
         save_to_json(f"{word_size}-lett-from{num_letters}_find-unique-words", words)
