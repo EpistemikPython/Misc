@@ -12,7 +12,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2024-12-03"
+__updated__ = "2024-12-04"
 
 import array
 import time
@@ -39,6 +39,18 @@ MAX_NUMWORDS = 8
 MIN_NUMWORDS = 2
 MAX_SAVE_COUNT = 40000
 
+def memory_check():
+    global interim
+    lgr.info(f"INTERIM TIME = {time.perf_counter() - start}")
+    lgr.info("solve count = {:,}".format(solve_count))
+    lgr.info("group count = {:,}".format(group_count))
+    vmp = psutil.virtual_memory().percent
+    smp = psutil.swap_memory().percent
+    lgr.info(f"% virtual memory = {vmp};  % swap memory = {smp}")
+    if vmp > 95.0 and smp > 80.0:
+        raise Exception(f">> EXCEEDED memory parameters: v = {vmp} | s = {smp} !!")
+    interim = time.perf_counter()
+
 def compress(cmask:int):
     return (cmask ^ (cmask - 1)).bit_length() - 1
 
@@ -47,8 +59,9 @@ def decompress(dpack:int):
 
 def store(group:array):
     global group_count
+    # lgr.debug(f"found group '{group}'")
     group = sorted( next(iter(word_names[wmask])) for wmask in group )
-    output[group_count] = group
+    results[group_count] = group
     group_count += 1
 
 def easy_solve(p_highbit:int, p_extra:int, p_progress:array, p_depth:int=0):
@@ -56,17 +69,8 @@ def easy_solve(p_highbit:int, p_extra:int, p_progress:array, p_depth:int=0):
        >> WARNING: small changes in parameters can lead to massive increases in run time and memory usage!"""
     global solve_count
     solve_count += 1
-    global interim
     if time.perf_counter() - interim > 10.0:
-        lgr.info(f"INTERIM TIME = {time.perf_counter() - start}")
-        lgr.info("solve count = {:,}".format(solve_count))
-        lgr.info("group count = {:,}".format(group_count))
-        vmp = psutil.virtual_memory().percent
-        smp = psutil.swap_memory().percent
-        lgr.info(f"% virtual memory = {vmp};  % swap memory = {smp}")
-        if vmp > 95.0 and smp > 80.0:
-            raise Exception(">> EXCEEDED memory parameters!!")
-        interim = time.perf_counter()
+        memory_check()
 
     depth_limit = num_words - 1
     for dx in range(p_extra + 1):
@@ -88,17 +92,8 @@ def fast_solve(p_highbit:int, p_extra:int, p_progress:array, p_depth:int=0):
        >> WARNING: small changes in parameters can lead to massive increases in run time and memory usage!"""
     global solve_count
     solve_count += 1
-    global interim
     if time.perf_counter() - interim > 10.0:
-        lgr.info(f"INTERIM TIME = {time.perf_counter() - start}")
-        lgr.info("solve count = {:,}".format(solve_count))
-        lgr.info("group count = {:,}".format(group_count))
-        vmp = psutil.virtual_memory().percent
-        smp = psutil.swap_memory().percent
-        lgr.info(f"% virtual memory = {vmp};  % swap memory = {smp}")
-        if vmp > 95.0 and smp > 80.0:
-            raise Exception(">> EXCEEDED memory parameters!!")
-        interim = time.perf_counter()
+        memory_check()
 
     depth_limit = num_words - 1
     for dx in range(p_extra + 1):
@@ -136,10 +131,10 @@ def run():
                     break
                 mask |= bx
             else:
+                words.append(word)
+                word_names.setdefault( mask, [] ).append(word)
                 least = mask.bit_length() - 1
                 pack = compress(mask)
-                words.append(word)
-                word_names.setdefault( mask, set() ).add(word)
                 word_pack[least].setdefault( pack, set() ).add(mask)
     lgr.info(f"found {len(words)} uniquely-lettered {word_size}-letter words.")
     if save_option and len(words) <= MAX_SAVE_COUNT:
@@ -157,18 +152,18 @@ def run():
     lgr.info(f"\n\t\t\t {"" if group_count <= display_count else "Sample of"} Solutions:")
     cx = 0
     tx = group_count // display_count
-    for index in output.keys():
+    for index in results.keys():
         if group_count <= display_count:
-            lgr.info(output[index])
+            lgr.info(results[index])
         else:
             cx += 1
             if cx % tx == 0:
-                lgr.info(f"{cx}: {output[index]}")
+                lgr.info(f"{cx}: {results[index]}")
     lgr.info("total # of groups = {:,}".format(group_count))
 
     if save_option and group_count <= MAX_SAVE_COUNT:
         lgr.info(f"\nsolve and display elapsed time = {time.perf_counter()-start}")
-        json_save_name = save_to_json(f"{word_size}x{num_words}f{num_letters}_find-unique-words", output)
+        json_save_name = save_to_json(f"{word_size}x{num_words}f{num_letters}_find-unique-words", results)
         lgr.info(f"Saved results to: {json_save_name}")
 
 def set_args():
@@ -207,7 +202,7 @@ if __name__ == '__main__':
     group_count = 0
     word_names = {}
     word_pack = []
-    output = {}
+    results = {}
     code = 0
     try:
         save_option, word_size, num_words, num_letters = prep_args(argv[1:])
