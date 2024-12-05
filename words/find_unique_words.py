@@ -15,6 +15,7 @@ __created__ = "2023-10-10"
 __updated__ = "2024-12-04"
 
 import array
+import logging
 import time
 import psutil
 from argparse import ArgumentParser
@@ -24,8 +25,8 @@ from mhsUtils import json, save_to_json, get_base_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
 # five-letter testing
-# WORD_FILE = "input/five-letter_test.json"
-WORD_FILE = "input/scrabble-plus.json"
+WORD_FILE = "input/five-letter_test.json"
+# WORD_FILE = "input/scrabble-plus.json"
 # highest to lowest letter frequencies in Scrabble '[5-13]-letter' words
 ORDERED_LETTERS = "ESIARNOTLCDUPMGHBYFKVWZXQJ"
 # highest to lowest letter frequencies in Scrabble 7-letter words
@@ -64,7 +65,39 @@ def store(group:array):
     results[group_count] = group
     group_count += 1
 
+class WordContainer:
+    """store word with its mask"""
+    def __init__(self, p_word:str, p_mask:int):
+        self.word = p_word
+        self.mask = p_mask
+
+    def get_word(self):
+        return self.word
+
+    def get_mask(self):
+        return self.mask
+
+class SolutionStore:
+    def __init__(self):
+        self.results = []
+        self.count = 0
+
+    def add(self, group:list[WordContainer]):
+        self.results.append(group)
+        self.count += 1
+
+    def size(self):
+        return self.count
+
+    def display(self, p_lgr:logging.Logger):
+        for item in self.results:
+            p_lgr.info("\n")
+            for wd in item:
+                p_lgr.info(f"{wd.get_word()}, ")
+        p_lgr.info("\n")
+
 def get_words_easy():
+    count = 0
     words = []
     wf = json.load(open(WORD_FILE))
     for word in wf:
@@ -79,12 +112,16 @@ def get_words_easy():
                     break
                 mask |= bx
             else:
+                count += 1
                 words.append(word)
-                word_names.setdefault(mask, []).append(word)
                 least = mask.bit_length()-1
-                pack = compress(mask)
-                word_pack[least].setdefault(pack, set()).add(mask)
-    return words
+                easy_word_pack.setdefault(least, []).append(WordContainer(word, mask))
+    lgr.info(f"found {count} uniquely-lettered {word_size}-letter words.")
+    for k in easy_word_pack:
+        for lx in easy_word_pack[k]:
+            lgr.debug(lx.get_word())
+    if save_option and count <= MAX_SAVE_COUNT:
+        save_to_json(f"{word_size}-lett-from{num_letters}_easy-unique-words", sorted(words))
 
 def get_words_fast():
     words = []
@@ -105,8 +142,10 @@ def get_words_fast():
                 word_names.setdefault(mask, []).append(word)
                 least = mask.bit_length()-1
                 pack = compress(mask)
-                word_pack[least].setdefault(pack, set()).add(mask)
-    return words
+                fast_word_pack[least].setdefault(pack, set()).add(mask)
+    lgr.info(f"found {len(words)} uniquely-lettered {word_size}-letter words.")
+    if save_option and len(words) <= MAX_SAVE_COUNT:
+        save_to_json(f"{word_size}-lett-from{num_letters}_fast-unique-words", sorted(words))
 
 def easy_solve(p_highbit:int, p_extra:int, p_progress:array, p_depth:int=0):
     """RECURSIVE solving algorithm
@@ -119,10 +158,10 @@ def easy_solve(p_highbit:int, p_extra:int, p_progress:array, p_depth:int=0):
     depth_limit = num_words - 1
     for dx in range(p_extra + 1):
         least = p_highbit.bit_length()-1
-        for pack in word_pack[least]:
+        for pack in easy_word_pack[least]:
             required = decompress(pack)
             if (p_highbit & required) == required:
-                for mask in word_pack[least][pack]:
+                for mask in easy_word_pack[least][pack]:
                     if (mask & p_highbit) == mask:
                         p_progress[p_depth] = mask
                         if p_depth >= depth_limit:
@@ -142,10 +181,10 @@ def fast_solve(p_highbit:int, p_extra:int, p_progress:array, p_depth:int=0):
     depth_limit = num_words - 1
     for dx in range(p_extra + 1):
         least = p_highbit.bit_length()-1
-        for pack in word_pack[least]:
+        for pack in fast_word_pack[least]:
             required = decompress(pack)
             if (p_highbit & required) == required:
-                for mask in word_pack[least][pack]:
+                for mask in fast_word_pack[least][pack]:
                     if (mask & p_highbit) == mask:
                         p_progress[p_depth] = mask
                         if p_depth >= depth_limit:
@@ -156,15 +195,15 @@ def fast_solve(p_highbit:int, p_extra:int, p_progress:array, p_depth:int=0):
 
 def run():
     """process a list of words to find groups of words of the same length with each having unique letters"""
-    global word_pack
-    word_pack = [{} for _ in range(num_letters)]
+    global fast_word_pack
+    fast_word_pack = [{} for _ in range(num_letters)]
+    # global easy_word_pack
+    # easy_word_pack = {[] for _ in range(num_letters)}
     extra = num_letters - (word_size * num_words)
     lgr.info(f"num extra letters = {extra}")
 
-    words = get_words_fast()
-    lgr.info(f"found {len(words)} uniquely-lettered {word_size}-letter words.")
-    if save_option and len(words) <= MAX_SAVE_COUNT:
-        save_to_json(f"{word_size}-lett-from{num_letters}_find-unique-words", words)
+    get_words_fast()
+    get_words_easy()
 
     initializer = ()
     for _ in range(num_words):
@@ -227,7 +266,8 @@ if __name__ == '__main__':
     solve_count = 0
     group_count = 0
     word_names = {}
-    word_pack = []
+    easy_word_pack = {}
+    fast_word_pack = []
     results = {}
     code = 0
     try:
