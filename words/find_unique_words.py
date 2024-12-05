@@ -12,7 +12,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2024-12-04"
+__updated__ = "2024-12-05"
 
 import array
 import logging
@@ -25,8 +25,8 @@ from mhsUtils import json, save_to_json, get_base_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
 # five-letter testing
-WORD_FILE = "input/five-letter_test.json"
-# WORD_FILE = "input/scrabble-plus.json"
+# WORD_FILE = "input/five-letter_test.json"
+WORD_FILE = "input/scrabble-plus.json"
 # highest to lowest letter frequencies in Scrabble '[5-13]-letter' words
 ORDERED_LETTERS = "ESIARNOTLCDUPMGHBYFKVWZXQJ"
 # highest to lowest letter frequencies in Scrabble 7-letter words
@@ -39,6 +39,9 @@ DEFAULT_NUMWORDS = 5
 MAX_NUMWORDS = 8
 MIN_NUMWORDS = 2
 MAX_SAVE_COUNT = 40000
+
+def dsp(a:int, nm:str="num"):
+    print("{:>20}".format(nm) + f" = {hex(a)}; {a}; {bin(a)}")
 
 def memory_check():
     global interim
@@ -91,10 +94,22 @@ class SolutionStore:
 
     def display(self, p_lgr:logging.Logger):
         for item in self.results:
+            sstr = ""
             p_lgr.info("\n")
             for wd in item:
-                p_lgr.info(f"{wd.get_word()}, ")
+                sstr = {f"{sstr} | {wd.get_word()}"}
+            p_lgr.info(sstr)
         p_lgr.info("\n")
+
+def display_easy():
+    count = 0
+    for k in range(word_size-1, num_letters):
+        if k in easy_word_pack.keys():
+            for lx in easy_word_pack[k]:
+                count += 1
+                lxwd = lx.get_word()
+                lxmk = lx.get_mask()
+                lgr.info("{:>4}) ".format(count) + f"{lxwd} = {k} | " + "{:>010b}".format(lxmk))
 
 def get_words_easy():
     count = 0
@@ -115,11 +130,10 @@ def get_words_easy():
                 count += 1
                 words.append(word)
                 least = mask.bit_length()-1
+                # lgr.info(f"{word} = {least} | "+"{:>010b}".format(mask))
                 easy_word_pack.setdefault(least, []).append(WordContainer(word, mask))
     lgr.info(f"found {count} uniquely-lettered {word_size}-letter words.")
-    for k in easy_word_pack:
-        for lx in easy_word_pack[k]:
-            lgr.debug(lx.get_word())
+    display_easy()
     if save_option and count <= MAX_SAVE_COUNT:
         save_to_json(f"{word_size}-lett-from{num_letters}_easy-unique-words", sorted(words))
 
@@ -147,28 +161,30 @@ def get_words_fast():
     if save_option and len(words) <= MAX_SAVE_COUNT:
         save_to_json(f"{word_size}-lett-from{num_letters}_fast-unique-words", sorted(words))
 
-def easy_solve(p_highbit:int, p_extra:int, p_progress:array, p_depth:int=0):
+def solve_easy(p_highbit:int, p_testmask:int, p_progress:list[WordContainer]):
     """RECURSIVE solving algorithm
        >> WARNING: small changes in parameters can lead to massive increases in run time and memory usage!"""
     global solve_count
     solve_count += 1
+    if solve_count % 400 == 0:
+        lgr.info("solve count = {:,}".format(solve_count))
     if time.perf_counter() - interim > 10.0:
         memory_check()
 
-    depth_limit = num_words - 1
-    for dx in range(p_extra + 1):
-        least = p_highbit.bit_length()-1
-        for pack in easy_word_pack[least]:
-            required = decompress(pack)
-            if (p_highbit & required) == required:
-                for mask in easy_word_pack[least][pack]:
-                    if (mask & p_highbit) == mask:
-                        p_progress[p_depth] = mask
-                        if p_depth >= depth_limit:
-                            store(p_progress)
-                        else:
-                            easy_solve(p_highbit & ~mask, p_extra-dx, p_progress, p_depth+1)
-        p_highbit ^= 1 << least
+    global storage
+    for r in range(p_highbit):
+        if p_highbit in easy_word_pack.keys():
+            count = 0
+            for kx in easy_word_pack[p_highbit]:
+                count += 1
+                kxmk = kx.get_mask()
+                if kxmk & p_testmask:
+                    break
+                p_progress.append(kx)
+                if len(p_progress) == num_words:
+                    storage.add(kx)
+                else:
+                    solve_easy(p_highbit-1, (kxmk | p_testmask), p_progress)
 
 def fast_solve(p_highbit:int, p_extra:int, p_progress:array, p_depth:int=0):
     """RECURSIVE solving algorithm
@@ -202,17 +218,19 @@ def run():
     extra = num_letters - (word_size * num_words)
     lgr.info(f"num extra letters = {extra}")
 
-    get_words_fast()
+    # get_words_fast()
     get_words_easy()
 
     initializer = ()
     for _ in range(num_words):
         initializer += (0,)
+
     lgr.info(f"% virtual memory = {psutil.virtual_memory().percent};  % swap memory = {psutil.swap_memory().percent}")
-    solve( (1 << num_letters) - 1, p_extra = extra, p_progress = array.array('L', initializer) )
-    lgr.info("solve count = {:,}".format(solve_count))
+    # fast_solve( (1 << num_letters) - 1, p_extra = extra, p_progress = array.array('L', initializer) )
+    solve_easy(num_letters-1, 0, [])
 
     # display some output
+    lgr.info("solve count = {:,}".format(solve_count))
     display_count = 32
     lgr.info(f"\n\t\t\t {"" if group_count <= display_count else "Sample of"} Solutions:")
     cx = 0
@@ -262,13 +280,13 @@ if __name__ == '__main__':
     interim = start
     log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
     lgr = log_control.get_logger()
-    solve = fast_solve
     solve_count = 0
     group_count = 0
     word_names = {}
     easy_word_pack = {}
     fast_word_pack = []
     results = {}
+    storage = SolutionStore()
     code = 0
     try:
         save_option, word_size, num_words, num_letters = prep_args(argv[1:])
