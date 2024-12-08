@@ -45,7 +45,7 @@ def bin_dsp(p_bin:int, p_name:str= "mask"):
 
 def memory_check():
     global interim
-    lgr.info(f"INTERIM TIME = {time.perf_counter() - start}")
+    lgr.info(f"\n\t\t\t\tINTERIM TIME = {time.perf_counter() - start}")
     lgr.info("solve count = {:,}".format(solve_count))
     lgr.info("group count = {:,}".format(group_count))
     vmp = psutil.virtual_memory().percent
@@ -68,7 +68,7 @@ class WordContainer:
         return self.mask
 
     def get_contents(self):
-        return f"word = {self.word}; mask = {self.mask}"
+        return f"{self.word}; " + bin_dsp(self.mask)
 
 def list_display(p_groups:list[WordContainer], p_lev:int=logging.INFO):
     if p_groups:
@@ -88,9 +88,9 @@ class SolutionStore:
     def add(self, p_group:list[WordContainer]):
         copy_list = [_ for _ in p_group]
         self.results.append(copy_list)
-        lgr.info("\n\t\t\t\t>> ADDED a group to SolutionStore:")
+        # lgr.info("\n\t\t\t\t>> ADDED a group to SolutionStore:")
         self.count += 1
-        self.display()
+        # self.display()
 
     def get(self):
         reply = []
@@ -107,13 +107,23 @@ class SolutionStore:
             lgr.info(f"NO groups found!")
         else:
             lgr.info(f"Found {num} unique groups.")
-        count = 1
+        display_count = 32
+        lgr.info(f"\n\t\t\t {"" if num <= display_count else "Sample of"} Solutions:")
+        cx = 0
+        tx = num // display_count
         for lx in self.results:
-            lgr.info(f"Group #{count}")
-            for item in lx:
-                lgr.info(f"\t{item.get_word()}:{item.get_mask()}")
-            lgr.info("\n")
-            count += 1
+            cx += 1
+            if num <= display_count:
+                lgr.info(f"Group #{cx}")
+                for item in lx:
+                    lgr.info(f"\t{item.get_word()}:{item.get_mask()}")
+                lgr.info("\n")
+            else:
+                if cx % tx == 0:
+                    lgr.info(f"Group #{cx}")
+                    for item in lx:
+                        lgr.info(f"\t{item.get_word()}:{item.get_mask()}")
+                    lgr.info("\n")
 
 def display_easy(p_lev:int=logging.NOTSET):
     count = 0
@@ -146,44 +156,40 @@ def get_words_easy():
                 least = mask.bit_length()-1
                 easy_word_pack.setdefault(least, []).append(WordContainer(word, mask))
     lgr.info(f"found {count} uniquely-lettered {word_size}-letter words.")
-    display_easy()
+    # display_easy()
     if save_option and count <= MAX_SAVE_COUNT:
         save_to_json(f"{word_size}-lett-from{num_letters}_easy-unique-words", sorted(words))
 
 def solve_easy(p_highbit:int, p_testmask:int, p_progress:list[WordContainer]):
     """RECURSIVE solving algorithm
        >> WARNING: small changes in parameters can lead to massive increases in run time and memory usage!"""
-    loglev = logging.NOTSET
+    # loglev = logging.NOTSET
     global solve_count
     solve_count += 1
-    lgr.log(loglev, f"\n\t\t\t\t\t{solve_count}) START: p_hb = {p_highbit}; " + bin_dsp(p_testmask, "p_testmask"))
-    list_display(p_progress, loglev)
+    # lgr.log(loglev, f"\n\t\t\t\t\t{solve_count}) START: p_hb = {p_highbit}; " + bin_dsp(p_testmask, "p_testmask"))
+    # list_display(p_progress, loglev)
     if word_size-1 <= p_highbit < num_letters:
         if time.perf_counter() - interim > 10.0:
-            lgr.info("solve count = {:,}".format(solve_count))
             memory_check()
+            lgr.info(f"\n\t\t\t\t\tSTART: p_hb = {p_highbit}; " + bin_dsp(p_testmask, "p_testmask"))
+            list_display(p_progress)
 
         for rbit in range(p_highbit, word_size-2, -1):
             if rbit in easy_word_pack.keys():
                 for kx in easy_word_pack[rbit]:
                     kxmk = kx.get_mask()
-                    lgr.log(loglev, f"word = {kx.get_word()}: p_hb = {p_highbit}; rbit = {rbit}; " +
-                             bin_dsp(p_testmask, "p_testmask") +
-                             bin_dsp(kxmk) + bin_dsp(kxmk & p_testmask, "mask & p_testmask"))
-                    if not kxmk & p_testmask:
+                    # lgr.log(loglev, f"word = {kx.get_word()}: p_hb = {p_highbit}; rbit = {rbit}; " +
+                    #          bin_dsp(p_testmask, "p_testmask") +
+                    #          bin_dsp(kxmk) + bin_dsp(kxmk & p_testmask, "mask & p_testmask"))
+                    if not (kxmk & p_testmask):
                         update = p_progress + [kx]
                         if len(update) == num_words:
                             storage.add(update)
                         else:
-                            if p_highbit > 1:
-                                solve_easy(rbit-1, (kxmk | p_testmask), update)
-                            else:
-                                lgr.log(loglev, f"solve_easy(hbit = {rbit-1}; " + bin_dsp(kxmk) + bin_dsp(p_testmask, "p_testmask") +
-                                         bin_dsp(kxmk | p_testmask, "mask | p_testmask"))
-                                list_display(update, loglev)
-    else:
-        lgr.warning(f">> INVALID high bit = {p_highbit}.\n")
-    lgr.log(loglev, f"END SOLVE # {solve_count}\n")
+                            solve_easy(rbit-1, (kxmk | p_testmask), update)
+    # else:
+    #     lgr.warning(f">> INVALID high bit = {p_highbit}.\n")
+    # lgr.log(loglev, f"END SOLVE # {solve_count}\n")
 
 def run():
     """process a list of words to find groups of words of the same length with each having unique letters"""
