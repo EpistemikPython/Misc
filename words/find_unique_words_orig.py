@@ -23,8 +23,8 @@ from mhsUtils import json, save_to_json, get_base_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
 # 3-letter testing
-WORD_FILE = "input/three-letter_test-2.json"
-# WORD_FILE = "input/scrabble-plus.json"
+# WORD_FILE = "input/three-letter_test-1.json"
+WORD_FILE = "input/scrabble-plus.json"
 # five-letter testing
 # WORD_FILE = "input/five-letter_test.json"
 # highest to lowest letter frequencies in Scrabble '5-13 letter' words
@@ -35,9 +35,11 @@ MAX_NUMLETTERS = len(ORDERED_LETTERS)
 MIN_NUM_LETTERS = 10
 MAX_WORDSIZE = 15
 MIN_WORDSIZE = 3
-DEFAULT_INITIALIZER = (0, 0, 0, 0, 0)
-MAX_NUMWORDS = len(DEFAULT_INITIALIZER)
+MAX_NUMWORDS = 8
 MIN_NUMWORDS = 2
+DEFAULT_WORDSIZE = 5
+DEFAULT_NUMWORDS = 5
+MAX_SAVE_COUNT = 40000
 
 def compress(cmask:int):
     return (cmask ^ (cmask - 1)).bit_length() - 1
@@ -52,6 +54,8 @@ def store(group:array):
     count += 1
 
 def solve(highbit:int, p_extra:int, progress:array, depth:int=0):
+    global solve_count
+    solve_count += 1
     depth_limit = num_words - 1
     for dx in range(p_extra + 1):
         least = highbit.bit_length() - 1
@@ -93,16 +97,13 @@ def run():
                 pack = compress(mask)
                 word_names.setdefault( mask, set() ).add(word)
                 word_pack[least].setdefault( pack, set() ).add(mask)
-    lgr.info(f"found {wct} 'uniquely-lettered' words.")
+    lgr.info(f"found {wct} 'uniquely-lettered' {word_size}-letter words.")
 
-    initializer = DEFAULT_INITIALIZER
-    if num_words == 4:
-        initializer = (0, 0, 0, 0)
-    elif num_words == 3:
-        initializer = (0, 0, 0)
-    elif num_words == MIN_NUMWORDS:
-        initializer = (0, 0)
+    initializer = ()
+    for _ in range(num_words):
+        initializer += (0,)
     solve( (1 << num_letters) - 1, extra, array.array('L', initializer) )
+    lgr.info("solve count = {:,}".format(solve_count))
 
     # sample some of the output
     lgr.info(f"\n\t\t\t Solutions:")
@@ -116,20 +117,19 @@ def run():
             break
     lgr.info(f"total groups = {count}")
 
-    lgr.info(f"\nsolve and display elapsed time = {time.perf_counter() - start}")
-    if save_option:
+    if save_option and count <= MAX_SAVE_COUNT:
+        lgr.info(f"\nsolve and display elapsed time = {time.perf_counter()-start}")
         json_save_name = save_to_json(f"{word_size}x{num_words}from{num_letters}_find-unique-words", output)
         lgr.info(f"Saved results to: {json_save_name}")
-
 
 def set_args():
     arg_parser = ArgumentParser(description="get the save-to-file, word size, number of words and number of letters options", prog=f"python3 {argv[0]}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="write the results to a JSON file")
-    arg_parser.add_argument('-w', '--wordsize', type=int, default = MIN_WORDSIZE,
-                            help = f"number of letters in each found word; DEFAULT = {MIN_WORDSIZE}")
-    arg_parser.add_argument('-n', '--numwords', type=int, default = MAX_NUMWORDS,
-                            help = f"number of words in each found group; DEFAULT = {MAX_NUMWORDS}")
+    arg_parser.add_argument('-w', '--wordsize', type=int, default = DEFAULT_WORDSIZE,
+                            help = f"number of letters in each found word; DEFAULT = {DEFAULT_WORDSIZE}")
+    arg_parser.add_argument('-n', '--numwords', type=int, default = DEFAULT_NUMWORDS,
+                            help = f"number of words in each found group; DEFAULT = {DEFAULT_NUMWORDS}")
     arg_parser.add_argument('-l', '--numletters', type=int, default = MAX_NUMLETTERS,
                             help = f"number of possible letters for each word; DEFAULT = {MAX_NUMLETTERS}")
     return arg_parser
@@ -151,6 +151,7 @@ if __name__ == '__main__':
     log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
     lgr = log_control.get_logger()
     count = 0
+    solve_count = 0
     word_names = {}
     word_pack = []
     output = {}
