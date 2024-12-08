@@ -12,10 +12,9 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2024-12-05"
+__updated__ = "2024-12-08"
 
 import array
-import logging
 import time
 import psutil
 from argparse import ArgumentParser
@@ -24,9 +23,11 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import json, save_to_json, get_base_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
-# five-letter testing
+# 3-letter testing
+WORD_FILE = "input/three-letter_test-2.json"
+# 5-letter testing
 # WORD_FILE = "input/five-letter_test.json"
-WORD_FILE = "input/scrabble-plus.json"
+# WORD_FILE = "input/scrabble-plus.json"
 # highest to lowest letter frequencies in Scrabble '[5-13]-letter' words
 ORDERED_LETTERS = "ESIARNOTLCDUPMGHBYFKVWZXQJ"
 # highest to lowest letter frequencies in Scrabble 7-letter words
@@ -55,9 +56,6 @@ def memory_check():
         raise Exception(f">> EXCEEDED memory parameters: v = {vmp} | s = {smp} !!")
     interim = time.perf_counter()
 
-def compress(cmask:int):
-    return (cmask ^ (cmask - 1)).bit_length() - 1
-
 def decompress(dpack:int):
     return 1 << dpack
 
@@ -80,26 +78,40 @@ class WordContainer:
     def get_mask(self):
         return self.mask
 
+    def display(self):
+        return f"word = {self.word}; mask = {self.mask}"
+
 class SolutionStore:
     def __init__(self):
         self.results = []
         self.count = 0
 
     def add(self, group:list[WordContainer]):
-        self.results.append(group)
+        copy_list = [_ for _ in group]
+        self.results.append(copy_list)
+        lgr.info(f"ADDED {repr(copy_list)} to SolutionStore.")
         self.count += 1
+        self.display()
+
+    def get(self):
+        return self.results
 
     def size(self):
         return self.count
 
-    def display(self, p_lgr:logging.Logger):
-        for item in self.results:
-            sstr = ""
-            p_lgr.info("\n")
-            for wd in item:
-                sstr = {f"{sstr} | {wd.get_word()}"}
-            p_lgr.info(sstr)
-        p_lgr.info("\n")
+    def display(self):
+        num = self.count
+        if num == 0:
+            lgr.info(f"NO groups found!")
+        else:
+            lgr.info(f"Found {num} unique groups.")
+        count = 1
+        for lx in self.results:
+            lgr.info(f"Group #{count}")
+            for item in lx:
+                lgr.info(f"{item.get_word()}:{item.get_mask()}")
+            lgr.info("\n")
+            count += 1
 
 def display_easy():
     count = 0
@@ -119,7 +131,7 @@ def get_words_easy():
         if len(word) == word_size:
             mask = 0
             for lett in word:
-                lx = ordered_letters.find(lett)
+                lx = ordered_letters.find(lett.upper())
                 if lx < 0:
                     break
                 bx = 1 << lx
@@ -130,123 +142,60 @@ def get_words_easy():
                 count += 1
                 words.append(word)
                 least = mask.bit_length()-1
-                # lgr.info(f"{word} = {least} | "+"{:>010b}".format(mask))
                 easy_word_pack.setdefault(least, []).append(WordContainer(word, mask))
     lgr.info(f"found {count} uniquely-lettered {word_size}-letter words.")
     display_easy()
     if save_option and count <= MAX_SAVE_COUNT:
         save_to_json(f"{word_size}-lett-from{num_letters}_easy-unique-words", sorted(words))
 
-def get_words_fast():
-    words = []
-    wf = json.load(open(WORD_FILE))
-    for word in wf:
-        if len(word) == word_size:
-            mask = 0
-            for lett in word:
-                lx = ordered_letters.find(lett)
-                if lx < 0:
-                    break
-                bx = 1 << lx
-                if mask & bx:
-                    break
-                mask |= bx
-            else:
-                words.append(word)
-                word_names.setdefault(mask, []).append(word)
-                least = mask.bit_length()-1
-                pack = compress(mask)
-                fast_word_pack[least].setdefault(pack, set()).add(mask)
-    lgr.info(f"found {len(words)} uniquely-lettered {word_size}-letter words.")
-    if save_option and len(words) <= MAX_SAVE_COUNT:
-        save_to_json(f"{word_size}-lett-from{num_letters}_fast-unique-words", sorted(words))
-
 def solve_easy(p_highbit:int, p_testmask:int, p_progress:list[WordContainer]):
     """RECURSIVE solving algorithm
        >> WARNING: small changes in parameters can lead to massive increases in run time and memory usage!"""
     global solve_count
     solve_count += 1
-    if solve_count % 400 == 0:
-        lgr.info("solve count = {:,}".format(solve_count))
-    if time.perf_counter() - interim > 10.0:
-        memory_check()
+    lgr.info(f"\n\t\t\t\t\t{solve_count}) START: p_hb = {p_highbit}; " + "p_tm = {:>010b}; ".format(p_testmask) +
+             f"len(p_prog) = {len(p_progress)}")
+    if word_size-1 <= p_highbit < num_letters:
+        if solve_count % 400 == 0:
+            lgr.info("solve count = {:,}".format(solve_count))
+        if time.perf_counter() - interim > 10.0:
+            memory_check()
 
-    global storage
-    for r in range(p_highbit):
-        if p_highbit in easy_word_pack.keys():
-            count = 0
-            for kx in easy_word_pack[p_highbit]:
-                count += 1
-                kxmk = kx.get_mask()
-                if kxmk & p_testmask:
-                    break
-                p_progress.append(kx)
-                if len(p_progress) == num_words:
-                    storage.add(kx)
-                else:
-                    solve_easy(p_highbit-1, (kxmk | p_testmask), p_progress)
-
-def fast_solve(p_highbit:int, p_extra:int, p_progress:array, p_depth:int=0):
-    """RECURSIVE solving algorithm
-       >> WARNING: small changes in parameters can lead to massive increases in run time and memory usage!"""
-    global solve_count
-    solve_count += 1
-    if time.perf_counter() - interim > 10.0:
-        memory_check()
-
-    depth_limit = num_words - 1
-    for dx in range(p_extra + 1):
-        least = p_highbit.bit_length()-1
-        for pack in fast_word_pack[least]:
-            required = decompress(pack)
-            if (p_highbit & required) == required:
-                for mask in fast_word_pack[least][pack]:
-                    if (mask & p_highbit) == mask:
-                        p_progress[p_depth] = mask
-                        if p_depth >= depth_limit:
-                            store(p_progress)
+        for rbit in range(p_highbit, word_size-2, -1):
+            if rbit in easy_word_pack.keys():
+                for kx in easy_word_pack[rbit]:
+                    kxmk = kx.get_mask()
+                    lgr.info(f"word = {kx.get_word()}: p_hb = {p_highbit}; rbit = {rbit}; " +
+                             "p_m = {:>010b}; ".format(p_testmask) + "kxmk = {:>010b}; ".format(kxmk) +
+                             "kxmk & p_tm = {:>010b}\n".format(kxmk & p_testmask))
+                    if not kxmk & p_testmask:
+                        update = p_progress + [kx]
+                        if len(update) == num_words:
+                            storage.add(update)
                         else:
-                            fast_solve(p_highbit & ~mask, p_extra-dx, p_progress, p_depth+1)
-        p_highbit ^= 1 << least
+                            if kx.get_word() in ("COR","TAN"):
+                                solve_easy(rbit-1, (kxmk | p_testmask), update)
+                            else:
+                                lgr.info(f"solve_easy({rbit-1}, ({kxmk} | {p_testmask} = [{kxmk | p_testmask}]), {update[0].display()})")
+    else:
+        lgr.info(f">> INVALID high bit = {p_highbit}.\n")
+    lgr.info(f"END SOLVE # {solve_count}\n")
 
 def run():
     """process a list of words to find groups of words of the same length with each having unique letters"""
-    global fast_word_pack
-    fast_word_pack = [{} for _ in range(num_letters)]
-    # global easy_word_pack
-    # easy_word_pack = {[] for _ in range(num_letters)}
-    extra = num_letters - (word_size * num_words)
-    lgr.info(f"num extra letters = {extra}")
+    lgr.info(f"% virtual memory = {psutil.virtual_memory().percent};  % swap memory = {psutil.swap_memory().percent}")
 
-    # get_words_fast()
     get_words_easy()
-
-    initializer = ()
-    for _ in range(num_words):
-        initializer += (0,)
+    solve_easy(num_letters-1, 0, [])
+    lgr.info(f"storage size = {storage.size()}")
 
     lgr.info(f"% virtual memory = {psutil.virtual_memory().percent};  % swap memory = {psutil.swap_memory().percent}")
-    # fast_solve( (1 << num_letters) - 1, p_extra = extra, p_progress = array.array('L', initializer) )
-    solve_easy(num_letters-1, 0, [])
-
     # display some output
-    lgr.info("solve count = {:,}".format(solve_count))
-    display_count = 32
-    lgr.info(f"\n\t\t\t {"" if group_count <= display_count else "Sample of"} Solutions:")
-    cx = 0
-    tx = group_count // display_count
-    for index in results.keys():
-        if group_count <= display_count:
-            lgr.info(results[index])
-        else:
-            cx += 1
-            if cx % tx == 0:
-                lgr.info(f"{cx}: {results[index]}")
-    lgr.info("total # of groups = {:,}".format(group_count))
+    storage.display()
 
-    if save_option and group_count <= MAX_SAVE_COUNT:
+    if save_option and storage.size() <= MAX_SAVE_COUNT:
         lgr.info(f"\nsolve and display elapsed time = {time.perf_counter()-start}")
-        json_save_name = save_to_json(f"{word_size}x{num_words}f{num_letters}_find-unique-words", results)
+        json_save_name = save_to_json(f"{word_size}x{num_words}f{num_letters}_find-unique-words", storage.get())
         lgr.info(f"Saved results to: {json_save_name}")
 
 def set_args():
