@@ -16,6 +16,7 @@ __updated__ = "2024-12-08"
 
 import array
 import time
+import psutil
 from argparse import ArgumentParser
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
@@ -41,6 +42,18 @@ DEFAULT_WORDSIZE = 5
 DEFAULT_NUMWORDS = 5
 MAX_SAVE_COUNT = 40000
 
+def memory_check():
+    global interim
+    lgr.info(f"INTERIM TIME = {time.perf_counter() - start}")
+    lgr.info("solve count = {:,}".format(solve_count))
+    lgr.info("group count = {:,}".format(count))
+    vmp = psutil.virtual_memory().percent
+    smp = psutil.swap_memory().percent
+    lgr.info(f"% virtual memory = {vmp};  % swap memory = {smp}")
+    if vmp > 95.0 and smp > 80.0:
+        raise Exception(f">> EXCEEDED memory parameters: v = {vmp} | s = {smp} !!")
+    interim = time.perf_counter()
+
 def compress(cmask:int):
     return (cmask ^ (cmask - 1)).bit_length() - 1
 
@@ -56,6 +69,8 @@ def store(group:array):
 def solve(highbit:int, p_extra:int, progress:array, depth:int=0):
     global solve_count
     solve_count += 1
+    if time.perf_counter() - interim > 10.0:
+        memory_check()
     depth_limit = num_words - 1
     for dx in range(p_extra + 1):
         least = highbit.bit_length() - 1
@@ -103,19 +118,21 @@ def run():
     for _ in range(num_words):
         initializer += (0,)
     solve( (1 << num_letters) - 1, extra, array.array('L', initializer) )
-    lgr.info("solve count = {:,}".format(solve_count))
 
     # sample some of the output
-    lgr.info(f"\n\t\t\t Solutions:")
-    nx = 0
+    lgr.info("solve count = {:,}".format(solve_count))
+    display_count = 32
+    lgr.info(f"\n\t\t\t {"" if count <= display_count else "Sample of"} Solutions:")
+    cx = 0
+    tx = count // display_count
     for index in output.keys():
-        lgr.info(output[index])
-        nx += 1
-        if nx == 32:
-            if count > 32:
-                lgr.info("etc...")
-            break
-    lgr.info(f"total groups = {count}")
+        if count <= display_count:
+            lgr.info(output[index])
+        else:
+            cx += 1
+            if cx % tx == 0:
+                lgr.info(f"{cx}: {output[index]}")
+    lgr.info("total # of groups = {:,}".format(count))
 
     if save_option and count <= MAX_SAVE_COUNT:
         lgr.info(f"\nsolve and display elapsed time = {time.perf_counter()-start}")
@@ -150,6 +167,7 @@ if __name__ == '__main__':
     start = time.perf_counter()
     log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
     lgr = log_control.get_logger()
+    interim = start
     count = 0
     solve_count = 0
     word_names = {}
