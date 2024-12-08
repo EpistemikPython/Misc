@@ -12,7 +12,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2024-11-28"
+__updated__ = "2024-12-08"
 
 import array
 import time
@@ -22,7 +22,9 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import json, save_to_json, get_base_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
-WORD_FILE = "input/scrabble-plus.json"
+# 3-letter testing
+WORD_FILE = "input/three-letter_test-2.json"
+# WORD_FILE = "input/scrabble-plus.json"
 # five-letter testing
 # WORD_FILE = "input/five-letter_test.json"
 # highest to lowest letter frequencies in Scrabble '5-13 letter' words
@@ -76,22 +78,22 @@ def run():
     wf = json.load( open(WORD_FILE) )
     for word in wf:
         if len(word) == word_size:
-            wct += 1
             mask = 0
             for lett in word:
-                lx = ordered_letters.find(lett)
-                if lx < 0 or lx >= num_letters:
+                lx = ordered_letters.find(lett.upper())
+                if lx < 0:
                     break
                 bx = 1 << lx
                 if mask & bx:
                     break
                 mask |= bx
             else:
+                wct += 1
                 least = mask.bit_length() - 1
                 pack = compress(mask)
                 word_names.setdefault( mask, set() ).add(word)
                 word_pack[least].setdefault( pack, set() ).add(mask)
-    lgr.info(f"found {wct} words.")
+    lgr.info(f"found {wct} 'uniquely-lettered' words.")
 
     initializer = DEFAULT_INITIALIZER
     if num_words == 4:
