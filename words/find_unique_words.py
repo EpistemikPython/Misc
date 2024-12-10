@@ -38,7 +38,7 @@ MIN_WORDSIZE = 3
 DEFAULT_NUMWORDS = 5
 MAX_NUMWORDS = 8
 MIN_NUMWORDS = 2
-MAX_SAVE_COUNT = 40000
+MAX_SAVE_COUNT = 2000000
 
 def bin_dsp(p_bin:int, p_name:str= "mask"):
     return p_name + " = {:>010b}; ".format(p_bin)
@@ -98,15 +98,15 @@ class SolutionStore:
             grp = []
             for item in lx:
                 grp.append(item.get_word())
-            reply.append(grp)
-        return reply
+            reply.append(sorted(grp))
+        return [ordered_letters] + sorted(reply)
 
     def display(self):
         num = self.count
         if num == 0:
             lgr.info(f"NO groups found!")
         else:
-            lgr.info(f"Found {num} unique groups.")
+            lgr.info("Found {:,} unique groups.".format(num))
         display_count = 32
         lgr.info(f"\n\t\t\t {"" if num <= display_count else "Sample of"} Solutions:")
         cx = 0
@@ -125,7 +125,7 @@ class SolutionStore:
                         lgr.info(f"\t{item.get_word()}:{item.get_mask()}")
                     lgr.info("\n")
 
-def display_easy(p_lev:int=logging.NOTSET):
+def display_new(p_lev:int=logging.NOTSET):
     count = 0
     for k in range(word_size-1, num_letters):
         if k in easy_word_pack.keys():
@@ -135,7 +135,7 @@ def display_easy(p_lev:int=logging.NOTSET):
                 lxmk = lx.get_mask()
                 lgr.log(p_lev, "{:>4}) ".format(count) + f"{lxwd} = {k} | " + bin_dsp(lxmk))
 
-def get_words_easy():
+def get_words_new():
     count = 0
     words = []
     wf = json.load(open(WORD_FILE))
@@ -158,9 +158,10 @@ def get_words_easy():
     lgr.info(f"found {count} uniquely-lettered {word_size}-letter words.")
     # display_easy()
     if save_option and count <= MAX_SAVE_COUNT:
-        save_to_json(f"{word_size}-lett-from{num_letters}_easy-unique-words", sorted(words))
+        json_save_name = save_to_json(f"{word_size}-uniq-letts_from-{ordered_letters}_easy-unique-words", [ordered_letters]+sorted(words))
+        lgr.info(f"Saved found words list to: {json_save_name}")
 
-def solve_easy(p_highbit:int, p_testmask:int, p_progress:list[WordContainer]):
+def solve_new(p_highbit:int, p_testmask:int, p_progress:list[WordContainer]):
     """RECURSIVE solving algorithm
        >> WARNING: small changes in parameters can lead to massive increases in run time and memory usage!"""
     # loglev = logging.NOTSET
@@ -186,7 +187,7 @@ def solve_easy(p_highbit:int, p_testmask:int, p_progress:list[WordContainer]):
                         if len(update) == num_words:
                             storage.add(update)
                         else:
-                            solve_easy(rbit-1, (kxmk | p_testmask), update)
+                            solve_new(rbit-1, (kxmk | p_testmask), update)
     # else:
     #     lgr.warning(f">> INVALID high bit = {p_highbit}.\n")
     # lgr.log(loglev, f"END SOLVE # {solve_count}\n")
@@ -195,8 +196,8 @@ def run():
     """process a list of words to find groups of words of the same length with each having unique letters"""
     lgr.info(f"% virtual memory = {psutil.virtual_memory().percent};  % swap memory = {psutil.swap_memory().percent}")
 
-    get_words_easy()
-    solve_easy(num_letters-1, 0, [])
+    get_words_new()
+    solve_new(num_letters-1, 0, [])
     lgr.info(f"storage size = {storage.size()}")
 
     lgr.info(f"% virtual memory = {psutil.virtual_memory().percent};  % swap memory = {psutil.swap_memory().percent}")
@@ -206,8 +207,8 @@ def run():
 
     if save_option and storage.size() <= MAX_SAVE_COUNT:
         lgr.info(f"\nsolve and display elapsed time = {time.perf_counter()-start}")
-        json_save_name = save_to_json(f"{word_size}x{num_words}f{num_letters}_find-unique-words", storage.get())
-        lgr.info(f"Saved results to: {json_save_name}")
+        json_save_name = save_to_json(f"{word_size}x{num_words}f{num_letters}_easy-unique-words", storage.get())
+        lgr.info(f"Saved group results to: {json_save_name}")
 
 def set_args():
     arg_parser = ArgumentParser(description = "get the save-to-file, word size, number of words and number of letters options",
