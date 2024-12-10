@@ -12,7 +12,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2024-12-08"
+__updated__ = "2024-12-10"
 
 import array
 import time
@@ -20,12 +20,13 @@ import psutil
 from argparse import ArgumentParser
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import json, save_to_json, get_base_filename
+from mhsUtils import save_to_json, get_base_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
+WORD_FILE = "input/words_alpha.txt"
+# WORD_FILE = "input/scrabble-plus.json"
 # 3-letter testing
 # WORD_FILE = "input/three-letter_test-1.json"
-WORD_FILE = "input/scrabble-plus.json"
 # five-letter testing
 # WORD_FILE = "input/five-letter_test.json"
 # highest to lowest letter frequencies in Scrabble '5-13 letter' words
@@ -40,7 +41,7 @@ MAX_NUMWORDS = 8
 MIN_NUMWORDS = 2
 DEFAULT_WORDSIZE = 5
 DEFAULT_NUMWORDS = 5
-MAX_SAVE_COUNT = 40000
+MAX_SAVE_COUNT = 4000000
 
 def memory_check():
     global interim
@@ -94,25 +95,27 @@ def run():
     word_pack = [{} for _ in range(num_letters)]
 
     wct = 0
-    wf = json.load( open(WORD_FILE) )
-    for word in wf:
-        if len(word) == word_size:
-            mask = 0
-            for lett in word:
-                lx = ordered_letters.find(lett.upper())
-                if lx < 0:
-                    break
-                bx = 1 << lx
-                if mask & bx:
-                    break
-                mask |= bx
-            else:
-                wct += 1
-                least = mask.bit_length() - 1
-                pack = compress(mask)
-                word_names.setdefault( mask, set() ).add(word)
-                word_pack[least].setdefault( pack, set() ).add(mask)
-    lgr.info(f"found {wct} 'uniquely-lettered' {word_size}-letter words.")
+    # wf = json.load( open(WORD_FILE) )
+    # for word in wf:
+    with open(WORD_FILE) as wordlist:
+        for word in wordlist.read().split():
+            if len(word) == word_size:
+                mask = 0
+                for lett in word:
+                    lx = ordered_letters.find(lett.upper())
+                    if lx < 0:
+                        break
+                    bx = 1 << lx
+                    if mask & bx:
+                        break
+                    mask |= bx
+                else:
+                    wct += 1
+                    least = mask.bit_length() - 1
+                    pack = compress(mask)
+                    word_names.setdefault( mask, set() ).add(word)
+                    word_pack[least].setdefault( pack, set() ).add(mask)
+    lgr.info("found {:,}".format(wct) + f" 'uniquely-lettered' {word_size}-letter words.")
 
     initializer = ()
     for _ in range(num_words):
@@ -136,7 +139,8 @@ def run():
 
     if save_option and count <= MAX_SAVE_COUNT:
         lgr.info(f"\nsolve and display elapsed time = {time.perf_counter()-start}")
-        json_save_name = save_to_json(f"{word_size}x{num_words}from{num_letters}_find-unique-words", output)
+        save_content = {"input file": f"{WORD_FILE}"} | output
+        json_save_name = save_to_json(f"{word_size}x{num_words}f{num_letters}_fast-unique-words", save_content)
         lgr.info(f"Saved results to: {json_save_name}")
 
 def set_args():
