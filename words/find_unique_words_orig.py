@@ -10,7 +10,7 @@
 
 __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
-__python_version__ = "3.6+"
+__python_version__ = "3.12+"
 __created__ = "2023-10-10"
 __updated__ = "2024-12-10"
 
@@ -29,10 +29,9 @@ WORD_FILE = "input/words_alpha.txt"
 # WORD_FILE = "input/three-letter_test-1.json"
 # five-letter testing
 # WORD_FILE = "input/five-letter_test.json"
+
 # highest to lowest letter frequencies in Scrabble '5-13 letter' words
 ORDERED_LETTERS = "ESIARNOTLCDUPMGHBYFKVWZXQJ"
-# highest to lowest letter frequencies in Scrabble 7-letter words
-# ORDERED_LETTERS = "ESAIRNOTLDUCGPMHBYKFWVZXJQ"
 MAX_NUMLETTERS = len(ORDERED_LETTERS)
 MIN_NUM_LETTERS = 10
 MAX_WORDSIZE = 15
