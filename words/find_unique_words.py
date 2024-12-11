@@ -11,7 +11,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-10"
-__updated__ = "2024-12-08"
+__updated__ = "2024-12-10"
 
 import logging
 import time
@@ -22,15 +22,14 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import json, save_to_json, get_base_filename, get_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
+WORD_FILE = "input/scrabble-plus.json"
 # 3-letter testing
 # WORD_FILE = "input/three-letter_test-1.json"
 # 5-letter testing
 # WORD_FILE = "input/five-letter_test.json"
-WORD_FILE = "input/scrabble-plus.json"
+
 # highest to lowest letter frequencies in Scrabble '[5-13]-letter' words
 ORDERED_LETTERS = "ESIARNOTLCDUPMGHBYFKVWZXQJ"
-# highest to lowest letter frequencies in Scrabble 7-letter words
-# ORDERED_LETTERS = "ESAIRNOTLDUCGPMHBYKFWVZXJQ"
 MAX_NUMLETTERS = len(ORDERED_LETTERS)
 DEFAULT_WORDSIZE = 5
 MAX_WORDSIZE = 13
@@ -45,15 +44,16 @@ def bin_dsp(p_bin:int, p_name:str= "mask"):
 
 def memory_check():
     global interim
-    lgr.info(f"\n\t\t\t\tINTERIM TIME = {time.perf_counter() - start}")
+    interim_time = time.perf_counter()
+    lgr.info(f"\n\t\t\t\tINTERIM TIME = {interim_time - start}")
     lgr.info("solve count = {:,}".format(solve_count))
     lgr.info("group count = {:,}".format(group_count))
     vmp = psutil.virtual_memory().percent
     smp = psutil.swap_memory().percent
     lgr.info(f"% virtual memory = {vmp};  % swap memory = {smp}")
     if vmp > 95.0 and smp > 80.0:
-        raise Exception(f">> EXCEEDED memory parameters: v = {vmp} | s = {smp} !!")
-    interim = time.perf_counter()
+        raise Exception(f">> EXCEEDED memory parameters: virtual = {vmp} | swap = {smp} !!")
+    interim = interim_time
 
 class WordContainer:
     """store word with its mask"""
@@ -164,15 +164,15 @@ def get_words_new():
 def solve_new(p_highbit:int, p_testmask:int, p_progress:list[WordContainer]):
     """RECURSIVE solving algorithm
        >> WARNING: small changes in parameters can lead to massive increases in run time and memory usage!"""
-    # loglev = logging.NOTSET
     global solve_count
     solve_count += 1
+    # loglev = logging.NOTSET
     # lgr.log(loglev, f"\n\t\t\t\t\t{solve_count}) START: p_hb = {p_highbit}; " + bin_dsp(p_testmask, "p_testmask"))
     # list_display(p_progress, loglev)
     if word_size-1 <= p_highbit < num_letters:
         if time.perf_counter() - interim > 10.0:
             memory_check()
-            lgr.info(f"\n\t\t\t\t\tSTART: p_hb = {p_highbit}; " + bin_dsp(p_testmask, "p_testmask"))
+            lgr.info(f"\n\t\t\t\t\tCURRENT: p_hb = {p_highbit}; " + bin_dsp(p_testmask, "p_testmask"))
             list_display(p_progress)
 
         for rbit in range(p_highbit, word_size-2, -1):
@@ -198,7 +198,6 @@ def run():
 
     get_words_new()
     solve_new(num_letters-1, 0, [])
-    lgr.info(f"storage size = {storage.size()}")
 
     lgr.info(f"% virtual memory = {psutil.virtual_memory().percent};  % swap memory = {psutil.swap_memory().percent}")
     lgr.info("solve count = {:,}".format(solve_count))
