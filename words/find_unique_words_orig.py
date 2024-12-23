@@ -12,7 +12,7 @@ __author__ = "Mark Sattolo"
 __author_email__ = "epistemik@gmail.com"
 __python_version__ = "3.12+"
 __created__ = "2023-10-10"
-__updated__ = "2024-12-10"
+__updated__ = "2024-12-11"
 
 import array
 import time
@@ -23,12 +23,9 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import save_to_json, get_base_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
-WORD_FILE = "input/words_alpha.txt"
-# WORD_FILE = "input/scrabble-plus.json"
-# 3-letter testing
-# WORD_FILE = "input/three-letter_test-1.json"
-# five-letter testing
-# WORD_FILE = "input/five-letter_test.json"
+# WORD_FILE = "input/words_alpha.txt"
+# 5-letter testing
+WORD_FILE = "input/five-letter-test.txt"
 
 # highest to lowest letter frequencies in Scrabble '5-13 letter' words
 ORDERED_LETTERS = "ESIARNOTLCDUPMGHBYFKVWZXQJ"
@@ -71,7 +68,6 @@ def solve(highbit:int, p_extra:int, progress:array, depth:int=0):
     solve_count += 1
     if time.perf_counter() - interim > 10.0:
         memory_check()
-    depth_limit = num_words - 1
     for dx in range(p_extra + 1):
         least = highbit.bit_length() - 1
         for pack in word_pack[least]:
@@ -80,7 +76,7 @@ def solve(highbit:int, p_extra:int, progress:array, depth:int=0):
                 for mask in word_pack[least][pack]:
                     if (mask & highbit) == mask:
                         progress[depth] = mask
-                        if depth >= depth_limit:
+                        if depth >= num_words-1:
                             store(progress)
                         else:
                             solve(highbit & ~mask, p_extra - dx, progress, depth + 1)
@@ -94,8 +90,6 @@ def run():
     word_pack = [{} for _ in range(num_letters)]
 
     wct = 0
-    # wf = json.load( open(WORD_FILE) )
-    # for word in wf:
     with open(WORD_FILE) as wordlist:
         for word in wordlist.read().split():
             if len(word) == word_size:
@@ -119,7 +113,7 @@ def run():
     initializer = ()
     for _ in range(num_words):
         initializer += (0,)
-    solve( (1 << num_letters) - 1, extra, array.array('L', initializer) )
+    solve( (1 << num_letters)-1, extra, array.array('L', initializer) )
 
     # sample some of the output
     lgr.info("solve count = {:,}".format(solve_count))
