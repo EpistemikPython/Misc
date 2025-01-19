@@ -27,23 +27,10 @@ TEST_OUTPUT_FILE    = "./tests/sb_allwords.json"
 ANSWER_KEY = "answers"
 END_KEY    = "]"
 
-example = [
-"with open(filename, 'r+') as file:"
-    # load existing data into a dict
-    'file_data = json.load(file)'
-    # join new_data with existing file_data
-    'file_data.append(new_data)'
-    # return to start of file to overwrite all the existing data
-    'file.seek(0)'
-    # convert back to json
-    'json.dump(file_data, file, indent = 4)'
-]
-
 def run():
     """Open a SpellingBee results JSON file and get new words and append to an existing JSON file."""
     with open(output_file, 'r+') as file_out:
         out_data = json.load(file_out)
-        lgr.info(f"type(out_data) = {type(out_data)}")
         with open(input_file) as file_in:
             search_state = False
             for line in file_in:
@@ -56,9 +43,9 @@ def run():
                     if ansline not in out_data:
                         lgr.debug(f"add word '{ansline}' to {output_file}.")
                         out_data.append(ansline)
-                    else:
-                        lgr.info(f"answer line '{ansline}' ALREADY in output!")
-        # return to start of file to overwrite all the existing data
+                    # else:
+                    #     lgr.info(f"answer line '{ansline}' ALREADY in output!")
+        # return to start of file to overwrite the existing data
         file_out.seek(0)
         json.dump(out_data, file_out, indent=4)
 
