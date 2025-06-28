@@ -1,3 +1,10 @@
+##############################################################################################################################
+# coding=utf-8
+#
+# video-to-audio.py
+#   -- extract the audio track from a video file
+# see: https://thepythoncode.com/article/extract-audio-from-video-in-python
+
 
 import os
 import sys
