@@ -21,6 +21,7 @@
 *.bin
 *.exe
 *.x
+*.mp*
 *.term
 *.html
 **/json/
@@ -29,6 +30,7 @@ output*
 venv*
 VENV*
 tests*
+**/test.*
 act
 scrabble_words.py
 # find <dir/>* -type l >> .gitignore
