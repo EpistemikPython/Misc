@@ -19,10 +19,10 @@ import psutil
 from argparse import ArgumentParser
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import json, save_to_json, get_base_filename, get_filename
+from mhsUtils import osp, json, save_to_json, get_base_filename, get_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
-WORD_FILE = "input/scrabble-plus.json"
+DEFAULT_WORD_FILE = "input/scrabble-plus.json"
 # 3-letter testing
 # WORD_FILE = "input/three-letter_test-1.json"
 # 5-letter testing
@@ -138,7 +138,7 @@ def display_new(p_lev:int=logging.NOTSET):
 def get_words_new():
     count = 0
     words = []
-    wf = json.load(open(WORD_FILE))
+    wf = json.load(open(in_file))
     for word in wf:
         if len(word) == word_size:
             mask = 0
@@ -210,7 +210,7 @@ def run():
         lgr.info(f"Saved group results to: {json_save_name}")
 
 def set_args():
-    arg_parser = ArgumentParser(description = "get the save-to-file, word size, number of words and number of letters options",
+    arg_parser = ArgumentParser(description="process a list of words to find groups of words of the same length with each having unique letters",
                                 prog = f"python3 {get_filename(argv[0])}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default = False,
@@ -221,6 +221,8 @@ def set_args():
                             help = f"number of words in each found group; DEFAULT = {DEFAULT_NUMWORDS}")
     arg_parser.add_argument('-l', '--numletters', type=int, default = MAX_NUMLETTERS,
                             help = f"number of possible letters for each word; DEFAULT = {MAX_NUMLETTERS}")
+    arg_parser.add_argument('-f', '--file', type = str, metavar = "PATH", default = DEFAULT_WORD_FILE,
+                            help = f"path to a JSON file with words to use; DEFAULT = '{DEFAULT_WORD_FILE}'.")
     return arg_parser
 
 def prep_args(argl:list):
@@ -234,7 +236,9 @@ def prep_args(argl:list):
         raise Exception(f">> INVALID wordsize [{word_sz}] & numwords [{num_wds}] combination!")
     num_letts = args.numletters if (word_sz * num_wds) <= args.numletters <= MAX_NUMLETTERS else min((word_sz * num_wds + 2), MAX_NUMLETTERS)
     lgr.info(f"total number of letters = {num_letts}")
-    return args.save, word_sz, num_wds, num_letts
+    infile = args.file if osp.isfile(args.file) else DEFAULT_WORD_FILE
+    lgr.info(f"JSON input file = '{infile}'")
+    return args.save, word_sz, num_wds, num_letts, infile
 
 
 if __name__ == '__main__':
@@ -251,7 +255,7 @@ if __name__ == '__main__':
     storage = SolutionStore()
     code = 0
     try:
-        save_option, word_size, num_words, num_letters = prep_args(argv[1:])
+        save_option, word_size, num_words, num_letters, in_file = prep_args(argv[1:])
         ordered_letters = ORDERED_LETTERS[:num_letters]
         lgr.info(f"letters being used: '{ordered_letters}'")
         lgr.info(f"Find groups of {num_words} 'uniquely-lettered' {word_size}-letter words.")
