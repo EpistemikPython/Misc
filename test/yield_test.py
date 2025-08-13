@@ -1,6 +1,12 @@
-import sys
+##############################################################################################################################
+# coding=utf-8
+#
+# yield_test.py
+#   -- explore 'yield' expressions
+#
+# Copyright (c) 2025 Mark Sattolo <epistemik@gmail.com>
 
-
+# import sys
 # import pydoc
 
 def rconcat(a, b):
