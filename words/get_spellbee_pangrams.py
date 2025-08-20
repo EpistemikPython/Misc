@@ -2,7 +2,7 @@
 # coding=utf-8
 #
 # get_spellbee_pangrams.py
-#   -- from a spelling-bee words file, get all pangrams and save to a new JSON file
+#   -- from a spelling-bee words file, get all pangrams and save to a JSON file
 #
 # Copyright (c) 2025 Mark Sattolo <epistemik@gmail.com>
 
@@ -10,53 +10,52 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2025-08-19"
-__updated__ = "2025-08-19"
+__updated__ = "2025-08-20"
 
-import os
 import time
 from argparse import ArgumentParser
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import osp, FILE_DATETIME_FORMAT, JSON_LABEL, get_current_time, get_base_filename, get_filename
+from mhsUtils import osp, save_to_json, get_base_filename, get_filename
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
-DEFAULT_INPUT_FILE    = "input/spellbee_words_test.json"
+DEFAULT_INPUT_FILE    = "input/spellbee_words.json"
 DEFAULT_OUTPUT_FOLDER = "./output"
 
-def is_pangram(p_line:str) -> bool:
-    testline = p_line.strip('", \n')
-    # lgr.debug(f"testing {testline}")
-    result = ""
-    for lett in testline:
-        # lgr.debug(f"testing '{lett}'")
+def is_pangram(test_word:str) -> bool:
+    # eliminate simple plurals
+    if test_word == previous_word + 'S' or test_word == previous_word + "ES":
+        return False
+    unique = ""
+    for lett in test_word:
         if not lett.isalpha():
-            continue
-        if lett not in result:
-            result += lett
-    lgr.debug(f"result = '{result}'")
-    if len(result) == 7:
-        lgr.debug(f">> {testline} is a Pangram!")
+            return False
+        if lett not in unique:
+            unique += lett
+    # lgr.debug(f"unique = '{unique}'")
+    if len(unique) == 7:
+        lgr.debug(f">> {test_word} is a Pangram!")
         return True
     return False
 
 def run():
-    """from a spelling-bee words file, get all pangrams and save to a new JSON file."""
-    outfile_name = osp.join(output_folder, "pangrams" + '_' + get_current_time(FILE_DATETIME_FORMAT) + osp.extsep + JSON_LABEL)
+    """from a spelling-bee words file, get all pangrams and save to a JSON file."""
+    global previous_word
+    pangrams = []
     with open(input_file) as file_in:
-        with open(outfile_name, 'w') as file_out:
-            for line in file_in:
-                # lgr.debug(line)
-                newline = line
-                if is_pangram(line) and save_option:
-                    file_out.write(newline)
-    file_out.close()
+        for line in file_in:
+            # lgr.debug(line)
+            testword = line.strip('-_", \n')
+            if is_pangram(testword):
+                pangrams.append(testword)
+            previous_word = testword
+
     if save_option:
+        outfile_name = save_to_json("pangrams", pangrams)
         lgr.info(f"\nSaved results to: {outfile_name}")
-    else:
-        os.remove(outfile_name)
 
 def set_args():
-    arg_parser = ArgumentParser(description = "from a spelling-bee words file, get all pangrams and save to a new JSON file",
+    arg_parser = ArgumentParser(description = "from a spelling-bee words file, get all pangrams and save to a JSON file",
                                 prog = f"python3 {get_filename(argv[0])}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default = False,
@@ -91,6 +90,7 @@ if __name__ == '__main__':
     code = 0
     try:
         save_option, input_file, output_folder = get_args(argv[1:])
+        previous_word = ""
         run()
     except KeyboardInterrupt:
         lgr.exception(">> User Interrupt.")
