@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2025-08-19"
-__updated__ = "2025-08-20"
+__updated__ = "2025-08-24"
 
 import time
 from argparse import ArgumentParser
@@ -41,18 +41,24 @@ def is_pangram(test_word:str) -> bool:
 def run():
     """from a spelling-bee words file, get all pangrams and save to a JSON file."""
     global previous_word
+    base_words = []
     pangrams = []
     with open(input_file) as file_in:
         for line in file_in:
             # lgr.debug(line)
             testword = line.strip('-_", \n')
+            if len(testword) >= 4:
+                base_words.append(testword)
             if is_pangram(testword):
                 pangrams.append(testword)
             previous_word = testword
+    # find and remove other plurals and simple past
 
     if save_option:
         outfile_name = save_to_json("pangrams", pangrams)
-        lgr.info(f"\nSaved results to: {outfile_name}")
+        lgr.info(f"\nSaved all pangrams to: {outfile_name}")
+        outfile_name = save_to_json("all_spellbee_words", base_words)
+        lgr.info(f"\nSaved all spellbee words to: {outfile_name}")
 
 def set_args():
     arg_parser = ArgumentParser(description = "from a spelling-bee words file, get all pangrams and save to a JSON file",
