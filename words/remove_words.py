@@ -2,7 +2,7 @@
 # coding=utf-8
 #
 # remove_words.py
-#   -- remove specified words from a JSON word file and save results
+#   -- remove specified words from a JSON word file and save results to a new file
 #
 # Copyright (c) 2025 Mark Sattolo <epistemik@gmail.com>
 
@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2025-09-11"
-__updated__ = "2025-09-11"
+__updated__ = "2025-09-12"
 
 import json
 import time
