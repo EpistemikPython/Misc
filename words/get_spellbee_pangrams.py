@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2025-08-19"
-__updated__ = "2025-09-08"
+__updated__ = "2025-09-13"
 
 import time
 from argparse import ArgumentParser
@@ -21,7 +21,6 @@ from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
 DEFAULT_INPUT_FILE = "input/spellbee_words.json"
 TEST_INPUT_FILE    = "input/spellbee_words_test.json"
-DEFAULT_OUTPUT_FOLDER = "./output"
 MIN_SPELLBEE_LENGTH = 4
 MIN_PANGRAM_LENGTH = 7
 
@@ -97,14 +96,11 @@ def set_args():
                                 prog = f"python3 {get_filename(argv[0])}")
     # optional arguments
     arg_parser.add_argument('-s', '--save', action="store_true", default = False,
-                            help = "Copy the found pangrams to a new file; DEFAULT = 'False'")
+                            help = "Save the found pangrams to a new file; DEFAULT = 'False'")
     arg_parser.add_argument('-t', '--test', action="store_true", default = False,
                             help = f"Use the test input file; DEFAULT = 'False'; TEST input file = '{TEST_INPUT_FILE}'.")
     arg_parser.add_argument('-i', '--input', type=str, default = DEFAULT_INPUT_FILE,
                             help = f"path to an ALTERNATE SpellingBee JSON input file; DEFAULT input file = '{DEFAULT_INPUT_FILE}'.")
-    arg_parser.add_argument('-o', '--output', type=str, default = DEFAULT_OUTPUT_FOLDER,
-                            help = f"path to an ALTERNATE output folder to store the produced JSON file; "
-                                   f"DEFAULT folder = '{DEFAULT_OUTPUT_FOLDER}/'.")
     return arg_parser
 
 def get_args(argl:list):
@@ -117,11 +113,7 @@ def get_args(argl:list):
     inputf = TEST_INPUT_FILE if args.test else args.input if osp.isfile(args.input) else DEFAULT_INPUT_FILE
     lgr.log(loglev, f"input file = '{inputf}'")
 
-    outputf = args.output if osp.isfile(args.output) else DEFAULT_OUTPUT_FOLDER
-    if args.save:
-        lgr.log(loglev, f"output folder = '{outputf}'")
-
-    return args.save, inputf, outputf, "_test" if args.test else ""
+    return args.save, inputf, "_test" if args.test else ""
 
 
 if __name__ == '__main__':
@@ -130,7 +122,7 @@ if __name__ == '__main__':
     lgr = log_control.get_logger()
     code = 0
     try:
-        save_option, input_file, output_folder, test = get_args(argv[1:])
+        save_option, input_file, test = get_args(argv[1:])
         previous_word = ""
         run()
     except KeyboardInterrupt:
