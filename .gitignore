@@ -31,6 +31,7 @@ venv*
 VENV*
 tests*
 **/test.*
+**/Music
 act
 scrabble_words.py
 # find <dir/>* -type l >> .gitignore
