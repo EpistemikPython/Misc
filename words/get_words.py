@@ -10,12 +10,11 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2025-09-12"
-__updated__ = "2025-09-14"
+__updated__ = "2025-11-29"
 
 import re
 import time
 from argparse import ArgumentParser
-from os.path import basename
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
 from mhsUtils import osp, get_base_filename, get_filename, get_filetype, save_to_json
@@ -29,6 +28,7 @@ DEFAULT_TEXT_FILE = "./input/combined-wordlist-all_sort-uniq.txt"
 TEST_TEXT_FILE    = "./input/wordlist-test.txt"
 
 def run():
+    """From a words list file, get specified words and save to a new file."""
     if input_type == HTML_TYPE:
         run_html()
     elif input_type == TEXT_TYPE:
@@ -37,6 +37,7 @@ def run():
         lgr.info("do nothing...")
 
 def run_text():
+    """Run a text file."""
     first_data = []
     with open(input_file) as file_in:
         for it in file_in:
@@ -62,7 +63,7 @@ def run_text():
         lgr.info(f"\nSaved results to: {outfile_name}")
 
 def run_html():
-    """From a words list file, get specified words and save to a new file."""
+    """Run an HTML file."""
     out_data = []
     with open(input_file) as file_in:
         for line in file_in:
@@ -87,7 +88,7 @@ def set_args():
                             help = f"path to a word list file with words to get; DEFAULT = '{DEFAULT_TEXT_FILE}'.")
     return arg_parser
 
-def get_args(argl:list) -> tuple[bool, str, str]:
+def get_args(argl:list):
     args = set_args().parse_args(argl)
     save_opt = not args.nosave
     lgr.info(f"save option = '{save_opt}'")
@@ -97,10 +98,10 @@ def get_args(argl:list) -> tuple[bool, str, str]:
     return save_opt, itype, infile
 
 
+log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
+
 if __name__ == '__main__':
     start = time.perf_counter()
-    basename = get_base_filename(__file__)
-    log_control = MhsLogger(basename, con_level = DEFAULT_LOG_LEVEL )
     lgr = log_control.get_logger()
     code = 0
     try:
@@ -115,6 +116,5 @@ if __name__ == '__main__':
     except Exception as mex:
         lgr.exception(mex)
         code = 66
-
     lgr.info(f"\nElapsed time = {time.perf_counter() - start} seconds")
     exit(code)

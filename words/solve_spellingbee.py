@@ -4,13 +4,13 @@
 # solve_spellingbee.py
 #   -- from a word list file, find all words that fulfill the specified SpellingBee requirements
 #
-# Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2025 Mark Sattolo <epistemik@gmail.com>
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2024-10-31"
+__updated__ = "2025-11-29"
 
 import logging
 import time
@@ -29,7 +29,7 @@ MAX_PRINT = 30
 MAX_RANGE = 12 # possible word sizes from 4 to 15
 
 def run(p_loglev:int):
-    """from a word list file, find all words that fulfill the specified SpellingBee requirements"""
+    """From a word list file, find all words that fulfill the specified SpellingBee requirements."""
     solutions = [ [] for _ in range(MAX_RANGE) ]
     num_solns = 0
     wdf = json.load( open(file_name) )
@@ -129,23 +129,23 @@ def get_args(argl:list):
     return args.save, args.name, args.file, central, outer
 
 
+log_control = MhsLogger(get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL)
+
 if __name__ == '__main__':
     start = time.perf_counter()
-    log_control = MhsLogger(get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL)
     lgr = log_control.get_logger()
     code = 0
     try:
         save_option, dict_name, file_name, required, outers = get_args(argv[1:])
         run(DEFAULT_LOG_LEVEL)
-    except KeyboardInterrupt:
-        lgr.exception(">> User interruption.")
+    except KeyboardInterrupt as mki:
+        lgr.exception(mki)
         code = 13
-    except ValueError:
-        lgr.exception(">> Value Error.")
+    except ValueError as mve:
+        lgr.exception(mve)
         code = 27
     except Exception as mex:
-        lgr.exception(f"Problem: {repr(mex)}.")
+        lgr.exception(mex)
         code = 66
-
     lgr.info(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit(code)

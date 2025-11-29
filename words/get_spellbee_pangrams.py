@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2025-08-19"
-__updated__ = "2025-09-13"
+__updated__ = "2025-11-29"
 
 import time
 from argparse import ArgumentParser
@@ -41,7 +41,7 @@ def is_pangram(test_word:str) -> bool:
     return False
 
 def run():
-    """from a spelling-bee words file, get regular pangrams and save to a JSON file."""
+    """From a spelling-bee words file, get regular pangrams and save to a JSON file."""
     global previous_word
     base_words = []
     pangrams = []
@@ -116,24 +116,24 @@ def get_args(argl:list):
     return args.save, inputf, "_test" if args.test else ""
 
 
+log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
+
 if __name__ == '__main__':
     start = time.perf_counter()
-    log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
     lgr = log_control.get_logger()
     code = 0
     try:
         save_option, input_file, test = get_args(argv[1:])
         previous_word = ""
         run()
-    except KeyboardInterrupt:
-        lgr.exception(">> User Interrupt.")
+    except KeyboardInterrupt as mki:
+        lgr.exception(mki)
         code = 13
-    except ValueError:
-        lgr.exception(">> Value Error.")
+    except ValueError as mve:
+        lgr.exception(mve)
         code = 27
     except Exception as mex:
-        lgr.exception(f">> PROBLEM: {repr(mex)}")
+        lgr.exception(mex)
         code = 66
-
     lgr.info(f"\nfinal elapsed time = {time.perf_counter() - start} seconds")
     exit(code)

@@ -4,13 +4,13 @@
 # spellingbee_single-size.py
 #   -- from a word list file, find all words of a chosen size that fulfill the specified SpellingBee requirements
 #
-# Copyright (c) 2024 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2025 Mark Sattolo <epistemik@gmail.com>
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-06-11"
-__updated__ = "2024-10-31"
+__updated__ = "2025-11-29"
 
 import logging
 import time
@@ -29,7 +29,7 @@ MAX_WORD_SIZE = 15
 MAX_PRINT = 30
 
 def run(p_loglev:int):
-    """from a word list file, find all words of a chosen size that fulfill the specified SpellingBee requirements"""
+    """From a word list file, find all words of a chosen size that fulfill the specified SpellingBee requirements."""
     solutions = []
     wdf = json.load( open(file_name) )
     for item in wdf:
@@ -131,27 +131,26 @@ def get_args(argl:list):
             raise Exception(f"Invalid NUMBER of outer letters: {len(outer)}.")
     else:
         raise Exception(f"NON-LETTER in outer letters: {outer}.")
-
     return args.save, args.name, args.file, length, central, outer
 
 
+log_control = MhsLogger(get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL)
+
 if __name__ == '__main__':
     start = time.perf_counter()
-    log_control = MhsLogger(get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL)
     lgr = log_control.get_logger()
     code = 0
     try:
         save_option, dict_name, file_name, word_size, required, outers = get_args(argv[1:])
         run(DEFAULT_LOG_LEVEL)
-    except KeyboardInterrupt:
-        lgr.exception(">> User interruption.")
+    except KeyboardInterrupt as mki:
+        lgr.exception(mki)
         code = 13
-    except ValueError:
-        lgr.exception(">> Value Error.")
+    except ValueError as mve:
+        lgr.exception(mve)
         code = 27
     except Exception as mex:
-        lgr.exception(f"Problem: {repr(mex)}.")
+        lgr.exception(mex)
         code = 66
-
     lgr.info(f"\nfinal elapsed time = {time.perf_counter() - start}")
     exit(code)
