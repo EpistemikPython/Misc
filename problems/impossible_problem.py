@@ -3,17 +3,17 @@
 #
 # impossible_problem.py
 #
-#  Copyright (c) 2021  Mark Sattolo  <epistemik@gmail.com>
+#  Copyright (c) 2026  Mark Sattolo  <epistemik@gmail.com>
 
 __author__ = 'Mark Sattolo'
 __author_email__ = 'epistemik@gmail.com'
 __python_version__ = '3.6+'
 __created__ = '2019-09-11'
-__updated__ = '2021-03-22'
+__updated__ = '2026-01-16'
 
-# import json
 import operator
 import sys
+import json
 
 """
 x and y are whole numbers each greater than 1, where y is greater than x, 
@@ -21,19 +21,20 @@ and the sum of the two is less than or equal to 100:
 y > x > 1
 x + y ≤ 100
 
-Sam knows only the sum of the two numbers (x + y), while Peter knows only their product (x * y). 
+Sam knows only the sum of the two numbers (x + y), while Pam knows only their product (x * y). 
 The following conversation takes place between them.
 Sam: 'I don’t know x and y, and I know that you don’t know them either.'
-Peter: 'I now know x and y.'
+Pam: 'I now know x and y.'
 Sam: 'I also now know x and y.'
 
 The question: What are x and y?
 """
 
+DEBUG_MODE = False
+DEFAULT_MAX_SUM = 100
 # dictionaries to store all the possible sums and products, each with possible (x,y)s
 possible_sums = {}
 possible_prods = {}
-
 
 def num_count_items(p_dict:dict, p_count:int=0) -> int:
     num = 0
@@ -42,24 +43,21 @@ def num_count_items(p_dict:dict, p_count:int=0) -> int:
             num += 1
     return num
 
-
-def print_dict(p_dict:dict, p_label:str, p_op:operator=operator.lt, p_count:int=2):
+def print_dict(p_dict:dict, p_label:str, p_op=operator.lt, p_count:int=2):
     count = 0
     for item in p_dict:
         key = p_dict[item]
         if p_op(key['count'] , p_count):
-            print(F"{p_label} = {item};\tcount = {key['count']};\tx = {key['x']};\ty = {key['y']}")
+            print(f"{p_label} = {item};\tcount = {key['count']};\tx = {key['x']};\ty = {key['y']}")
             count += 1
-    print(F"Have {count} {p_label} items with count {'<' if p_op(0,1) else '>'} {p_count}")
+    print(f"Have {count} {p_label} item{'' if count == 1 else 's'} with count {'<' if p_op(0,1) else '>'} {p_count}")
 
-
-def tabulate_results(p_x:int, p_y:int):
+def get_possible_results(p_x:int, p_y:int):
     """
     for each x,y:
         calculate the sum then add this x,y to the list for that sum and keep a count of each x,y
         calculate the product then add this x,y to the list for that product and keep a count of each x,y
     """
-    # print("\ntabulate_results()")
     tr_sum = p_x + p_y
     sum_key = str(tr_sum)
     # keep the count
@@ -94,8 +92,8 @@ def tabulate_results(p_x:int, p_y:int):
         possible_prods[prod_key]['y'] = []
     possible_prods[prod_key]['y'].append(p_y)
 
-    # print(F"x = {p_x}; y = {p_y}; sum = {tr_sum}; product = {tr_prod}")
-
+    if DEBUG_MODE:
+        print(f"x = {p_x}; y = {p_y}; sum = {tr_sum}; product = {tr_prod}")
 
 def find_candidate_sums(p_sums:dict, p_prods:dict) -> list:
     """
@@ -110,7 +108,7 @@ def find_candidate_sums(p_sums:dict, p_prods:dict) -> list:
     sum_list = []
     sum_count = 0
     for isum in p_sums:
-        print(F"Try sum {isum}")
+        print(f"Try sum {isum}")
         possible = True
         sdict = p_sums[isum]
         # for each sum with multiple possible x,y
@@ -126,23 +124,22 @@ def find_candidate_sums(p_sums:dict, p_prods:dict) -> list:
                 # check if this product has multiple possible x,y
                 if p_prods[nprod_key]['count'] == 1:
                     possible = False
-                    print(F"ONLY ONE x,y=({ix},{iy}) for product {nprod_key}! Go to next sum!\n")
+                    print(f"ONLY ONE x,y=({ix},{iy}) for PRODUCT {nprod_key}! Go to next sum!\n")
                     break
                 posn += 1
             if not possible: continue
         else:
-            print(F"ONLY ONE possible x,y for sum {isum}! Go to next sum!\n")
+            print(f"ONLY ONE x,y for SUM {isum}! Go to next sum!\n")
             continue
         sum_count += 1
         sum_list.append(isum)
-        print(F">> {isum} is a candidate sum!\n\n")
+        print(f">> {isum} is a candidate sum!\n\n")
 
     return sum_list
 
-
 def find_candidate_prods(p_cand_sums:list, p_poss_sums:dict) -> dict:
     """
-    Peter: 'I now know x and y.'
+    Pam: 'I now know x and y.'
     thus: find products that have only ONE of their possible (x,y)s giving a candidate sum
           so: from the candidate sums, take all the (x,y)s and find all the products
               >> candidate products will be those appearing in just ONE candidate sum
@@ -153,7 +150,7 @@ def find_candidate_prods(p_cand_sums:list, p_poss_sums:dict) -> dict:
     print("\nfind_candidate_prods()")
     cand_prods_dict = {}
     for isum in p_cand_sums:
-        print(F"Try sum {isum}")
+        print(f"Try sum {isum}")
         poss_sum = p_poss_sums[isum]
         sposn = 0
         # for each possible x in this sum
@@ -180,7 +177,6 @@ def find_candidate_prods(p_cand_sums:list, p_poss_sums:dict) -> dict:
             sposn += 1
 
     return cand_prods_dict
-
 
 def get_solutions(p_cand_prods:dict) -> dict:
     """
@@ -218,34 +214,36 @@ def get_solutions(p_cand_prods:dict) -> dict:
 
     return xy_dict
 
-
-def main_solve_problem(p_max_sum:int):
+def main_solve_problem(p_sum:int):
     """
     y > x > 1
     x + y <= maximum_sum
     """
-    print(F"Max sum = {p_max_sum}")
+    print(f"Max sum = {p_sum}")
     count = 0
     x1 = 2
-    x2 = p_max_sum // 2
+    x2 = p_sum // 2
     # x = 2..49 for max sum of 100
     for x in range(x1, x2):
         y1 = x + 1
-        y2 = p_max_sum - x + 1
+        y2 = p_sum - x + 1
         # y ranges = 3..98 (for x=2) to 50..51 (for x=49) if max sum of 100
         for y in range(y1, y2):
-            tabulate_results(x, y)
+            get_possible_results(x, y)
             count += 1
 
-    print(F"Number of possible x,y = {count}")
-    # print(F"sums = \n{json.dumps(possible_sums,indent=4)}\nproducts = \n{json.dumps(possible_prods,indent=4)}\n")
-    print(F"Number of sums having multiple (x,y)s = {num_count_items(possible_sums, 1)}")
-    # print_dict(possible_sums, 'sum', p_op=operator.gt, p_count=0)
-    print(F"Number of products having multiple (x,y)s = {num_count_items(possible_prods, 1)}")
-    # print_dict(possible_prods, 'prod', p_op=operator.gt, p_count=0)
+    print(f"Number of possible x,y = {count}")
+    if DEBUG_MODE:
+        print(f"sums = \n{json.dumps(possible_sums, indent = 4)}\nproducts = \n{json.dumps(possible_prods, indent = 4)}\n")
+    print(f"Number of sums having multiple (x,y)s = {num_count_items(possible_sums, 1)}")
+    if DEBUG_MODE:
+        print_dict(possible_sums, 'sum', p_op = operator.gt, p_count = 0)
+    print(f"Number of products having multiple (x,y)s = {num_count_items(possible_prods, 1)}")
+    if DEBUG_MODE:
+        print_dict(possible_prods, 'prod', p_op = operator.gt, p_count = 0)
 
     candidate_sums = find_candidate_sums(possible_sums, possible_prods)
-    print(F"\nNumber of candidate sums = {len(candidate_sums)}\nlist = {candidate_sums}")
+    print(f"\nNumber of candidate sums = {len(candidate_sums)}\nlist = {candidate_sums}")
 
     candidate_prods = find_candidate_prods(candidate_sums, possible_sums)
     print("\nCandidate products (only one x,y in the candidate sums):")
@@ -253,16 +251,17 @@ def main_solve_problem(p_max_sum:int):
 
     possible_solutions = get_solutions(candidate_prods)
     print("\nCandidate sums (with the (x,y)s from the candidate products):")
-    print_dict(possible_solutions, 'sum', p_op=operator.gt, p_count=0)
+    print_dict(possible_solutions, 'sum', p_op = operator.gt, p_count = 0)
     print("\nPossible solutions:")
     print_dict(possible_solutions, 'sum')
 
-    print("\nPROGRAM ENDED.")
-
 
 if __name__ == '__main__':
-    max_sum = 100
+    max_sum = DEFAULT_MAX_SUM
     if len(sys.argv) > 1 and sys.argv[1].isnumeric():
         max_sum = sys.argv[1]
+    if len(sys.argv) > 2:
+        DEBUG_MODE = True
     main_solve_problem(max_sum)
+    print("\nPROGRAM ENDED.")
     exit()
