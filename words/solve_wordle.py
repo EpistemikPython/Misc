@@ -4,22 +4,20 @@
 # solve_wordle.py
 #   -- solve a wordle game using input about the fixed, hindered and excluded letters
 #
-# Copyright (c) 2025 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2026 Mark Sattolo <epistemik@gmail.com>
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2024-09-14"
-__updated__ = "2025-11-29"
+__updated__ = "2026-01-10"
 
-import logging
-import json
 import time
 from argparse import ArgumentParser
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import save_to_json, get_base_filename, osp, get_filename
-from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
+from mhsUtils import *
+from mhsLogging import *
 
 DEFAULT_WORD_FILE = "input/five-letter_words.json"
 BLANK = '_'
@@ -117,37 +115,44 @@ def get_forms(p_loglev:int, p_fixed:str, p_hindered:str):
     return fform, hform
 
 def set_args():
-    arg_parser = ArgumentParser(description="solve a wordle game with information about the fixed, hindered and excluded letters",
-                                prog=f"python3 {get_filename(argv[0])}")
+    arg_parser = ArgumentParser(description = "solve a wordle game with information about the fixed, hindered and excluded letters",
+                                prog = f"python3 {get_filename(argv[0])}")
     # optional arguments
-    arg_parser.add_argument('-s', '--save', action="store_true", default=False, help="Write the results to a JSON file")
-    arg_parser.add_argument('-w', '--wordfile', type=str, default = DEFAULT_WORD_FILE,
+    arg_parser.add_argument('-s', '--save', action = "store_true", default = False,
+                            help = "Write the results to a JSON file")
+    arg_parser.add_argument('-w', '--wordfile', type = str, default = DEFAULT_WORD_FILE,
                             help = f"path to JSON file with list of all acceptable words; DEFAULT = '{DEFAULT_WORD_FILE}'")
-    arg_parser.add_argument('-f', '--fixed', type=str,
+    arg_parser.add_argument('-f', '--fixed', type = str,
                             help="csv list of location & letter where both are KNOWN (i.e. green hilited squares) e.g. '5n' or '1p,3r'")
-    arg_parser.add_argument('-d', '--hindered', type=str,
+    arg_parser.add_argument('-d', '--hindered', type = str,
                             help="csv list of location & letter where the letter IS IN the solution "
                                  "but HINDERED at one or more positions (i.e. yellow hilited squares) e.g. '2w,3w' or '1t,4mu'")
-    arg_parser.add_argument('-x', '--exclude', type=str, help="letters that ARE NOT in the solution, e.g. 'iveyls'")
+    arg_parser.add_argument('-x', '--exclude', type = str, help = "letters that are NOT in the solution, e.g. 'iveyls'")
     return arg_parser
 
 def get_args(argl:list):
+    args_log_level = DEFAULT_LOG_LEVEL
     args = set_args().parse_args(argl)
 
-    loglev = logging.INFO
+    lgr.log(args_log_level, f"save option = '{args.save}'")
 
-    lgr.log(loglev, f"save option = '{args.save}'")
+    if osp.isfile(args.wordfile):
+        infile = args.wordfile
+        lgr.log(args_log_level, f"word file = '{infile}'.")
+    else:
+        infile = DEFAULT_WORD_FILE
+        lgr.warning(f">> BAD input file = '{args.wordfile}'!! >> Using default file = '{infile}'.")
 
-    lgr.log(loglev, f"fixed = {args.fixed}")
-    fixed = args.fixed.upper() if args.fixed else ""
+    fixed = args.fixed.upper() if (args.fixed and args.fixed.isalpha()) else ""
+    lgr.log(args_log_level, f"fixed = {fixed}")
 
-    lgr.log(loglev, f"hindered = {args.hindered}")
-    hindered = args.hindered.upper() if args.hindered else ""
+    hindered = args.hindered.upper() if (args.hindered and args.hindered.isalpha()) else ""
+    lgr.log(args_log_level, f"hindered = {hindered}")
 
-    lgr.log(loglev, f"excluded = {args.exclude}")
-    exclude = args.exclude.upper() if args.exclude else ""
+    exclude = args.exclude.upper() if (args.exclude and args.exclude.isalpha()) else ""
+    lgr.log(args_log_level, f"excluded = {exclude}")
 
-    return args.save, args.wordfile, fixed, hindered, exclude
+    return args.save, infile, fixed, hindered, exclude
 
 
 log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
@@ -157,8 +162,7 @@ if __name__ == '__main__':
     lgr = log_control.get_logger()
     code = 0
     try:
-        save_option, words_file, fixed_str, hindered_str, excluded = get_args(argv[1:])
-        input_file = words_file if osp.isfile(words_file) else DEFAULT_WORD_FILE
+        save_option, input_file, fixed_str, hindered_str, excluded = get_args(argv[1:])
         fixed_form, hindered_form = get_forms(logging.DEBUG, fixed_str, hindered_str)
         run(logging.INFO)
     except KeyboardInterrupt as mki:
@@ -170,5 +174,5 @@ if __name__ == '__main__':
     except Exception as mex:
         lgr.exception(mex)
         code = 66
-    lgr.info(f"\nfinal elapsed time = {time.perf_counter() - start} seconds")
+    lgr.info(f"\nTotal elapsed time = {time.perf_counter() - start} seconds.")
     exit(code)
