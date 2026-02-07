@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2026-01-08"
+__updated__ = "2026-02-01"
 
 import time
 from argparse import ArgumentParser
@@ -19,7 +19,6 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import *
 from mhsLogging import *
 
-start = time.perf_counter()
 DEFAULT_WORD_FILE = "input/scrabble-plus.json"
 DEFAULT_LENGTH = 5
 MIN_LENGTH = 2
