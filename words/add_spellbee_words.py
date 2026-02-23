@@ -4,25 +4,24 @@
 # add_spellbee_words.py
 #   -- from a SpellingBee results JSON file, get new words and append to an existing JSON file
 #
-# Copyright (c) 2025 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2026 Mark Sattolo <epistemik@gmail.com>
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2025-01-13"
-__updated__ = "2025-01-13"
+__updated__ = "2026-02-21"
 
 import json
 import time
 from argparse import ArgumentParser
-from os.path import basename
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
-from mhsUtils import osp, get_base_filename, get_filename, save_to_json
+from mhsUtils import *
 from mhsLogging import MhsLogger, DEFAULT_LOG_LEVEL
 
 DEFAULT_INPUT_FILE  = "/home/marksa/Documents/Words/SpellingBee/SpellBeeWords_2025.json"
-DEFAULT_OUTPUT_FILE = "/home/marksa/Documents/Words/SpellingBee/SpellBee_AllWords.json"
+DEFAULT_OUTPUT_FILE = f"/home/marksa/Documents/Words/SpellingBee/SpellBee_AllWords_{get_current_date(FILE_DATE_STR)}.json"
 TEST_OUTPUT_FILE    = "./tests/sb_allwords.json"
 ANSWER_KEY = "answers"
 END_KEY    = "]"
@@ -67,7 +66,7 @@ def set_args():
                             help = f"path to a SpellingBee results JSON file to update with new words; DEFAULT = '{DEFAULT_OUTPUT_FILE}'.")
     return arg_parser
 
-def get_args(argl:list) -> (bool, str, str):
+def get_args(argl:list):
     args = set_args().parse_args(argl)
     lgr.info(f"save option = '{args.save}'")
     infile = args.input if osp.isfile(args.input) else DEFAULT_INPUT_FILE
@@ -77,10 +76,11 @@ def get_args(argl:list) -> (bool, str, str):
     return args.save, infile, outfile
 
 
+basename = get_base_filename(__file__)
+log_control = MhsLogger(basename, con_level = DEFAULT_LOG_LEVEL )
+
 if __name__ == '__main__':
     start = time.perf_counter()
-    basename = get_base_filename(__file__)
-    log_control = MhsLogger(basename, con_level = DEFAULT_LOG_LEVEL )
     lgr = log_control.get_logger()
     code = 0
     try:
@@ -95,6 +95,5 @@ if __name__ == '__main__':
     except Exception as mex:
         lgr.exception(mex)
         code = 66
-
     lgr.info(f"\nElapsed time = {time.perf_counter() - start} seconds")
     exit(code)
