@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2026-03-06"
-__updated__ = "2026-03-29"
+__updated__ = "2026-03-30"
 
 import time
 from argparse import ArgumentParser
@@ -19,7 +19,8 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import *
 from mhsLogging import *
 
-DEFAULT_FILE = "./input/all_words.txt"
+DEFAULT_INPUT_FILE = "./input/all_words.txt"
+DEFAULT_CHECK_FILE = "./input/scrabble-plus.json"
 ING_FORM = "ING"
 ING_FORM_LEN = len(ING_FORM)
 ED_FORM = "ED"
@@ -28,9 +29,16 @@ ER_FORM = "ER"
 ER_FORM_LEN = len(ER_FORM)
 MIN_WORD_LENGTH = 5
 MIN_FORM_LENGTH = 3
+DEBUG_PRINTING = logging.INFO
 
 def run():
     """From a words list file, find missing word forms and save to a new file."""
+    check_data = []
+    with open(check_file) as file_ck:
+        for it in file_ck:
+            item = it.strip('-_",. \n').upper()
+            if len(item) >= MIN_WORD_LENGTH:
+                check_data.append(item)
     first_data = []
     with open(input_file) as file_in:
         for it in file_in:
@@ -43,16 +51,29 @@ def run():
         if word[-ING_FORM_LEN:] == ING_FORM:
             rootword = word[:-ING_FORM_LEN]
             newform = rootword + ED_FORM
-            if newform not in first_data and len(newform) >= MIN_FORM_LENGTH:
+            if newform not in first_data and newform in check_data and len(newform) >= MIN_FORM_LENGTH:
                 save_data.append(newform)
-                lgr.info(f"new word form = {newform}")
+                lgr.logl(DEBUG_PRINTING, f"new word form = {newform}")
         elif word[-ED_FORM_LEN:] == ED_FORM:
             rootword = word[:-ED_FORM_LEN]
             if rootword[-1] != 'E':
                 newform = rootword + ING_FORM
-                if newform not in first_data and len(newform) >= MIN_FORM_LENGTH:
+                if newform not in first_data and newform in check_data and len(newform) >= MIN_FORM_LENGTH:
                     save_data.append(newform)
-                    lgr.info(f"new word form = {newform}")
+                    lgr.logl(DEBUG_PRINTING, f"new word form = {newform}")
+        elif word[-ER_FORM_LEN:] == ER_FORM:
+            rootword = word[:-ER_FORM_LEN]
+            if rootword[-1] != 'E':
+                newform = rootword + ING_FORM
+                if (len(newform) >= MIN_FORM_LENGTH and newform not in save_data
+                        and newform not in first_data and newform in check_data):
+                    save_data.append(newform)
+                    lgr.logl(DEBUG_PRINTING, f"new word form = {newform}")
+                newform = rootword + ED_FORM
+                if (len(newform) >= MIN_FORM_LENGTH and newform not in save_data
+                        and newform not in first_data and newform in check_data):
+                    save_data.append(newform)
+                    lgr.logl(DEBUG_PRINTING, f"new word form = {newform}")
 
     outfile_name = save_to_json("find_word_forms", save_data)
     lgr.info(f"\nSaved results to: {outfile_name}")
@@ -61,15 +82,19 @@ def set_args():
     arg_parser = ArgumentParser(description = "from a words list file, find missing word forms and save to a new file",
                                 prog = f"python3 {get_filename(argv[0])}")
     # optional arguments
-    arg_parser.add_argument('-f', '--file', type = str, metavar = "filePATH", default = DEFAULT_FILE,
-                            help = f"path to a word list file with words to get; DEFAULT = '{DEFAULT_FILE}'.")
+    arg_parser.add_argument('-i', '--input', type = str, metavar = "inputfilePATH", default = DEFAULT_INPUT_FILE,
+                            help = f"path to a word list file with words to get; DEFAULT = '{DEFAULT_INPUT_FILE}'.")
+    arg_parser.add_argument('-c', '--check', type = str, metavar = "checkfilePATH", default = DEFAULT_CHECK_FILE,
+                            help = f"path to a word list file with words to get; DEFAULT = '{DEFAULT_CHECK_FILE}'.")
     return arg_parser
 
 def get_args(argl:list):
     args = set_args().parse_args(argl)
-    infile = args.file if osp.isfile(args.file) else DEFAULT_FILE
+    infile = args.input if osp.isfile(args.input) else DEFAULT_INPUT_FILE
     lgr.info(f"input file = '{infile}'")
-    return infile
+    checkfile = args.check if osp.isfile(args.check) else DEFAULT_CHECK_FILE
+    lgr.info(f"check file = '{checkfile}'")
+    return infile, checkfile
 
 
 log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
@@ -79,7 +104,7 @@ if __name__ == '__main__':
     lgr = log_control.get_logger()
     code = 0
     try:
-        input_file = get_args(argv[1:])
+        input_file, check_file = get_args(argv[1:])
         run()
     except KeyboardInterrupt as mki:
         lgr.exception(mki)
