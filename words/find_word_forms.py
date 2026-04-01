@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2026-03-06"
-__updated__ = "2026-03-30"
+__updated__ = "2026-04-01"
 
 import time
 from argparse import ArgumentParser
@@ -29,7 +29,7 @@ ER_FORM = "ER"
 ER_FORM_LEN = len(ER_FORM)
 MIN_WORD_LENGTH = 5
 MIN_FORM_LENGTH = 3
-DEBUG_PRINTING = logging.INFO
+DEBUG_PRINTING = True
 
 def run():
     """From a words list file, find missing word forms and save to a new file."""
@@ -53,14 +53,14 @@ def run():
             newform = rootword + ED_FORM
             if newform not in first_data and newform in check_data and len(newform) >= MIN_FORM_LENGTH:
                 save_data.append(newform)
-                lgr.logl(DEBUG_PRINTING, f"new word form = {newform}")
+                if DEBUG_PRINTING: lgr.info(f"new word form = {newform}")
         elif word[-ED_FORM_LEN:] == ED_FORM:
             rootword = word[:-ED_FORM_LEN]
             if rootword[-1] != 'E':
                 newform = rootword + ING_FORM
                 if newform not in first_data and newform in check_data and len(newform) >= MIN_FORM_LENGTH:
                     save_data.append(newform)
-                    lgr.logl(DEBUG_PRINTING, f"new word form = {newform}")
+                    if DEBUG_PRINTING: lgr.info(f"new word form = {newform}")
         elif word[-ER_FORM_LEN:] == ER_FORM:
             rootword = word[:-ER_FORM_LEN]
             if rootword[-1] != 'E':
@@ -68,12 +68,12 @@ def run():
                 if (len(newform) >= MIN_FORM_LENGTH and newform not in save_data
                         and newform not in first_data and newform in check_data):
                     save_data.append(newform)
-                    lgr.logl(DEBUG_PRINTING, f"new word form = {newform}")
+                    if DEBUG_PRINTING: lgr.info(f"new word form = {newform}")
                 newform = rootword + ED_FORM
                 if (len(newform) >= MIN_FORM_LENGTH and newform not in save_data
                         and newform not in first_data and newform in check_data):
                     save_data.append(newform)
-                    lgr.logl(DEBUG_PRINTING, f"new word form = {newform}")
+                    if DEBUG_PRINTING: lgr.info(f"new word form = {newform}")
 
     outfile_name = save_to_json("find_word_forms", save_data)
     lgr.info(f"\nSaved results to: {outfile_name}")
