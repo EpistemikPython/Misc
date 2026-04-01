@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2026-03-08"
-__updated__ = "2026-03-22"
+__updated__ = "2026-03-31"
 
 import time
 from argparse import ArgumentParser
@@ -47,7 +47,7 @@ def run():
             if word not in save_data:
                 save_data.append(word)
 
-    outfile_name = save_to_json(("subtract" if subtract_option else "add") + "_compare_words", save_data)
+    outfile_name = save_to_json( "compare_words_" + ("subtract" if subtract_option else "add"), save_data)
     lgr.info(f"\nSaved results to: {outfile_name}")
 
 def set_args():
