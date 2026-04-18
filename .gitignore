@@ -34,4 +34,6 @@ tests*
 **/Music
 act
 scrabble_words.py
+SpellBee
+SpellingBee
 # find <dir/>* -type l >> .gitignore
