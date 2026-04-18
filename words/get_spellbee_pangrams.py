@@ -4,13 +4,13 @@
 # get_spellbee_pangrams.py
 #   -- from a spelling-bee words file, get pangrams and save to a JSON file
 #
-# Copyright (c) 2025 Mark Sattolo <epistemik@gmail.com>
+# Copyright (c) 2026 Mark Sattolo <epistemik@gmail.com>
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2025-08-19"
-__updated__ = "2025-11-29"
+__updated__ = "2026-04-17"
 
 import time
 from argparse import ArgumentParser
@@ -28,12 +28,12 @@ def is_pangram(test_word:str) -> bool:
     # eliminate simple plurals
     if test_word == previous_word + 'S' or test_word == previous_word + "ES":
         return False
-    unique = ""
+    unique = []
     for lett in test_word:
         if not lett.isalpha():
             return False
         if lett not in unique:
-            unique += lett
+            unique.append(lett)
     # lgr.debug(f"unique = '{unique}'")
     if len(unique) == MIN_PANGRAM_LENGTH:
         lgr.debug(f">> {test_word} is a Pangram!")
