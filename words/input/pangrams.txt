@@ -1,1 +1,0 @@
-/home/marksa/dev/git/Python/Games/SpellingBee/input/pangrams.txt
