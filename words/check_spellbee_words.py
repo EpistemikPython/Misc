@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2026-04-17"
-__updated__ = "2026-04-20"
+__updated__ = "2026-05-02"
 
 import time
 from sys import path, argv
@@ -29,23 +29,25 @@ def run():
     excluded_words = []
     with open(input_file) as file_in:
         for it in file_in:
-            if len(it) < MIN_NUM_LETTERS:
-                continue
             result = []
             item = get_clean_word(it)
+            if len(item) < MIN_NUM_LETTERS:
+                continue
             for lett in item:
                 if lett not in result:
                     result.append(lett)
-            if len(result) <= MAX_DIFF_LETTERS:
-                found_words.append(str(item))
+            if result and len(result) <= MAX_DIFF_LETTERS:
+                found_words.append(item)
             else:
-                excluded_words.append(str(item))
+                excluded_words.append(item)
     if save_option:
         outfile_name = save_to_json("check_spellbee_words", found_words)
         lgr.info(f"\nSaved results to: {outfile_name}")
         if excluded_words:
             outfile_name = save_to_json("excluded_spellbee_words", excluded_words)
-            lgr.info(f"\nSaved results to: {outfile_name}")
+            lgr.info(f"\nSaved excluded words to: {outfile_name}")
+        else:
+            lgr.info(f"\nNo excluded words found.")
 
 def set_args():
     arg_parser = ArgumentParser(description = "from a word file, get all words which can be valid SpellingBee responses "
