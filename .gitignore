@@ -36,4 +36,6 @@ act
 scrabble_words.py
 SpellBee
 SpellingBee
+spellbee_words.*
+spellingbee_words.*
 # find <dir/>* -type l >> .gitignore
