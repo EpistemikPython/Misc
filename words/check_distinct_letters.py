@@ -10,7 +10,7 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2026-05-07"
-__updated__ = "2026-05-07"
+__updated__ = "2026-05-08"
 
 from sys import path, argv
 path.append("/home/marksa/git/Python/utils")
@@ -24,19 +24,19 @@ def run():
         if word == "EXIT":
             print("Bye!\n")
             break
-            return
         for it in word:
             if not it.isalpha():
                 continue
             lett = it.upper()
             if lett not in result:
                 result += lett
-        print(f"{len(result)} distinct letters: [{result}]")
+        lres = len(result)
+        print(f"{lres} distinct letter{'s' if lres > 1 else ''}: [{result}]" if result else "No letters entered!")
 
 
 if __name__ == '__main__':
     if len(argv) > 1:
-        print(f"Usage: python3 {get_filename(argv[0])}\nEnter words and find out how many distinct letters each has.")
+        print(f"Usage: python3 {get_filename(argv[0])}\nEnter a word and find out how many distinct letters it has.")
         exit(0)
     code = 0
     try:
