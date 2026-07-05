@@ -8,9 +8,9 @@
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
-__python_version__ = "3.6+"
+__python_version__ = "3.11+"
 __created__ = "2023-10-29"
-__updated__ = "2026-02-01"
+__updated__ = "2026-07-05"
 
 import time
 from argparse import ArgumentParser
@@ -27,10 +27,12 @@ MAX_LENGTH = 15
 def run():
     """Process a list of words to find words of the specified lengths and optionally save to a JSON file."""
     newlist = []
-    wdf = json.load( open(file_name) )
+    wds = open(file_name)
+    wdf = json.load(wds) if file_name.endswith(".json") else wds
     for item in wdf:
-        if lower <= len(item) <= upper:
-            newlist.append(item)
+        cword = get_clean_word(item)
+        if lower <= len(cword) <= upper:
+            newlist.append(cword)
     lgr.info(f"word count = {len(newlist)}\n")
 
     lgr.info("sample output:")
@@ -38,7 +40,7 @@ def run():
     nli = len(newlist) // 30
     for word in newlist:
         if ni % nli == 0:
-            lgr.info(f'"{word}",')
+            lgr.info(f"{word}")
         ni += 1
 
     if save_option:
@@ -57,7 +59,7 @@ def set_args():
                             help = f"path to alternate file with list of all acceptable words; DEFAULT = {DEFAULT_WORD_FILE}.")
     arg_parser.add_argument('-l', '--lower', type = int, default = DEFAULT_LENGTH,
                             help = f"minimum number of letters in the words; DEFAULT = {DEFAULT_LENGTH}; MIN = {MIN_LENGTH}.")
-    arg_parser.add_argument('-u', '--upper', type = int, default = MAX_LENGTH,
+    arg_parser.add_argument('-u', '--upper', type = int, default = DEFAULT_LENGTH,
                             help = f"maximum number of letters in the words; DEFAULT = {DEFAULT_LENGTH}; MAX = {MAX_LENGTH}.")
     return arg_parser
 
