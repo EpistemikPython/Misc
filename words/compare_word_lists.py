@@ -21,12 +21,14 @@ from mhsLogging import *
 
 DEFAULT_SEARCH_FILE = "./input/new_pangrams.txt"
 DEFAULT_TARGET_FILE = "./input/all_words.txt"
+MIN_LENGTH = 2
+MAX_LENGTH = 15
 
 def run():
     """Search for words in a list that are NOT in a target word list."""
     srch_name = get_filename(search_file)
     targ_name = get_filename(target_file)
-    lgr.info(f"Find words in '{srch_name}' that are NOT in '{targ_name}'.")
+    lgr.info("Find" + (f" {word_size}-letter" if word_size else " all") + f" words in '{srch_name}' that are NOT in '{targ_name}'.")
     search_data = []
     target_data = []
     sf = open(search_file)
@@ -42,7 +44,11 @@ def run():
     save_data = []
     for word in search_data:
         if word not in target_data:
-            save_data.append(word)
+            if word_size:
+                if len(word) == word_size:
+                    save_data.append(word)
+            else:
+                save_data.append(word)
 
     if save_option:
         outfile_name = save_to_json( "compare_word_lists", save_data)
@@ -58,6 +64,8 @@ def set_args():
                             help = f"path to the file to search for words not in the target file; DEFAULT = '{DEFAULT_SEARCH_FILE}'.")
     arg_parser.add_argument('-t', '--target', type = str, metavar = "targetPATH", default = DEFAULT_TARGET_FILE,
                             help = f"path to the target file; DEFAULT = '{DEFAULT_TARGET_FILE}'.")
+    arg_parser.add_argument('-r', '--restrict', type = int, metavar = "WORD_LENGTH", default = 0,
+                            help = f"restrict the search to words of this specified length; DEFAULT = 'accept ALL words'.")
     return arg_parser
 
 def get_args(argl:list):
@@ -66,7 +74,10 @@ def get_args(argl:list):
     lgr.info(f"search file = '{srchfile}'")
     targfile = args.target if osp.isfile(args.target) else DEFAULT_TARGET_FILE
     lgr.info(f"target file = '{targfile}'")
-    return args.save, srchfile, targfile
+    lgr.info(f"restrict length = {args.restrict}")
+    srch_len = args.restrict if MIN_LENGTH <= args.restrict <= MAX_LENGTH else 0
+    lgr.info(f"search length = {srch_len}")
+    return args.save, srchfile, targfile, srch_len
 
 
 log_control = MhsLogger( get_base_filename(__file__), con_level = DEFAULT_LOG_LEVEL )
@@ -76,7 +87,7 @@ if __name__ == '__main__':
     lgr = log_control.get_logger()
     code = 0
     try:
-        save_option, search_file, target_file = get_args(argv[1:])
+        save_option, search_file, target_file, word_size = get_args(argv[1:])
         run()
     except KeyboardInterrupt as mki:
         lgr.exception(mki)
