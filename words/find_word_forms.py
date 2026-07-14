@@ -8,9 +8,9 @@
 
 __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
-__python_version__ = "3.6+"
+__python_version__ = "3.11+"
 __created__ = "2026-03-06"
-__updated__ = "2026-04-03"
+__updated__ = "2026-07-12"
 
 import time
 from argparse import ArgumentParser
@@ -27,9 +27,11 @@ ED_FORM = "ED"
 ED_FORM_LEN = len(ED_FORM)
 ER_FORM = "ER"
 ER_FORM_LEN = len(ER_FORM)
-MIN_WORD_LENGTH = 5
+LY_FORM = "LY"
+LY_FORM_LEN = len(LY_FORM)
+MIN_WORD_LENGTH = 4
 MIN_FORM_LENGTH = 3
-DEBUG_PRINTING = True
+DEBUG_PRINTING = False
 
 def run():
     """From a words list file, find missing word forms and save to a new file."""
@@ -95,6 +97,10 @@ def check_add(word:str):
         newform = word + ER_FORM
         if check_form(newform):
             save_data.append(newform)
+    if word[-LY_FORM_LEN:] != LY_FORM:
+        newform = word + LY_FORM
+        if check_form(newform):
+            save_data.append(newform)
 
 def check_form(newform:str):
     """See if new form is in check data and not already found."""
@@ -110,9 +116,9 @@ def set_args():
                                 prog = f"python3 {get_filename(argv[0])}")
     # optional arguments
     arg_parser.add_argument('-i', '--input', type = str, metavar = "inputfilePATH", default = DEFAULT_INPUT_FILE,
-                            help = f"path to a word list file with words to get; DEFAULT = '{DEFAULT_INPUT_FILE}'.")
+                            help = f"path to a file with base words to use; DEFAULT = '{DEFAULT_INPUT_FILE}'.")
     arg_parser.add_argument('-c', '--check', type = str, metavar = "checkfilePATH", default = DEFAULT_CHECK_FILE,
-                            help = f"path to a word list file with words to get; DEFAULT = '{DEFAULT_CHECK_FILE}'.")
+                            help = f"path to a file to check for missing word forms; DEFAULT = '{DEFAULT_CHECK_FILE}'.")
     return arg_parser
 
 def get_args(argl:list):
