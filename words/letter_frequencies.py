@@ -11,9 +11,8 @@ __author__         = "Mark Sattolo"
 __author_email__   = "epistemik@gmail.com"
 __python_version__ = "3.6+"
 __created__ = "2023-10-29"
-__updated__ = "2026-02-06"
+__updated__ = "2026-10-19"
 
-import string
 import time
 from argparse import ArgumentParser
 from collections import defaultdict
@@ -22,7 +21,7 @@ path.append("/home/marksa/git/Python/utils")
 from mhsUtils import *
 from mhsLogging import *
 
-DEFAULT_WORD_FILE = "input/scrabble-plus.json"
+DEFAULT_WORD_FILE = osp.join("input","scrabble-plus.json")
 MIN_WORD_LEN     =  4
 DEFAULT_WORD_LEN =  5
 MAX_WORD_LEN     = 15
@@ -34,11 +33,13 @@ def run():
     appearances = dict.fromkeys(string.ascii_uppercase, 0) # number of words each letter appears in
     word_count = 0
     letter_count = 0
-    wds = json.load( open(word_file) )
-    for item in wds:
+    wf = open(word_file)
+    wsf = json.load(wf) if word_file.endswith(osp.extsep + JSON_LABEL) else wf
+    for item in wsf:
+        cword = get_clean_word(item)
         seen = []
-        if min_size <= len(item) <= max_size:
-            for letter in item:
+        if min_size <= len(cword) <= max_size:
+            for letter in cword:
                 freqs[letter] += 1
                 if letter not in seen:
                     appearances[letter] += 1
@@ -60,8 +61,8 @@ def run():
     lgr.info(f"total letter frequencies = {total_freqs}")
 
     sorted_freqs = {}
-    for item in sorted(lett_freqs, reverse = True):
-        sorted_freqs[lett_freqs[item]] = item
+    for sfit in sorted(lett_freqs, reverse = True):
+        sorted_freqs[lett_freqs[sfit]] = sfit
     lgr.info(f"\n\tsorted letter frequencies:")
     for key in sorted_freqs.keys():
         lgr.info(f"\t{key}: {sorted_freqs[key]}")
